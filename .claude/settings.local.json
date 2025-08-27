@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx cap init:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx cap add:*)",
+      "Bash(del /f \"src\\services\\alarmService.ts\")",
+      "Bash(npm run sync:*)",
+      "Bash(npm run android:build:*)",
+      "Bash(./gradlew:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
