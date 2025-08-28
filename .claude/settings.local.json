@@ -15,7 +15,8 @@
       "Bash(npm run dev:*)",
       "Bash(npm run android:open:*)",
       "WebFetch(domain:localhost)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
