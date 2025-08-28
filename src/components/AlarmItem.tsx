@@ -1,8 +1,9 @@
 import React from 'react';
 import { useAlarmStore } from '@/stores/alarmStore';
 import { Alarm } from '@/types';
-import { Power, Trash2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import DayIndicator from './DayIndicator';
+import ToggleSwitch from './ToggleSwitch';
 
 interface AlarmItemProps {
   alarm: Alarm;
@@ -11,61 +12,74 @@ interface AlarmItemProps {
 export function AlarmItem({ alarm }: AlarmItemProps) {
   const { toggleAlarm, deleteAlarm } = useAlarmStore();
   
-  const getAlarmTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      basic: '기본',
-      reminder: '리마인더',
-      medication: '복약',
-      workout: '운동',
-      work: '업무',
-      custom: '사용자 정의',
-    };
-    return labels[type] || type;
+  const formatTime = (date: Date) => {
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const period = hours >= 12 ? '오후' : '오전';
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    
+    return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
   };
-  
-  const getRepeatTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-      once: '한 번만',
-      daily: '매일',
-      weekly: '매주',
-      weekdays: '평일',
-      weekends: '주말',
-      custom: '사용자 정의',
-    };
-    return labels[type] || type;
-  };
-  
+
   return (
-    <div className={`alarm-item ${!alarm.isActive ? 'inactive' : ''}`}>
-      <div className="alarm-info">
-        <h3>{alarm.title}</h3>
-        {alarm.description && <p>{alarm.description}</p>}
-        <p>
-          <Clock size={16} style={{ display: 'inline', marginRight: '0.25rem' }} />
-          {format(alarm.time, 'HH:mm')} · {getAlarmTypeLabel(alarm.type)} · {getRepeatTypeLabel(alarm.repeatType || 'once')}
-        </p>
-      </div>
+    <div 
+      className={`alarm-card rounded-xl p-4 transition-all duration-300 ${
+        !alarm.isActive ? 'opacity-70' : ''
+      } hover:scale-[0.98] active:scale-95`}
+      style={{ backgroundColor: '#1E1E1E' }}
+      onClick={(e) => {
+        if (!e.target.closest('.toggle-switch') && !e.target.closest('.fa-ellipsis-vertical')) {
+          toggleAlarm(alarm.id);
+        }
+      }}
+    >
+      <DayIndicator repeatDays={alarm.repeatDays} isActive={alarm.isActive} />
       
-      <div className="alarm-actions">
-        <button
-          className={`btn ${alarm.isActive ? 'btn-secondary' : 'btn-primary'}`}
-          onClick={() => toggleAlarm(alarm.id)}
-          title={alarm.isActive ? '알람 끄기' : '알람 켜기'}
-        >
-          <Power size={16} />
-        </button>
+      <div className="flex justify-between items-center">
+        <div>
+          <p className={`text-2xl font-bold ${!alarm.isActive ? 'text-gray-500' : ''}`}>
+            {formatTime(alarm.time)}
+          </p>
+          <div className="flex items-center mt-1">
+            <span className={`text-sm mr-2 ${!alarm.isActive ? 'text-gray-500' : 'text-gray-400'}`}>
+              미션
+            </span>
+            {alarm.hasMission && (
+              <i 
+                className={`fas text-xs ${
+                  !alarm.isActive 
+                    ? 'fas fa-check text-gray-500' 
+                    : alarm.missionCompleted 
+                      ? 'fas fa-check' 
+                      : 'fas fa-xmark text-red-400'
+                }`}
+                style={
+                  alarm.isActive && alarm.missionCompleted 
+                    ? { color: '#00BCD4' } 
+                    : {}
+                }
+              ></i>
+            )}
+          </div>
+        </div>
         
-        <button
-          className="btn btn-danger"
-          onClick={() => {
-            if (confirm('이 알람을 삭제하시겠습니까?')) {
-              deleteAlarm(alarm.id);
-            }
-          }}
-          title="알람 삭제"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="flex items-center space-x-3">
+          <ToggleSwitch
+            isChecked={alarm.isActive}
+            onChange={() => toggleAlarm(alarm.id)}
+          />
+          <button 
+            className={`${!alarm.isActive ? 'text-gray-500' : 'text-gray-400'}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm('이 알람을 삭제하시겠습니까?')) {
+                deleteAlarm(alarm.id);
+              }
+            }}
+          >
+            <i className="fas fa-ellipsis-vertical"></i>
+          </button>
+        </div>
       </div>
     </div>
   );

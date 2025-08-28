@@ -49,6 +49,32 @@ export const useAlarmStore = create<AlarmStore>()(
       getActiveAlarms: () => {
         return get().alarms.filter((alarm) => alarm.isActive);
       },
+      
+      getNextAlarm: () => {
+        const activeAlarms = get().alarms.filter((alarm) => alarm.isActive);
+        if (activeAlarms.length === 0) return null;
+        
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        // Find the earliest upcoming alarm
+        const upcomingAlarms = activeAlarms
+          .map(alarm => {
+            const alarmTime = new Date(alarm.time);
+            let nextAlarmTime = new Date(today);
+            nextAlarmTime.setHours(alarmTime.getHours(), alarmTime.getMinutes(), 0, 0);
+            
+            // If alarm time has passed today, set for tomorrow
+            if (nextAlarmTime <= now) {
+              nextAlarmTime.setDate(nextAlarmTime.getDate() + 1);
+            }
+            
+            return { ...alarm, nextTime: nextAlarmTime };
+          })
+          .sort((a, b) => a.nextTime.getTime() - b.nextTime.getTime());
+        
+        return upcomingAlarms.length > 0 ? upcomingAlarms[0] : null;
+      },
     }),
     {
       name: 'semor-alarms',

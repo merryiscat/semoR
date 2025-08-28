@@ -1,0 +1,273 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #121212;
+    color: #e0e0e0;
+    max-width: 414px;
+    margin: 0 auto;
+    height: 100vh;
+    position: relative;
+  }
+}
+
+@layer components {
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+  }
+  
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #424242;
+    transition: .4s;
+    border-radius: 34px;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+  
+  input:checked + .slider {
+    background-color: #00BCD4;
+  }
+  
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scale-120 {
+    transform: scale(1.2);
+  }
+
+  .scale-80 {
+    transform: scale(0.8);
+  }
+
+  /* Elegant card shadows */
+  .card-shadow {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Custom scrollbar for time picker */
+  .time-picker {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+  }
+  
+  .time-picker::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Enhanced slider styling */
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: linear-gradient(to right, #00BCD4 0%, #00BCD4 70%, #6B7280 70%, #6B7280 100%);
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00BCD4, #00ACC1);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 188, 212, 0.4);
+    transition: all 0.2s ease;
+  }
+  
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 188, 212, 0.6);
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00BCD4, #00ACC1);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 188, 212, 0.4);
+  }
+  
+  /* Enhanced toggle switch */
+  .toggle-switch-enhanced {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .toggle-switch-enhanced:checked {
+    background: linear-gradient(135deg, #00BCD4, #00ACC1);
+    box-shadow: 0 2px 8px rgba(0, 188, 212, 0.4);
+  }
+  
+  .toggle-switch-enhanced::before {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Time picker enhanced styling */
+  .time-picker-container {
+    background: linear-gradient(145deg, #1E1E1E, #262626);
+    backdrop-filter: blur(10px);
+  }
+  
+  .time-item {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    margin: 2px 0;
+  }
+  
+  .time-item.selected {
+    transform: scale(1.15);
+    opacity: 1;
+    background: rgba(0, 188, 212, 0.1);
+    color: #00BCD4;
+    font-weight: 600;
+    text-shadow: 0 0 10px rgba(0, 188, 212, 0.3);
+  }
+  
+  .time-item.unselected {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+  
+  /* Day button enhancements */
+  .day-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .day-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 188, 212, 0.1), rgba(0, 188, 212, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: inherit;
+  }
+  
+  .day-button:hover::before {
+    opacity: 1;
+  }
+  
+  .day-button.selected {
+    background: linear-gradient(135deg, rgba(0, 188, 212, 0.2), rgba(0, 188, 212, 0.1));
+    border-color: #00BCD4;
+    color: #00BCD4;
+    box-shadow: 0 0 15px rgba(0, 188, 212, 0.3);
+  }
+  
+  /* Mission slot enhancements */
+  .mission-slot {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .mission-slot:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  .mission-slot.filled {
+    background: linear-gradient(135deg, rgba(0, 188, 212, 0.2), rgba(0, 188, 212, 0.1));
+    box-shadow: 0 2px 10px rgba(0, 188, 212, 0.2);
+  }
+  
+  .mission-slot.empty {
+    border-style: dashed;
+    border-width: 2px;
+    border-color: #6B7280;
+    background: rgba(107, 114, 128, 0.05);
+  }
+  
+  .mission-slot.empty:hover {
+    border-color: #00BCD4;
+    background: rgba(0, 188, 212, 0.05);
+  }
+  
+  /* Button press effects */
+  .btn-press {
+    transition: all 0.15s ease;
+  }
+  
+  .btn-press:active {
+    transform: scale(0.98);
+  }
+  
+  /* Center highlight line enhancement */
+  .center-highlight {
+    background: linear-gradient(90deg, transparent, rgba(0, 188, 212, 0.6), transparent);
+    box-shadow: 0 0 10px rgba(0, 188, 212, 0.4);
+  }
+  
+  /* Save button enhancement */
+  .save-button {
+    background: linear-gradient(135deg, #F44336, #E53935);
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .save-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(244, 67, 54, 0.6);
+  }
+  
+  .save-button:active {
+    transform: translateY(0);
+  }
+}

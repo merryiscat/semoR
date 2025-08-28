@@ -8,26 +8,23 @@ export function AlarmList() {
   
   if (alarms.length === 0) {
     return (
-      <div className="card">
-        <div className="empty-state">
-          <Clock size={64} />
-          <h3>아직 알람이 없습니다</h3>
-          <p>첫 번째 알람을 추가해보세요!</p>
-        </div>
+      <div className="rounded-xl p-6 text-center" style={{ backgroundColor: '#1E1E1E' }}>
+        <Clock size={64} className="mx-auto mb-4 text-gray-400" />
+        <h3 className="text-lg font-medium mb-2">아직 알람이 없습니다</h3>
+        <p className="text-gray-400">첫 번째 알람을 추가해보세요!</p>
       </div>
     );
   }
   
   return (
-    <div className="card">
-      <h2 style={{ marginBottom: '1.5rem' }}>내 알람 목록</h2>
-      <div>
-        {alarms
-          .sort((a, b) => a.time.getTime() - b.time.getTime())
-          .map((alarm) => (
-            <AlarmItem key={alarm.id} alarm={alarm} />
-          ))}
-      </div>
+    <div>
+      {alarms
+        .sort((a, b) => a.time.getTime() - b.time.getTime())
+        .map((alarm) => (
+          <div key={alarm.id} className="mb-3">
+            <AlarmItem alarm={alarm} />
+          </div>
+        ))}
     </div>
   );
 }

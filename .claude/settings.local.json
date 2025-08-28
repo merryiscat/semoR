@@ -8,7 +8,14 @@
       "Bash(del /f \"src\\services\\alarmService.ts\")",
       "Bash(npm run sync:*)",
       "Bash(npm run android:build:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run android:open:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

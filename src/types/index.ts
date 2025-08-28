@@ -6,7 +6,13 @@ export interface Alarm {
   isActive: boolean;
   type: AlarmType;
   repeatType?: RepeatType;
+  repeatDays?: number[];
   soundUrl?: string;
+  hasMission?: boolean;
+  missionCompleted?: boolean;
+  missions?: Mission[];
+  volume?: number;
+  vibration?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,4 +42,20 @@ export interface AlarmStore {
   deleteAlarm: (id: string) => void;
   toggleAlarm: (id: string) => void;
   getActiveAlarms: () => Alarm[];
+  getNextAlarm: () => Alarm | null;
+}
+
+export type NavTab = 'alarm' | 'sleep' | 'morning' | 'report' | 'settings';
+
+export interface AppState {
+  activeTab: NavTab;
+  setActiveTab: (tab: NavTab) => void;
+  currentPage: 'main' | 'add-alarm';
+  setCurrentPage: (page: 'main' | 'add-alarm') => void;
+}
+
+export interface Mission {
+  id: string;
+  name: string;
+  icon: string;
 }
