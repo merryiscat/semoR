@@ -21,9 +21,7 @@ export function AlarmList() {
       {alarms
         .sort((a, b) => a.time.getTime() - b.time.getTime())
         .map((alarm) => (
-          <div key={alarm.id} className="mb-3">
-            <AlarmItem alarm={alarm} />
-          </div>
+          <AlarmItem key={alarm.id} alarm={alarm} />
         ))}
     </div>
   );

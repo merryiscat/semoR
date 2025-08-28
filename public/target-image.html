@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Target Design Image</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            background: #2D3A4F;
+            border-radius: 20px;
+            padding: 20px;
+            color: white;
+        }
+        .time-display {
+            text-align: center;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .period { font-size: 24px; margin-right: 20px; }
+        .time { color: white; }
+        .minutes { margin-left: 20px; }
+        
+        .section {
+            margin: 30px 0;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .days {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        .day {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #00BCD4;
+            color: #00BCD4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+        .missions {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .mission-box {
+            width: 56px;
+            height: 56px;
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+        }
+        .volume-bar {
+            height: 8px;
+            background: linear-gradient(to right, #00BCD4 70%, #444 70%);
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .toggle {
+            width: 44px;
+            height: 24px;
+            background: #00BCD4;
+            border-radius: 12px;
+            position: relative;
+            margin-left: auto;
+        }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            right: 2px;
+        }
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: #FF5722;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Time Display -->
+        <div class="time-display">
+            <span class="period">AM</span>
+            <span style="color: #666; font-size: 24px;">8 45<br>9 50</span>
+        </div>
+        <div class="time-display">
+            <span class="period" style="color: white;">PM</span>
+            <span class="time">10</span>
+            <span class="time">55</span>
+        </div>
+        <div style="text-align: center; color: #666; margin: 10px 0;">
+            <span>11 00<br>12 05</span>
+        </div>
+
+        <!-- Repeat Section -->
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="section-title">반복</span>
+                <div style="display: flex; align-items: center;">
+                    <span style="margin-right: 10px;">매일</span>
+                    <div class="toggle"></div>
+                </div>
+            </div>
+            <div class="days">
+                <div class="day">일</div>
+                <div class="day">월</div>
+                <div class="day">화</div>
+                <div class="day">수</div>
+                <div class="day">목</div>
+                <div class="day">금</div>
+                <div class="day">토</div>
+            </div>
+        </div>
+
+        <!-- Mission Section -->
+        <div class="section">
+            <div class="section-title">미션 <span style="color: #666;">(0/5)</span></div>
+            <div class="missions">
+                <div class="mission-box">+</div>
+                <div class="mission-box">+</div>
+                <div class="mission-box">+</div>
+                <div class="mission-box">+</div>
+                <div class="mission-box">+</div>
+            </div>
+        </div>
+
+        <!-- Volume Section -->
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>🔈</span>
+                <span>🔊</span>
+            </div>
+            <div class="volume-bar"></div>
+        </div>
+
+        <!-- Vibration -->
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>진동</span>
+                <div class="toggle"></div>
+            </div>
+        </div>
+
+        <!-- Sound -->
+        <div class="section">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                <span>사운드</span>
+                <span style="color: #666;">오르카니 ></span>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <button class="save-btn">저장</button>
+    </div>
+</body>
+</html>

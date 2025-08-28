@@ -23,9 +23,9 @@ export function AlarmItem({ alarm }: AlarmItemProps) {
 
   return (
     <div 
-      className={`alarm-card rounded-xl p-4 transition-all duration-300 ${
+      className={`alarm-card rounded-xl p-4 mb-3 transition-all duration-300 ${
         !alarm.isActive ? 'opacity-70' : ''
-      } hover:scale-[0.98] active:scale-95`}
+      }`}
       style={{ backgroundColor: '#1E1E1E' }}
       onClick={(e) => {
         if (!e.target.closest('.toggle-switch') && !e.target.closest('.fa-ellipsis-vertical')) {
@@ -44,21 +44,17 @@ export function AlarmItem({ alarm }: AlarmItemProps) {
             <span className={`text-sm mr-2 ${!alarm.isActive ? 'text-gray-500' : 'text-gray-400'}`}>
               미션
             </span>
-            {alarm.hasMission && (
+            {alarm.hasMission ? (
               <i 
-                className={`fas text-xs ${
+                className={`fas fa-check text-xs ${
                   !alarm.isActive 
-                    ? 'fas fa-check text-gray-500' 
-                    : alarm.missionCompleted 
-                      ? 'fas fa-check' 
-                      : 'fas fa-xmark text-red-400'
+                    ? 'text-gray-500' 
+                    : 'text-primary'
                 }`}
-                style={
-                  alarm.isActive && alarm.missionCompleted 
-                    ? { color: '#00BCD4' } 
-                    : {}
-                }
+                style={{ color: !alarm.isActive ? undefined : '#00BCD4' }}
               ></i>
+            ) : (
+              <i className={`fas fa-times text-xs ${!alarm.isActive ? 'text-gray-500' : 'text-gray-500'}`}></i>
             )}
           </div>
         </div>

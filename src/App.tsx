@@ -15,6 +15,16 @@ function App() {
   
   const nextAlarm = getNextAlarm();
 
+  // Check URL hash for routing
+  React.useEffect(() => {
+    const hash = window.location.hash;
+    if (hash === '#add-alarm') {
+      setCurrentPage('add-alarm');
+    } else {
+      setCurrentPage('main');
+    }
+  }, [setCurrentPage]);
+
   // If we're on the add alarm page, render it
   if (currentPage === 'add-alarm') {
     return <AddAlarmPage />;
@@ -66,6 +76,7 @@ function App() {
         {/* Header Section */}
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">알람</h1>
+          <span className="text-white text-xs font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: '#00BCD4' }}>PRO Start</span>
         </div>
         
         {renderActiveTab()}

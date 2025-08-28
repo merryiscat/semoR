@@ -43,7 +43,7 @@ const NextAlarmCard: React.FC<NextAlarmCardProps> = ({ nextAlarm }) => {
           <p className="text-gray-400 text-sm">Next Alarm</p>
           <p className="font-medium">{getTimeUntilAlarm(nextAlarm.time)}</p>
         </div>
-        <i className="fas fa-bullhorn text-gray-400"></i>
+        <i className="fas fa-bullhorn" style={{ color: '#00BCD4' }}></i>
       </div>
     </div>
   );

@@ -21,9 +21,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ activeTab, onTabCha
         <button
           key={item.id}
           onClick={() => onTabChange(item.id)}
-          className={`flex flex-col items-center ${
-            activeTab === item.id ? 'text-gray-400' : 'text-gray-400'
-          }`}
+          className="flex flex-col items-center"
           style={{ color: activeTab === item.id ? '#00BCD4' : '#9CA3AF' }}
         >
           <i className={`${item.icon} mb-1`}></i>

@@ -16,7 +16,12 @@
       "Bash(npm run android:open:*)",
       "WebFetch(domain:localhost)",
       "Bash(git add:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Read(/c:\\Users\\minhy\\Downloads/**)",
+      "Bash(npx vite:*)",
+      "Bash(npx playwright screenshot:*)",
+      "Bash(npx playwright:*)",
+      "Bash(del \"C:\\Users\\minhy\\Study\\LLM_Study\\semoR\\public\\add-alarm.html\")"
     ],
     "deny": [],
     "ask": []
