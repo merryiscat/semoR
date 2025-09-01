@@ -1,34 +1,48 @@
-# Gradle files
+# Gradle
 .gradle/
 build/
+*/build/
+!gradle-wrapper.jar
+!gradlew
+!gradlew.bat
+gradle.zip
+gradle-*/
 
-# Local configuration file (sdk path, etc)
+# Local configuration
 local.properties
+.gradle-cache/
 
-# Log/OS Files
-*.log
+# Android Studio
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
 
-# Android Studio generated files and folders
+# Android generated files
 captures/
 .externalNativeBuild/
 .cxx/
-*.aab
-*.apk
 output-metadata.json
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+# APK / AAB files
+*.apk
+*.ap_
+*.aab
 
-# Keystore files
+# Keystore files (개인 서명키는 절대 올리지 말 것)
 *.jks
 *.keystore
 
-# Google Services (e.g. APIs or Firebase)
+# Google Services (e.g. Firebase)
 google-services.json
 
 # Android Profiling
 *.hprof
+
+# Log files
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
