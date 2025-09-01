@@ -12,31 +12,22 @@ import kotlinx.coroutines.launch
 class BootReceiver : BroadcastReceiver() {
     
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
-            intent.action == Intent.ACTION_MY_PACKAGE_REPLACED ||
-            intent.action == Intent.ACTION_PACKAGE_REPLACED
-        ) {
-            // 부팅 후 모든 활성 알람 재설정
-            rescheduleAlarms(context)
-        }
-    }
-    
-    private fun rescheduleAlarms(context: Context) {
-        val alarmScheduler = AlarmScheduler(context)
-        val database = AlarmDatabase.getDatabase(context)
-        
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // 모든 활성 알람 가져오기 (LiveData가 아닌 직접 쿼리)
-                val activeAlarms = database.alarmDao().getActiveAlarms().value
-                
-                activeAlarms?.forEach { alarm ->
-                    if (alarm.isActive) {
-                        alarmScheduler.scheduleAlarm(alarm)
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            // 부팅 완료 후 모든 활성화된 알람을 다시 스케줄링
+            val database = AlarmDatabase.getDatabase(context)
+            val alarmScheduler = AlarmScheduler(context)
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val alarms = database.alarmDao().getAllAlarms().value
+                    alarms?.forEach { alarm ->
+                        if (alarm.isActive) {
+                            alarmScheduler.scheduleAlarm(alarm)
+                        }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }
