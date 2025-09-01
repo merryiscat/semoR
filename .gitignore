@@ -5,11 +5,10 @@ build/
 !gradle-wrapper.jar
 !gradlew
 !gradlew.bat
-gradle.zip
-gradle-*/
 
-# Local configuration
+# Local configuration files
 local.properties
+.gradle/
 .gradle-cache/
 
 # Android Studio
@@ -19,30 +18,27 @@ local.properties
 *.iws
 out/
 
-# Android generated files
-captures/
-.externalNativeBuild/
-.cxx/
-output-metadata.json
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
 
 # APK / AAB files
 *.apk
 *.ap_
 *.aab
 
+# Generated files
+captures/
+.externalNativeBuild/
+.cxx/
+
 # Keystore files (개인 서명키는 절대 올리지 말 것)
 *.jks
 *.keystore
 
-# Google Services (e.g. Firebase)
-google-services.json
-
-# Android Profiling
-*.hprof
-
-# Log files
-*.log
-
-# OS generated files
-.DS_Store
-Thumbs.db
+# Gradle cache / zip
+gradle.zip
+gradle-*/

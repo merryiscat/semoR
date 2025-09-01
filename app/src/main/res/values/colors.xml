@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark Theme - 검정 + 회색 + 파란색 하이라이트 -->
+    <color name="md_theme_primary">#3B82F6</color>
+    <color name="md_theme_onPrimary">#FFFFFF</color>
+    <color name="md_theme_primaryContainer">#1E3A8A</color>
+    <color name="md_theme_onPrimaryContainer">#DBEAFE</color>
+    
+    <color name="md_theme_secondary">#6B7280</color>
+    <color name="md_theme_onSecondary">#FFFFFF</color>
+    <color name="md_theme_secondaryContainer">#374151</color>
+    <color name="md_theme_onSecondaryContainer">#D1D5DB</color>
+    
+    <color name="md_theme_tertiary">#10B981</color>
+    <color name="md_theme_onTertiary">#FFFFFF</color>
+    <color name="md_theme_tertiaryContainer">#065F46</color>
+    <color name="md_theme_onTertiaryContainer">#A7F3D0</color>
+    
+    <!-- Error & Status Colors -->
+    <color name="md_theme_error">#EF4444</color>
+    <color name="md_theme_onError">#FFFFFF</color>
+    <color name="md_theme_errorContainer">#FEE2E2</color>
+    <color name="md_theme_onErrorContainer">#7F1D1D</color>
+    
+    <!-- Background & Surface - 다크 테마 -->
+    <color name="md_theme_background">#0F0F0F</color>
+    <color name="md_theme_onBackground">#F9FAFB</color>
+    <color name="md_theme_surface">#1F2937</color>
+    <color name="md_theme_onSurface">#F9FAFB</color>
+    <color name="md_theme_surfaceVariant">#111827</color>
+    <color name="md_theme_onSurfaceVariant">#9CA3AF</color>
+    <color name="md_theme_outline">#374151</color>
+    <color name="md_theme_outlineVariant">#4B5563</color>
+    
+    <!-- Surface Containers - 다크 테마 -->
+    <color name="md_theme_surfaceContainerLowest">#0A0A0A</color>
+    <color name="md_theme_surfaceContainerLow">#1F2937</color>
+    <color name="md_theme_surfaceContainer">#374151</color>
+    <color name="md_theme_surfaceContainerHigh">#4B5563</color>
+    <color name="md_theme_surfaceContainerHighest">#6B7280</color>
+    
+    <!-- Inverse Colors -->
+    <color name="md_theme_inverseSurface">#F9FAFB</color>
+    <color name="md_theme_inverseOnSurface">#1F2937</color>
+    <color name="md_theme_inversePrimary">#1E3A8A</color>
+    
+    <!-- Fixed Colors -->
+    <color name="md_theme_primaryFixed">#E0E7FF</color>
+    <color name="md_theme_onPrimaryFixed">#1E1B3C</color>
+    <color name="md_theme_primaryFixedDim">#A5B4FC</color>
+    <color name="md_theme_onPrimaryFixedVariant">#4338CA</color>
+    
+    <color name="md_theme_secondaryFixed">#F3E8FF</color>
+    <color name="md_theme_onSecondaryFixed">#2D1B69</color>
+    <color name="md_theme_secondaryFixedDim">#C4B5FD</color>
+    <color name="md_theme_onSecondaryFixedVariant">#6D28D9</color>
+    
+    <color name="md_theme_tertiaryFixed">#FCE7F3</color>
+    <color name="md_theme_onTertiaryFixed">#831843</color>
+    <color name="md_theme_tertiaryFixedDim">#F9A8D4</color>
+    <color name="md_theme_onTertiaryFixedVariant">#BE185D</color>
+    
+    <color name="md_theme_surfaceDim">#F1F5F9</color>
+    <color name="md_theme_surfaceBright">#FFFFFF</color>
+    
+    <!-- Custom App Colors - 다크 테마 -->
+    <color name="success">#10B981</color>
+    <color name="success_container">#065F46</color>
+    <color name="on_success">#FFFFFF</color>
+    <color name="on_success_container">#A7F3D0</color>
+    
+    <color name="warning">#F59E0B</color>
+    <color name="warning_container">#92400E</color>
+    
+    <color name="active_alarm">#3B82F6</color>
+    <color name="inactive_alarm">#6B7280</color>
+    <color name="alarm_card_bg">#1F2937</color>
+    
+    <!-- Shadow & Overlay -->
+    <color name="shadow_light">#1A000000</color>
+    <color name="shadow_medium">#33000000</color>
+    <color name="overlay">#80000000</color>
+</resources>
