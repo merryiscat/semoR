@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">세모알</string>
+    
+    <!-- Navigation -->
+    <string name="nav_alarm">알람</string>
+    <string name="nav_timer">타이머</string>
+    <string name="nav_sleep">수면</string>
+    <string name="nav_report">리포트</string>
+    <string name="nav_settings">설정</string>
+    
+    <!-- Alarm -->
+    <string name="alarm_label">알람명</string>
+    <string name="alarm_time">시간</string>
+    <string name="alarm_repeat">반복</string>
+    <string name="alarm_sound">알람음</string>
+    <string name="alarm_volume">볼륨</string>
+    <string name="alarm_snooze">스누즈</string>
+    <string name="alarm_snooze_interval">스누즈 간격</string>
+    <string name="alarm_delete">삭제</string>
+    <string name="alarm_edit">편집</string>
+    
+    <!-- Days -->
+    <string name="day_monday">월</string>
+    <string name="day_tuesday">화</string>
+    <string name="day_wednesday">수</string>
+    <string name="day_thursday">목</string>
+    <string name="day_friday">금</string>
+    <string name="day_saturday">토</string>
+    <string name="day_sunday">일</string>
+    
+    <!-- Buttons -->
+    <string name="btn_save">저장</string>
+    <string name="btn_cancel">취소</string>
+    <string name="btn_add">추가</string>
+    <string name="btn_delete">삭제</string>
+    <string name="btn_edit">편집</string>
+    
+    <!-- Messages -->
+    <string name="msg_alarm_saved">알람이 저장되었습니다.</string>
+    <string name="msg_alarm_deleted">알람이 삭제되었습니다.</string>
+    <string name="msg_no_alarms">등록된 알람이 없습니다.</string>
+    
+</resources>
