@@ -1,29 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    
     <item
         android:id="@+id/nav_alarm"
         android:icon="@drawable/ic_alarm"
         android:title="@string/nav_alarm" />
-    
     <item
         android:id="@+id/nav_custom_timer"
         android:icon="@drawable/ic_timer"
         android:title="@string/nav_timer" />
-    
     <item
         android:id="@+id/nav_sleep"
         android:icon="@drawable/ic_sleep"
         android:title="@string/nav_sleep" />
-    
     <item
         android:id="@+id/nav_report"
-        android:icon="@drawable/ic_report"
+        android:icon="@drawable/ic_alarm"
         android:title="@string/nav_report" />
-    
     <item
         android:id="@+id/nav_settings"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/ic_alarm"
         android:title="@string/nav_settings" />
-        
 </menu>

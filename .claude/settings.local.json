@@ -6,7 +6,12 @@
       "Bash(npm run android:*)",
       "Bash(./gradlew:*)",
       "Bash(curl:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(gradlew:*)",
+      "WebSearch",
+      "WebFetch(domain:m3.material.io)",
+      "WebFetch(domain:medium.com)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

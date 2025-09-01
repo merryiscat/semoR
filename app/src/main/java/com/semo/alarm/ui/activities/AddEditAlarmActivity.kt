@@ -57,6 +57,9 @@ class AddEditAlarmActivity : AppCompatActivity() {
     }
     
     private fun setupViews() {
+        // Custom NumberPicker TimePicker 설정
+        setupCustomTimePicker()
+        
         binding.buttonSave.setOnClickListener {
             saveAlarm()
         }
@@ -79,6 +82,82 @@ class AddEditAlarmActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
         })
+    }
+    
+    private fun setupCustomTimePicker() {
+        // AM/PM NumberPicker 설정
+        binding.amPmPicker.apply {
+            minValue = 0
+            maxValue = 1
+            displayedValues = arrayOf("AM", "PM")
+            wrapSelectorWheel = false
+        }
+        
+        // 시간 NumberPicker 설정 (1-12)
+        binding.hourPicker.apply {
+            minValue = 1
+            maxValue = 12
+            wrapSelectorWheel = true
+            
+            // 12→1 또는 1→12 변경 시 AM/PM 자동 전환
+            setOnValueChangedListener { _, oldVal, newVal ->
+                when {
+                    oldVal == 12 && newVal == 1 -> {
+                        // 12 → 1: AM/PM 전환
+                        binding.amPmPicker.value = if (binding.amPmPicker.value == 0) 1 else 0
+                    }
+                    oldVal == 1 && newVal == 12 -> {
+                        // 1 → 12: AM/PM 전환  
+                        binding.amPmPicker.value = if (binding.amPmPicker.value == 0) 1 else 0
+                    }
+                }
+            }
+        }
+        
+        // 분 NumberPicker 설정 (0-59)
+        binding.minutePicker.apply {
+            minValue = 0
+            maxValue = 59
+            wrapSelectorWheel = true
+            // 2자리 표시를 위한 formatter
+            setFormatter { value -> String.format("%02d", value) }
+            
+            // 59→00 또는 00→59 변경 시 시간 증감
+            setOnValueChangedListener { _, oldVal, newVal ->
+                when {
+                    oldVal == 59 && newVal == 0 -> {
+                        // 59분 → 00분: 시간 +1
+                        incrementHour()
+                    }
+                    oldVal == 0 && newVal == 59 -> {
+                        // 00분 → 59분: 시간 -1
+                        decrementHour()
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun incrementHour() {
+        val currentHour = binding.hourPicker.value
+        if (currentHour == 12) {
+            binding.hourPicker.value = 1
+            // 12 → 1이므로 AM/PM 전환
+            binding.amPmPicker.value = if (binding.amPmPicker.value == 0) 1 else 0
+        } else {
+            binding.hourPicker.value = currentHour + 1
+        }
+    }
+    
+    private fun decrementHour() {
+        val currentHour = binding.hourPicker.value
+        if (currentHour == 1) {
+            binding.hourPicker.value = 12
+            // 1 → 12이므로 AM/PM 전환
+            binding.amPmPicker.value = if (binding.amPmPicker.value == 0) 1 else 0
+        } else {
+            binding.hourPicker.value = currentHour - 1
+        }
     }
     
     private fun checkEditMode() {
@@ -104,15 +183,12 @@ class AddEditAlarmActivity : AppCompatActivity() {
     private fun populateFields(alarm: Alarm) {
         val (hour, minute) = alarm.getTimeAsHourMinute()
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.timePickerAlarm.hour = hour
-            binding.timePickerAlarm.minute = minute
-        } else {
-            @Suppress("DEPRECATION")
-            binding.timePickerAlarm.currentHour = hour
-            @Suppress("DEPRECATION")
-            binding.timePickerAlarm.currentMinute = minute
-        }
+        // 24시간 형식을 12시간 형식으로 변환
+        val (hour12, amPm) = convertTo12HourFormat(hour, minute)
+        
+        binding.amPmPicker.value = amPm
+        binding.hourPicker.value = hour12
+        binding.minutePicker.value = minute
         
         binding.editTextAlarmLabel.setText(alarm.label)
         binding.switchSnooze.isChecked = alarm.snoozeEnabled
@@ -126,25 +202,18 @@ class AddEditAlarmActivity : AppCompatActivity() {
     }
     
     private fun saveAlarm() {
-        val hour = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.timePickerAlarm.hour
-        } else {
-            @Suppress("DEPRECATION")
-            binding.timePickerAlarm.currentHour
-        }
+        // 12시간 형식을 24시간 형식으로 변환
+        val hour12 = binding.hourPicker.value
+        val minute = binding.minutePicker.value
+        val isAM = binding.amPmPicker.value == 0
         
-        val minute = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            binding.timePickerAlarm.minute
-        } else {
-            @Suppress("DEPRECATION")
-            binding.timePickerAlarm.currentMinute
-        }
+        val hour24 = convertTo24HourFormat(hour12, isAM)
         
-        val time = String.format("%02d:%02d", hour, minute)
+        val time = String.format("%02d:%02d", hour24, minute)
         val label = binding.editTextAlarmLabel.text.toString().trim()
         
         val selectedDays = dayChips.filter { it.value.isChecked }.keys.toList()
-        val daysString = if (selectedDays.isEmpty()) "once" else selectedDays.toString()
+        val daysString = if (selectedDays.isEmpty()) "once" else selectedDays.joinToString(",")
         val snoozeInterval = if (binding.seekBarSnooze.progress == 0) 1 else binding.seekBarSnooze.progress
         
         val alarm = if (isEditMode && currentAlarm != null) {
@@ -174,5 +243,30 @@ class AddEditAlarmActivity : AppCompatActivity() {
         
         Toast.makeText(this, getString(R.string.msg_alarm_saved), Toast.LENGTH_SHORT).show()
         finish()
+    }
+    
+    /**
+     * 24시간 형식을 12시간 형식으로 변환
+     * @return Pair<시간(1-12), AM/PM(0=AM, 1=PM)>
+     */
+    private fun convertTo12HourFormat(hour24: Int, minute: Int): Pair<Int, Int> {
+        return when {
+            hour24 == 0 -> Pair(12, 0) // 00:xx -> 12:xx AM
+            hour24 < 12 -> Pair(hour24, 0) // 01:xx~11:xx -> 1:xx~11:xx AM
+            hour24 == 12 -> Pair(12, 1) // 12:xx -> 12:xx PM
+            else -> Pair(hour24 - 12, 1) // 13:xx~23:xx -> 1:xx~11:xx PM
+        }
+    }
+    
+    /**
+     * 12시간 형식을 24시간 형식으로 변환
+     */
+    private fun convertTo24HourFormat(hour12: Int, isAM: Boolean): Int {
+        return when {
+            isAM && hour12 == 12 -> 0 // 12 AM -> 00
+            isAM -> hour12 // 1~11 AM -> 1~11
+            !isAM && hour12 == 12 -> 12 // 12 PM -> 12
+            else -> hour12 + 12 // 1~11 PM -> 13~23
+        }
     }
 }

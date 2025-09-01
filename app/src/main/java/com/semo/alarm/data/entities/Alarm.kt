@@ -49,14 +49,8 @@ data class Alarm(
     }
     
     fun getDaysAsList(): List<String> {
-        return if (days.isNotEmpty() && days != "daily") {
-            try {
-                days.removeSurrounding("[", "]")
-                    .split(",")
-                    .map { it.trim().removeSurrounding("'", "'") }
-            } catch (e: Exception) {
-                emptyList()
-            }
+        return if (days.isNotEmpty() && days != "daily" && days != "once") {
+            days.split(",").filter { it.isNotEmpty() }
         } else {
             emptyList()
         }

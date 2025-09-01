@@ -80,4 +80,9 @@
     <color name="shadow_light">#1A000000</color>
     <color name="shadow_medium">#33000000</color>
     <color name="overlay">#80000000</color>
+    
+    <!-- Neon Blue Highlight -->
+    <color name="neon_blue">#00D4FF</color>
+    <color name="neon_blue_glow">#4000D4FF</color>
+    <color name="neon_blue_bright">#80E0F0FF</color>
 </resources>

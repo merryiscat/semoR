@@ -57,29 +57,45 @@
                     android:padding="16dp">
 
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
+                        android:gravity="center_vertical">
 
+                        <!-- AM/PM을 맨 앞에 배치 -->
+                        <NumberPicker
+                            android:id="@+id/amPmPicker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="16dp"
+                            android:theme="@style/Material3NumberPickerTheme" />
+
+                        <!-- 시간 NumberPicker -->
+                        <NumberPicker
+                            android:id="@+id/hourPicker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:theme="@style/Material3NumberPickerTheme" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/alarm_time"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/md_theme_onSurface" />
+                            android:text=":"
+                            android:textSize="24sp"
+                            android:textColor="@color/md_theme_onSurface"
+                            android:layout_marginHorizontal="4dp" />
+
+                        <!-- 분 NumberPicker -->
+                        <NumberPicker
+                            android:id="@+id/minutePicker"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:theme="@style/Material3NumberPickerTheme" />
 
                     </LinearLayout>
-
-                    <TimePicker
-                        android:id="@+id/timePickerAlarm"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:timePickerMode="spinner" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

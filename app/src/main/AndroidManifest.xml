@@ -3,12 +3,17 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- 알람 관련 권한 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    
+    <!-- 알림 권한 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- 오디오 권한 (코골이 감지용) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:name=".SemoAlarmApplication"
@@ -19,13 +24,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SemoAlarm"
+        android:theme="@style/Theme.SemoR"
         tools:targetApi="31">
         
         <activity
             android:name=".ui.activities.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.SemoAlarm">
+            android:theme="@style/Theme.SemoR">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -47,12 +52,9 @@
         <receiver
             android:name=".receivers.BootReceiver"
             android:enabled="true"
-            android:exported="false">
-            <intent-filter android:priority="1000">
+            android:exported="true">
+            <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" />
             </intent-filter>
         </receiver>
 

@@ -75,15 +75,10 @@ set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
 
 :end
 @rem End local scope for the variables with windows NT shell
-if %ERRORLEVEL% equ 0 goto mainEnd
+if "%OS%"=="Windows_NT" endlocal
 
 :fail
 rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
-rem the _cmd_ return code if you want
-if not "" == "%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
-exit /b %EXIT_CODE%
-
-:mainEnd
-if "%OS%"=="Windows_NT" endlocal
-
-:end
+rem the _cmd_ return code
+if "%GRADLE_EXIT_CONSOLE%"=="1" exit /b 1
+exit /b 1
