@@ -52,6 +52,9 @@ class AlarmFragment : Fragment() {
             },
             onAlarmToggle = { alarm, isActive ->
                 viewModel.toggleAlarmStatus(alarm.id, isActive)
+            },
+            onAlarmDelete = { alarm ->
+                showDeleteConfirmDialog(alarm)
             }
         )
         
@@ -86,6 +89,17 @@ class AlarmFragment : Fragment() {
     private fun updateAlarmCount(count: Int) {
         val activeCount = count // 나중에 isActive로 필터링 가능
         binding.alarmCountText.text = "활성 알람 ${activeCount}개"
+    }
+    
+    private fun showDeleteConfirmDialog(alarm: Alarm) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("알람 삭제")
+            .setMessage("'${alarm.label.ifEmpty { "알람" }}'을(를) 삭제하시겠습니까?")
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteAlarm(alarm)
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
     
     override fun onDestroyView() {

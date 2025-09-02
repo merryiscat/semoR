@@ -11,7 +11,15 @@
       "WebSearch",
       "WebFetch(domain:m3.material.io)",
       "WebFetch(domain:medium.com)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(ver)",
+      "Bash(pip --version)",
+      "Bash(pipx:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(echo $VIRTUAL_ENV)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []

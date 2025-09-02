@@ -10,7 +10,8 @@ import com.semo.alarm.databinding.ItemAlarmBinding
 
 class AlarmAdapter(
     private val onAlarmClick: (Alarm) -> Unit,
-    private val onAlarmToggle: (Alarm, Boolean) -> Unit
+    private val onAlarmToggle: (Alarm, Boolean) -> Unit,
+    private val onAlarmDelete: (Alarm) -> Unit
 ) : ListAdapter<Alarm, AlarmAdapter.AlarmViewHolder>(AlarmDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AlarmViewHolder {
@@ -42,6 +43,13 @@ class AlarmAdapter(
                     onAlarmToggle(getItem(position), isChecked)
                 }
             }
+            
+            binding.btnDelete.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onAlarmDelete(getItem(position))
+                }
+            }
         }
 
         fun bind(alarm: Alarm) {
@@ -50,15 +58,15 @@ class AlarmAdapter(
             binding.textViewDays.text = formatDays(alarm.getDaysAsList())
             binding.switchAlarm.isChecked = alarm.isActive
             
-            // 활성화 상태에 따른 시각적 피드백
+            // 활성화 상태에 따른 시각적 피드백 - 세모알 아이덴티티 색상 적용
             val context = binding.root.context
             if (alarm.isActive) {
-                binding.accentBar.setBackgroundColor(context.getColor(com.semo.alarm.R.color.md_theme_primary))
+                binding.accentBar.setBackgroundColor(context.getColor(com.semo.alarm.R.color.neon_blue))
                 binding.textViewTime.alpha = 1.0f
                 binding.textViewLabel.alpha = 1.0f
                 binding.textViewDays.alpha = 1.0f
             } else {
-                binding.accentBar.setBackgroundColor(context.getColor(com.semo.alarm.R.color.inactive_alarm))
+                binding.accentBar.setBackgroundColor(context.getColor(com.semo.alarm.R.color.day_chip_off_bg))
                 binding.textViewTime.alpha = 0.6f
                 binding.textViewLabel.alpha = 0.6f
                 binding.textViewDays.alpha = 0.6f

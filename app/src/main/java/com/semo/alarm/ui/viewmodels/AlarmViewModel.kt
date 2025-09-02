@@ -77,4 +77,8 @@ class AlarmViewModel @Inject constructor(
     suspend fun getAlarmById(id: Int): Alarm? {
         return repository.getAlarmById(id)
     }
+    
+    suspend fun getAlarmCount(): Int {
+        return repository.getAlarmCount()
+    }
 }

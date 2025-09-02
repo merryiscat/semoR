@@ -29,10 +29,19 @@ class AlarmScheduler(private val context: Context) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
         
-        if (alarm.isRepeating()) {
-            scheduleRepeatingAlarm(alarm, pendingIntent)
-        } else {
-            scheduleOnceAlarm(alarm, pendingIntent)
+        when {
+            alarm.isCountRepeat() -> {
+                // 2회, 3회 반복 - 한 번만 스케줄링하고 AlarmReceiver에서 반복 처리
+                scheduleOnceAlarm(alarm, pendingIntent)
+            }
+            alarm.isRepeating() -> {
+                // 요일별 반복
+                scheduleRepeatingAlarm(alarm, pendingIntent)
+            }
+            else -> {
+                // 한 번만
+                scheduleOnceAlarm(alarm, pendingIntent)
+            }
         }
     }
     

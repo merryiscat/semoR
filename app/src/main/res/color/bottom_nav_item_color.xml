@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Selected state: Neon Blue -->
+    <item android:state_checked="true" android:color="@color/neon_blue" />
+    <!-- Unselected state: Deep Gray -->
+    <item android:color="@color/day_chip_off_bg" />
+</selector>

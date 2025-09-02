@@ -36,6 +36,15 @@ data class Alarm(
     @ColumnInfo(name = "snooze_interval")
     val snoozeInterval: Int = 5, // 분
     
+    @ColumnInfo(name = "vibration_enabled")
+    val vibrationEnabled: Boolean = true,
+    
+    @ColumnInfo(name = "silent_mode")
+    val silentMode: Boolean = false, // true면 진동만
+    
+    @ColumnInfo(name = "vibration_pattern")
+    val vibrationPattern: String = "default", // "short", "long", "pattern1" 등
+    
     @ColumnInfo(name = "created_at")
     val createdAt: Long = System.currentTimeMillis(),
     
@@ -49,7 +58,7 @@ data class Alarm(
     }
     
     fun getDaysAsList(): List<String> {
-        return if (days.isNotEmpty() && days != "daily" && days != "once") {
+        return if (days.isNotEmpty() && days != "daily" && days != "once" && days != "twice" && days != "thrice") {
             days.split(",").filter { it.isNotEmpty() }
         } else {
             emptyList()
@@ -57,10 +66,22 @@ data class Alarm(
     }
     
     fun isRepeating(): Boolean {
-        return days.isNotEmpty() && days != "once"
+        return days.isNotEmpty() && days != "once" && days != "twice" && days != "thrice"
     }
     
     fun isDailyAlarm(): Boolean {
         return days == "daily"
+    }
+    
+    fun isCountRepeat(): Boolean {
+        return days == "twice" || days == "thrice"
+    }
+    
+    fun getRepeatCount(): Int {
+        return when (days) {
+            "twice" -> 2
+            "thrice" -> 3
+            else -> 1
+        }
     }
 }

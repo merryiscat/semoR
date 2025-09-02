@@ -59,4 +59,33 @@
         <item name="android:textColorPrimary">@color/md_theme_onSurface</item>
         <item name="android:textSize">18sp</item>
     </style>
+
+    <!-- Custom Day Chip Styles -->
+    <style name="DayChipStyle" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/day_chip_off_bg</item>
+        <item name="android:textColor">@color/day_chip_off_text</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="android:checkable">true</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="closeIconVisible">false</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:minHeight">32dp</item>
+    </style>
+
+    <!-- SemoR Identity Switch Style -->
+    <style name="SemoRSwitchStyle" parent="Widget.Material3.CompoundButton.MaterialSwitch">
+        <item name="materialThemeOverlay">@style/SemoRSwitchOverlay</item>
+    </style>
+
+    <style name="SemoRSwitchOverlay">
+        <!-- ON 상태 색상 -->
+        <item name="colorPrimary">@color/neon_blue</item>
+        <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+        
+        <!-- OFF 상태 색상 -->
+        <item name="colorSurface">@color/switch_track_off</item>      <!-- track 색상 -->
+        <item name="colorOnSurface">@color/switch_thumb_off</item>    <!-- thumb 색상 -->
+        <item name="colorOutline">@color/switch_track_off</item>      <!-- outline 색상 -->
+    </style>
 </resources>
