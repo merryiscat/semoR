@@ -6,16 +6,23 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.receivers.AlarmReceiver
 import java.util.*
 
 class AlarmScheduler(private val context: Context) {
     
+    companion object {
+        private const val TAG = "AlarmScheduler"
+    }
+    
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     
     @SuppressLint("ScheduleExactAlarm")
     fun scheduleAlarm(alarm: Alarm) {
+        Log.d(TAG, "Scheduling alarm: ID=${alarm.id}, Time=${alarm.time}, Active=${alarm.isActive}")
+        
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("alarm_id", alarm.id)
             putExtra("alarm", alarm)
@@ -47,6 +54,8 @@ class AlarmScheduler(private val context: Context) {
     
     private fun scheduleOnceAlarm(alarm: Alarm, pendingIntent: PendingIntent) {
         val calendar = getNextAlarmTime(alarm)
+        
+        Log.d(TAG, "Scheduling once alarm for ${alarm.time} at ${calendar.time}")
         
         try {
             when {

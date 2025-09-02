@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="?attr/colorSurface">
+
+    <!-- Empty State for when no templates exist -->
+    <LinearLayout
+        android:id="@+id/emptyStateLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="96dp"
+            android:layout_height="96dp"
+            android:src="@drawable/ic_timer"
+            android:layout_marginBottom="16dp"
+            app:tint="?attr/colorOnSurfaceVariant"
+            android:alpha="0.6" />
+
+        <TextView
+            android:id="@+id/emptyStateTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="아직 타이머가 없습니다"
+            android:textSize="18sp"
+            android:textColor="?attr/colorOnSurface"
+            android:layout_marginBottom="8dp"
+            style="@style/TextAppearance.Material3.BodyLarge" />
+
+        <TextView
+            android:id="@+id/emptyStateMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ 버튼을 눌러 새 타이머를 만들어보세요"
+            android:textSize="14sp"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textAlignment="center"
+            style="@style/TextAppearance.Material3.BodyMedium" />
+
+    </LinearLayout>
+
+    <!-- RecyclerView for Templates -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewTemplates"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:padding="8dp"
+        tools:listitem="@layout/item_timer_template"
+        tools:itemCount="5" />
+
+</LinearLayout>

@@ -504,3 +504,125 @@ CREATE TABLE settings (
 - **편집 모드**: 기존 알람의 모든 소리/진동 설정 완벽 복원
 
 **현재 상태**: **완전히 작동하는 MVP 알람 앱**이 완성되었으며, 세모알만의 독창적인 브랜드 아이덴티티와 혁신적인 볼륨-진동 모드 시스템을 제공합니다! 🎉✨
+
+---
+
+## 🔄 **Phase 7: 사용자 정의 카테고리 시스템 개발**
+
+### 📋 **개발 배경 및 목표**
+기존 고정 카테고리 시스템(운동, 요리, 학습, 음료)에서 **사용자가 자유롭게 카테고리를 생성하고 관리할 수 있는 동적 시스템**으로 전환
+
+### 🎯 **새로운 시스템 설계**
+
+#### **1. 기존 시스템의 한계**
+- 카테고리가 하드코딩된 4개로 고정
+- 사용자가 원하는 카테고리 추가 불가
+- "홈트레이닝", "베이킹", "독서" 등 세분화된 카테고리 지원 불가
+
+#### **2. 새로운 시스템의 장점**
+- **완전한 사용자 정의**: 원하는 카테고리 무제한 추가
+- **개인화**: 개인의 생활 패턴에 맞는 맞춤형 카테고리
+- **확장성**: 아이콘, 색상, 설명 등 풍부한 커스터마이징
+
+### 🏗️ **데이터베이스 아키텍처 개선**
+
+#### **새로운 엔티티: TimerCategory**
+```kotlin
+@Entity(tableName = "timer_categories")
+data class TimerCategory(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val name: String,                    // "홈트레이닝", "베이킹", "독서" 등
+    val icon: String = "⏰",             // 이모지 아이콘 (24개 옵션)
+    val color: String = "#3B82F6",      // 카테고리 색상 (15개 색상 옵션)
+    val description: String = "",        // 카테고리 설명
+    val isDefault: Boolean = false,      // 기본 제공 vs 사용자 생성
+    val sortOrder: Int = 0,             // 표시 순서
+    val createdBy: String = "user",     // "system" 또는 "user"
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+)
+```
+
+#### **TimerTemplate 구조 변경**
+```kotlin
+// Before: 문자열 기반 카테고리
+val category: String // "exercise", "cooking", "study", "drink"
+
+// After: 정규화된 외래키 관계
+val categoryId: Int // TimerCategory ID 참조
+```
+
+### 📊 **데이터베이스 마이그레이션 (v3 → v4)**
+
+#### **마이그레이션 전략**
+1. **timer_categories 테이블 생성**
+2. **기본 4개 카테고리 자동 생성** (운동🏃, 요리👨‍🍳, 학습📚, 음료☕)
+3. **timer_templates 테이블 재구성**
+   - 기존 테이블 백업
+   - 새로운 스키마로 테이블 재생성 
+   - 카테고리 문자열 → ID 매핑으로 데이터 마이그레이션
+4. **외래키 제약조건 및 인덱스 생성**
+
+#### **카테고리 매핑**
+```sql
+CASE category
+    WHEN 'exercise' THEN 1  -- 🏃 운동
+    WHEN 'cooking' THEN 2   -- 👨‍🍳 요리
+    WHEN 'study' THEN 3     -- 📚 학습
+    WHEN 'drink' THEN 4     -- ☕ 음료
+    ELSE 1
+END
+```
+
+### 🎨 **UI/UX 개선사항**
+
+#### **CustomTimerFragment 구조 변경**
+- **동적 탭**: 하드코딩된 탭 → 데이터베이스 기반 동적 탭
+- **카테고리 관리**: + 버튼으로 카테고리 추가/편집 기능
+- **템플릿별 관리**: 각 카테고리 내에서 타이머 템플릿 추가/편집
+
+#### **새로운 컴포넌트**
+- **TimerCategoryDao**: 카테고리 CRUD 작업
+- **CategoryWithTemplateCount**: 카테고리별 템플릿 개수 조회
+- **TimerCategoryPagerAdapter**: 동적 카테고리 탭 관리
+
+### 🔧 **구현 완료 사항**
+
+#### **✅ 데이터 레이어**
+- `TimerCategory` 엔티티 완성
+- `TimerCategoryDao` 모든 CRUD 작업 구현
+- `TimerTemplate` 구조 변경 (`category` → `categoryId`)
+- 데이터베이스 마이그레이션 v3 → v4 완성
+- `DefaultTimerTemplates` 새로운 구조로 재작성 (10개 핵심 템플릿)
+
+#### **✅ Repository 레이어**
+- `TimerRepository` categoryId 기반으로 수정
+- 통계 쿼리 타입 안정성 개선 (Map<String, Any> → 전용 데이터 클래스)
+
+#### **✅ UI 레이어**
+- `TimerCategoryFragment` categoryId 기반으로 수정
+- `TimerCategoryPagerAdapter` 동적 카테고리 지원
+- `CustomTimerViewModel` categoryId 파라미터 지원
+- `TimerTemplateAdapter` 새로운 구조 대응
+
+### ⚠️ **현재 상태 및 이슈**
+
+#### **🔴 해결 필요한 문제**
+- **데이터베이스 마이그레이션 오류**: 스키마 불일치로 앱 크래시
+- **UI 연결 미완성**: 카테고리 아이콘/색상 표시 로직 필요
+- **카테고리 관리 UI 부재**: 사용자가 카테고리 추가/편집할 수 있는 화면 필요
+
+#### **🟡 남은 작업**
+1. **데이터베이스 마이그레이션 안정화**
+2. **카테고리 관리 화면 구현**
+3. **동적 탭 시스템 완성**
+4. **템플릿 생성/편집 기능 추가**
+5. **아이콘/색상 선택 UI 구현**
+
+### 🎯 **다음 단계**
+1. **마이그레이션 오류 해결** → 앱 안정성 확보
+2. **카테고리 관리 UI 구현** → 사용자 경험 완성
+3. **동적 시스템 테스트** → 전체 기능 검증
+
+**목표**: 사용자가 "홈트레이닝 🏠", "베이킹 🧁", "독서 📖" 등 원하는 카테고리를 자유롭게 생성하고, 각 카테고리에 맞춤형 타이머를 추가할 수 있는 완전한 개인화 시스템 구축

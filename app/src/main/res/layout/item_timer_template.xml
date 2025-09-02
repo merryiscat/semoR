@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeWidth="0dp"
+    style="@style/Widget.Material3.CardView.Elevated">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <!-- Template Icon/Category Indicator -->
+        <LinearLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_circle_primary"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvCategoryIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:textColor="?attr/colorOnPrimary"
+                android:textStyle="bold"
+                tools:text="🏃" />
+
+        </LinearLayout>
+
+        <!-- Template Info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvTemplateName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"
+                style="@style/TextAppearance.Material3.BodyLarge"
+                tools:text="타바타 운동" />
+
+            <TextView
+                android:id="@+id/tvTemplateDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:layout_marginBottom="8dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                style="@style/TextAppearance.Material3.BodyMedium"
+                tools:text="4분간 고강도 인터벌 트레이닝" />
+
+            <!-- Template Stats Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvDuration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorPrimary"
+                    android:drawablePadding="4dp"
+                    app:drawableStartCompat="@drawable/ic_timer"
+                    app:drawableTint="?attr/colorPrimary"
+                    style="@style/TextAppearance.Material3.LabelMedium"
+                    tools:text="4분" />
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="4dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginHorizontal="8dp"
+                    android:background="?attr/colorOnSurfaceVariant"
+                    android:alpha="0.5" />
+
+                <TextView
+                    android:id="@+id/tvUsageCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:drawablePadding="4dp"
+                    app:drawableStartCompat="@drawable/ic_play"
+                    app:drawableTint="?attr/colorOnSurfaceVariant"
+                    style="@style/TextAppearance.Material3.LabelMedium"
+                    tools:text="5회 사용" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Action Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnStartTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="시작"
+            android:textSize="14sp"
+            app:cornerRadius="8dp"
+            style="@style/Widget.Material3.Button.UnelevatedButton" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -3,6 +3,8 @@ package com.semo.alarm.di
 import android.content.Context
 import androidx.room.Room
 import com.semo.alarm.data.dao.AlarmDao
+import com.semo.alarm.data.dao.TimerTemplateDao
+import com.semo.alarm.data.dao.TimerRoundDao
 import com.semo.alarm.data.database.AlarmDatabase
 import dagger.Module
 import dagger.Provides
@@ -18,17 +20,21 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAlarmDatabase(@ApplicationContext context: Context): AlarmDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            AlarmDatabase::class.java,
-            "alarm_database"
-        )
-        .fallbackToDestructiveMigration()
-        .build()
+        return AlarmDatabase.getDatabase(context)
     }
     
     @Provides
     fun provideAlarmDao(database: AlarmDatabase): AlarmDao {
         return database.alarmDao()
+    }
+    
+    @Provides
+    fun provideTimerTemplateDao(database: AlarmDatabase): TimerTemplateDao {
+        return database.timerTemplateDao()
+    }
+    
+    @Provides
+    fun provideTimerRoundDao(database: AlarmDatabase): TimerRoundDao {
+        return database.timerRoundDao()
     }
 }

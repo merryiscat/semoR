@@ -61,15 +61,20 @@ class AlarmViewModel @Inject constructor(
     
     fun toggleAlarmStatus(id: Int, isActive: Boolean) {
         viewModelScope.launch {
-            repository.updateAlarmStatus(id, isActive)
-            
-            val alarm = repository.getAlarmById(id)
-            if (alarm != null) {
-                if (isActive) {
-                    alarmScheduler.scheduleAlarm(alarm.copy(isActive = true))
-                } else {
-                    alarmScheduler.cancelAlarm(id)
+            try {
+                repository.updateAlarmStatus(id, isActive)
+                
+                val alarm = repository.getAlarmById(id)
+                if (alarm != null) {
+                    if (isActive) {
+                        alarmScheduler.scheduleAlarm(alarm.copy(isActive = true))
+                    } else {
+                        alarmScheduler.cancelAlarm(id)
+                    }
                 }
+            } catch (e: Exception) {
+                // Log error but don't crash
+                e.printStackTrace()
             }
         }
     }
