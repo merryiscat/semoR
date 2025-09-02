@@ -17,13 +17,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- App Title -->
+    <!-- App Title with SemoR Identity Color -->
     <TextView
         android:id="@+id/appTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="SemoR"
-        android:textColor="@color/md_theme_onSurface"
+        android:textColor="@color/neon_blue"
         android:textSize="24sp"
         android:textStyle="bold"
         android:layout_marginTop="32dp"
@@ -41,7 +41,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bottom Navigation -->
+    <!-- Bottom Navigation with SemoR Identity Colors -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"
         android:layout_width="match_parent"
@@ -49,9 +49,9 @@
         android:background="@color/md_theme_surfaceContainerLow"
         android:elevation="8dp"
         app:menu="@menu/bottom_navigation_menu"
-        app:itemIconTint="@color/md_theme_primary"
-        app:itemTextColor="@color/md_theme_primary"
-        app:labelVisibilityMode="selected"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

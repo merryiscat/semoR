@@ -102,7 +102,7 @@
 
     </LinearLayout>
 
-    <!-- Beautiful FAB with Gradient -->
+    <!-- Beautiful FAB with SemoR Identity Color -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddAlarm"
         android:layout_width="wrap_content"
@@ -111,8 +111,8 @@
         android:layout_marginBottom="24dp"
         android:contentDescription="@string/btn_add"
         android:src="@drawable/ic_add"
-        android:backgroundTint="@color/md_theme_primary"
-        android:tint="@color/md_theme_onPrimary"
+        android:backgroundTint="@color/neon_blue"
+        android:tint="@color/day_chip_on_text"
         app:elevation="6dp"
         app:pressedTranslationZ="8dp"
         app:layout_constraintBottom_toBottomOf="parent"

@@ -78,6 +78,20 @@
             app:layout_constraintEnd_toStartOf="@+id/switchAlarm"
             tools:text="월, 화, 수, 목, 금" />
 
+        <!-- Delete Button (스위치 왼쪽) -->
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_close_white"
+            android:background="@drawable/delete_button_small"
+            android:contentDescription="알람 삭제"
+            android:scaleType="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/switchAlarm"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
         <!-- Switch -->
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchAlarm"
@@ -86,8 +100,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:thumbTint="@color/md_theme_onPrimary"
-            app:trackTint="@color/md_theme_primary" />
+            style="@style/SemoRSwitchStyle" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

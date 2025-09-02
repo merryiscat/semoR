@@ -85,4 +85,14 @@
     <color name="neon_blue">#00D4FF</color>
     <color name="neon_blue_glow">#4000D4FF</color>
     <color name="neon_blue_bright">#80E0F0FF</color>
+    
+    <!-- Day Chip Colors -->
+    <color name="day_chip_off_bg">#6B7280</color>        <!-- 회색 배경 -->
+    <color name="day_chip_off_text">#FFFFFF</color>      <!-- 흰색 폰트 -->
+    <color name="day_chip_on_bg">#00D4FF</color>         <!-- 네온 블루 배경 -->
+    <color name="day_chip_on_text">#000000</color>       <!-- 검은색 폰트 (가독성) -->
+    
+    <!-- Switch Thumb Colors -->
+    <color name="switch_thumb_off">#D1D5DB</color>       <!-- OFF 상태 thumb - 밝은 회색 -->
+    <color name="switch_track_off">#4B5563</color>       <!-- OFF 상태 track - 어두운 회색 -->
 </resources>

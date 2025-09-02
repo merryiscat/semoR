@@ -134,28 +134,55 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <!-- 제목 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="요일"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- 1줄: 한 번만, 2회 반복, 3회 반복 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="16dp">
+                        android:layout_marginBottom="12dp">
 
-
-                        <TextView
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOnce"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/alarm_repeat"
-                            android:textSize="18sp"
-                            android:textStyle="bold"
-                            android:textColor="@color/md_theme_onSurface" />
+                            android:text="한 번만"
+                            android:layout_marginEnd="8dp"
+                            android:checked="true"
+                            style="@style/DayChipStyle" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTwice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2회 반복"
+                            android:layout_marginEnd="8dp"
+                            style="@style/DayChipStyle" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipThrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="3회 반복"
+                            style="@style/DayChipStyle" />
 
                     </LinearLayout>
 
+                    <!-- 2줄: 요일 선택 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="12dp">
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipMon"
@@ -163,7 +190,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/day_monday"
                             android:layout_marginEnd="4dp"
-                            style="@style/Widget.Material3.Chip.Filter" />
+                            style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipTue"
@@ -171,7 +198,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/day_tuesday"
                             android:layout_marginEnd="4dp"
-                            style="@style/Widget.Material3.Chip.Filter" />
+                            style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipWed"
@@ -179,7 +206,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/day_wednesday"
                             android:layout_marginEnd="4dp"
-                            style="@style/Widget.Material3.Chip.Filter" />
+                            style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipThu"
@@ -187,15 +214,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/day_thursday"
                             android:layout_marginEnd="4dp"
-                            style="@style/Widget.Material3.Chip.Filter" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="8dp">
+                            style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipFri"
@@ -203,7 +222,7 @@
                             android:layout_height="wrap_content"
                             android:text="@string/day_friday"
                             android:layout_marginEnd="4dp"
-                            style="@style/Widget.Material3.Chip.Filter" />
+                            style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSat"
@@ -211,21 +230,49 @@
                             android:layout_height="wrap_content"
                             android:text="@string/day_saturday"
                             android:layout_marginEnd="4dp"
-                            style="@style/Widget.Material3.Chip.Filter" />
+                            style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSun"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/day_sunday"
-                            style="@style/Widget.Material3.Chip.Filter" />
+                            style="@style/DayChipStyle" />
+
+                    </LinearLayout>
+
+                    <!-- 3줄: 전체 선택 / 전체 해제 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnSelectAll"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
+                            android:text="전체 선택"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <Button
+                            android:id="@+id/btnDeselectAll"
+                            android:layout_width="0dp"
+                            android:layout_height="36dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:text="전체 해제"
+                            android:textSize="12sp"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
 
                     </LinearLayout>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 스누즈 설정 -->
+            <!-- 소리 & 진동 설정 -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -242,6 +289,81 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
+                    <!-- 제목 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="소리 &amp; 진동"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- 알람음 선택 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="알람음"
+                            android:textSize="16sp"
+                            android:textColor="@color/md_theme_onSurface" />
+
+                        <Button
+                            android:id="@+id/buttonSelectSound"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="기본 알람음"
+                            android:textSize="14sp"
+                            android:paddingHorizontal="16dp"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                    <!-- 볼륨 설정 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="볼륨"
+                            android:textSize="16sp"
+                            android:textColor="@color/md_theme_onSurface"
+                            android:layout_marginEnd="16dp" />
+
+                        <SeekBar
+                            android:id="@+id/seekBarVolume"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="100"
+                            android:progress="70" />
+
+                        <TextView
+                            android:id="@+id/textViewVolumePercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="70%"
+                            android:textSize="14sp"
+                            android:textColor="@color/md_theme_onSurface"
+                            android:layout_marginStart="8dp"
+                            android:minWidth="40dp"
+                            android:gravity="end" />
+
+                    </LinearLayout>
+
+                    <!-- 진동 모드 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -252,68 +374,30 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
+                            android:orientation="vertical">
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="@string/alarm_snooze"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
+                                android:text="진동 모드"
+                                android:textSize="16sp"
                                 android:textColor="@color/md_theme_onSurface" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="볼륨 0%일 때 자동 활성화"
+                                android:textSize="12sp"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:layout_marginTop="2dp" />
 
                         </LinearLayout>
 
                         <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchSnooze"
+                            android:id="@+id/switchVibrationMode"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:checked="true" />
-
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/layoutSnoozeInterval"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:layout_marginTop="8dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="@string/alarm_snooze_interval"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:id="@+id/textViewSnoozeValue"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="5분"
-                                android:textSize="14sp"
-                                android:layout_marginStart="8dp" />
-
-                        </LinearLayout>
-
-                        <SeekBar
-                            android:id="@+id/seekBarSnooze"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:max="15"
-                            android:progress="5"
-                            android:progressBackgroundTint="?attr/colorOutlineVariant"
-                            android:progressTint="?attr/colorPrimary"
-                            android:thumbTint="?attr/colorPrimary" />
+                            style="@style/SemoRSwitchStyle" />
 
                     </LinearLayout>
 
@@ -349,7 +433,8 @@
                     android:text="@string/btn_save"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:backgroundTint="@color/md_theme_primary"
+                    android:backgroundTint="@color/neon_blue"
+                    android:textColor="@color/day_chip_on_text"
                     app:cornerRadius="16dp" />
 
             </LinearLayout>

@@ -4,7 +4,7 @@
     
     <!-- Navigation -->
     <string name="nav_alarm">알람</string>
-    <string name="nav_timer">타이머</string>
+    <string name="nav_timer">커스텀</string>
     <string name="nav_sleep">수면</string>
     <string name="nav_report">리포트</string>
     <string name="nav_settings">설정</string>
