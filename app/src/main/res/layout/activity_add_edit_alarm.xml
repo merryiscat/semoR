@@ -186,56 +186,63 @@
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipMon"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_monday"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="2dp"
                             style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipTue"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_tuesday"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="2dp"
                             style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipWed"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_wednesday"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="2dp"
                             style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipThu"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_thursday"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="2dp"
                             style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipFri"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_friday"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="2dp"
                             style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSat"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_saturday"
-                            android:layout_marginEnd="4dp"
+                            android:layout_marginEnd="2dp"
                             style="@style/DayChipStyle" />
 
                         <com.google.android.material.chip.Chip
                             android:id="@+id/chipSun"
-                            android:layout_width="wrap_content"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:text="@string/day_sunday"
                             style="@style/DayChipStyle" />
 

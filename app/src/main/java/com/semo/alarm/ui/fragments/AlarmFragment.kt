@@ -72,17 +72,21 @@ class AlarmFragment : Fragment() {
     }
     
     private fun observeAlarms() {
-        viewModel.allAlarms.observe(viewLifecycleOwner) { alarms ->
-            alarmAdapter.submitList(alarms)
-            updateAlarmCount(alarms.size)
-            
-            if (alarms.isEmpty()) {
-                binding.emptyStateLayout.visibility = View.VISIBLE
-                binding.recyclerViewAlarms.visibility = View.GONE
-            } else {
-                binding.emptyStateLayout.visibility = View.GONE
-                binding.recyclerViewAlarms.visibility = View.VISIBLE
+        try {
+            viewModel.allAlarms.observe(viewLifecycleOwner) { alarms ->
+                alarmAdapter.submitList(alarms)
+                updateAlarmCount(alarms.size)
+                
+                if (alarms.isEmpty()) {
+                    binding.emptyStateLayout.visibility = View.VISIBLE
+                    binding.recyclerViewAlarms.visibility = View.GONE
+                } else {
+                    binding.emptyStateLayout.visibility = View.GONE
+                    binding.recyclerViewAlarms.visibility = View.VISIBLE
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
     
