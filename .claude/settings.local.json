@@ -19,7 +19,11 @@
       "Bash(node:*)",
       "Bash(npm:*)",
       "Bash(echo $VIRTUAL_ENV)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(git push:*)",
+      "Bash(where java)",
+      "Bash(java:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
