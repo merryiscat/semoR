@@ -5,45 +5,17 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
   
-  <!-- 세모알 로고 Safe Zone 최적화 -->
-  <group android:scaleX="0.55"
-      android:scaleY="0.55"
+  <!-- semoR 로고 이미지 중앙 배치 -->
+  <group android:scaleX="0.8"
+      android:scaleY="0.8"
       android:translateX="54"
-      android:translateY="54">
+      android:translateY="54"
+      android:pivotX="54"
+      android:pivotY="54">
     
-    <!-- Safe Zone(66x66) 내 완벽 배치된 세모알 로고 -->
-    
-    <!-- 메인 삼각형 틀 (더 굵은 선으로 명확하게) -->
-    <path android:fillColor="none"
-          android:strokeWidth="8"
-          android:strokeColor="#00D4FF"
-          android:strokeLineCap="round"
-          android:strokeLineJoin="round"
-          android:pathData="M54,15 L15,85 L93,85 Z"/>
-    
-    <!-- 내부 삼각형 틀 -->
-    <path android:fillColor="none"
-          android:strokeWidth="6"
-          android:strokeColor="#00D4FF"
-          android:strokeLineCap="round"
-          android:strokeLineJoin="round"
-          android:pathData="M54,30 L30,75 L78,75 Z"/>
-    
-    <!-- A 문자 (더 굵고 명확하게) -->
-    <path android:fillColor="none"
-          android:strokeWidth="6"
-          android:strokeColor="#00D4FF"
-          android:strokeLineCap="round"
-          android:strokeLineJoin="round"
-          android:pathData="M38,70 L38,52 L48,42 L58,52 L58,70 M42,58 L54,58"/>
-    
-    <!-- R 문자 (더 굵고 명확하게) -->
-    <path android:fillColor="none"
-          android:strokeWidth="6"
-          android:strokeColor="#00D4FF"
-          android:strokeLineCap="round"
-          android:strokeLineJoin="round"
-          android:pathData="M68,42 L68,78 M68,42 L78,42 L83,47 L83,54 L78,59 L68,59 M78,59 L88,78"/>
+    <!-- 배경 이미지로 PNG 로고 사용 -->
+    <path android:pathData="M-32,-32 L32,-32 L32,32 L-32,32 Z"
+          android:fillColor="@android:color/transparent"/>
           
   </group>
   
