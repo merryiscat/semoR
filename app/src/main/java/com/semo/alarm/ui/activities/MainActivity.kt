@@ -17,7 +17,6 @@ import com.semo.alarm.ui.fragments.ReportFragment
 import com.semo.alarm.ui.fragments.SettingsFragment
 import com.semo.alarm.ui.fragments.SleepFragment
 import com.semo.alarm.utils.PermissionManager
-import com.semo.alarm.utils.AlarmScheduler
 import com.semo.alarm.utils.NotificationAlarmManager
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,7 +25,6 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityMainBinding
     private lateinit var permissionManager: PermissionManager
-    private lateinit var alarmScheduler: AlarmScheduler
     private lateinit var notificationAlarmManager: NotificationAlarmManager
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,15 +36,12 @@ class MainActivity : AppCompatActivity() {
         // 권한 매니저 초기화
         initializePermissionManager()
         
-        // 알람 스케줄러 초기화
-        alarmScheduler = AlarmScheduler(this)
+        // 알람 매니저 초기화
         notificationAlarmManager = NotificationAlarmManager(this)
         
         // 권한 확인 및 요청
         checkAndRequestPermissions()
         
-        // 테스트 알람 추가 (개발/디버깅용)
-        addTestAlarmButton()
         
         setupBottomNavigation()
         
@@ -112,20 +107,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun addTestAlarmButton() {
-        // 새로운 알림 기반 테스트 알람 (30초 후)
-        binding.fabTestAlarm.setOnClickListener {
-            android.util.Log.d("MainActivity", "🔔 NEW Test alarm button clicked")
-            notificationAlarmManager.scheduleTestAlarm()
-            android.widget.Toast.makeText(this, "🔔 새로운 방식 테스트 알람이 30초 후 울립니다!\n로그캣을 확인하세요.", android.widget.Toast.LENGTH_LONG).show()
-        }
-        
-        // 기존 방식도 유지 (비교용)
-        binding.root.setOnLongClickListener {
-            android.util.Log.d("MainActivity", "🕐 OLD Long click detected - scheduling test alarm")
-            alarmScheduler.scheduleTestAlarm()
-            android.widget.Toast.makeText(this, "🕐 기존 방식 테스트 알람이 1분 후 울립니다", android.widget.Toast.LENGTH_LONG).show()
-            true
-        }
-    }
 }

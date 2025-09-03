@@ -45,6 +45,16 @@
             android:exported="false"
             android:parentActivityName=".ui.activities.MainActivity" />
 
+        <activity
+            android:name=".ui.activities.AddEditCategoryActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
+        <activity
+            android:name=".ui.activities.TimerListActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity" />
+
         <!-- 알람 수신자 -->
         <receiver
             android:name=".receivers.AlarmReceiver"

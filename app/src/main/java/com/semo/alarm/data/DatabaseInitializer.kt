@@ -2,6 +2,7 @@ package com.semo.alarm.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.repositories.TimerRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +20,7 @@ class DatabaseInitializer @Inject constructor(
     companion object {
         private const val PREF_NAME = "timer_templates_prefs"
         private const val KEY_DEFAULT_TEMPLATES_INITIALIZED = "default_templates_initialized"
+        private const val KEY_DEFAULT_CATEGORIES_INITIALIZED = "default_categories_initialized"
     }
     
     private val sharedPrefs: SharedPreferences by lazy {
@@ -26,10 +28,15 @@ class DatabaseInitializer @Inject constructor(
     }
     
     /**
-     * 앱 시작 시 기본 템플릿들을 확인하고 필요시 초기화
+     * 앱 시작 시 기본 카테고리와 템플릿들을 확인하고 필요시 초기화
      */
-    fun initializeDefaultTemplatesIfNeeded() {
+    fun initializeDefaultDataIfNeeded() {
         CoroutineScope(Dispatchers.IO).launch {
+            if (!isDefaultCategoriesInitialized()) {
+                initializeDefaultCategories()
+                markDefaultCategoriesInitialized()
+            }
+            
             if (!isDefaultTemplatesInitialized()) {
                 initializeDefaultTemplates()
                 markDefaultTemplatesInitialized()
@@ -38,13 +45,22 @@ class DatabaseInitializer @Inject constructor(
     }
     
     /**
-     * 강제로 기본 템플릿들을 다시 초기화 (개발/테스트용)
+     * 강제로 기본 데이터들을 다시 초기화 (개발/테스트용)
      */
-    fun reinitializeDefaultTemplates() {
+    fun reinitializeDefaultData() {
         CoroutineScope(Dispatchers.IO).launch {
+            initializeDefaultCategories()
             initializeDefaultTemplates()
+            markDefaultCategoriesInitialized()
             markDefaultTemplatesInitialized()
         }
+    }
+    
+    /**
+     * 기본 카테고리 초기화 여부 확인
+     */
+    private fun isDefaultCategoriesInitialized(): Boolean {
+        return sharedPrefs.getBoolean(KEY_DEFAULT_CATEGORIES_INITIALIZED, false)
     }
     
     /**
@@ -52,6 +68,15 @@ class DatabaseInitializer @Inject constructor(
      */
     private fun isDefaultTemplatesInitialized(): Boolean {
         return sharedPrefs.getBoolean(KEY_DEFAULT_TEMPLATES_INITIALIZED, false)
+    }
+    
+    /**
+     * 기본 카테고리 초기화 완료 표시
+     */
+    private fun markDefaultCategoriesInitialized() {
+        sharedPrefs.edit()
+            .putBoolean(KEY_DEFAULT_CATEGORIES_INITIALIZED, true)
+            .apply()
     }
     
     /**
@@ -64,7 +89,29 @@ class DatabaseInitializer @Inject constructor(
     }
     
     /**
-     * 실제 기본 템플릿들을 데이터베이스에 삽입
+     * 기본 카테고리들을 데이터베이스에 삽입
+     */
+    private suspend fun initializeDefaultCategories() {
+        try {
+            val defaultCategories = TimerCategory.getDefaultCategories()
+            
+            defaultCategories.forEach { category ->
+                try {
+                    timerRepository.insertCategory(category)
+                } catch (e: Exception) {
+                    android.util.Log.e("DatabaseInitializer", "Failed to insert category: ${category.name}", e)
+                }
+            }
+            
+            android.util.Log.d("DatabaseInitializer", "Default categories initialized successfully. Total: ${defaultCategories.size}")
+            
+        } catch (e: Exception) {
+            android.util.Log.e("DatabaseInitializer", "Failed to initialize default categories", e)
+        }
+    }
+    
+    /**
+     * 기본 템플릿들을 데이터베이스에 삽입
      */
     private suspend fun initializeDefaultTemplates() {
         try {
@@ -88,38 +135,29 @@ class DatabaseInitializer @Inject constructor(
     }
     
     /**
-     * 카테고리별 템플릿 개수 확인
+     * 기본 카테고리 템플릿 개수 확인
      */
     suspend fun getTemplateCounts(): Map<String, Int> {
         return mapOf(
-            "exercise" to DefaultTimerTemplates.getExerciseTemplates().size,
-            "cooking" to DefaultTimerTemplates.getCookingTemplates().size,
-            "study" to DefaultTimerTemplates.getStudyTemplates().size,
-            "drink" to DefaultTimerTemplates.getDrinkTemplates().size
+            "basic" to DefaultTimerTemplates.getBasicTemplates().size
         )
     }
     
     /**
-     * 특정 카테고리의 기본 템플릿만 초기화
+     * 기본 카테고리의 템플릿들만 초기화
      */
-    suspend fun initializeCategoryTemplates(category: String) {
+    suspend fun initializeBasicTemplates() {
         try {
-            val templates = when (category) {
-                "exercise" -> DefaultTimerTemplates.getExerciseTemplates()
-                "cooking" -> DefaultTimerTemplates.getCookingTemplates()
-                "study" -> DefaultTimerTemplates.getStudyTemplates()
-                "drink" -> DefaultTimerTemplates.getDrinkTemplates()
-                else -> emptyList()
-            }
+            val templates = DefaultTimerTemplates.getBasicTemplates()
             
             templates.forEach { (template, rounds) ->
                 timerRepository.insertTemplateWithRounds(template, rounds)
             }
             
-            android.util.Log.d("DatabaseInitializer", "Category '$category' templates initialized: ${templates.size}")
+            android.util.Log.d("DatabaseInitializer", "Basic templates initialized: ${templates.size}")
             
         } catch (e: Exception) {
-            android.util.Log.e("DatabaseInitializer", "Failed to initialize $category templates", e)
+            android.util.Log.e("DatabaseInitializer", "Failed to initialize basic templates", e)
         }
     }
     
@@ -129,6 +167,7 @@ class DatabaseInitializer @Inject constructor(
     fun resetInitializationState() {
         sharedPrefs.edit()
             .remove(KEY_DEFAULT_TEMPLATES_INITIALIZED)
+            .remove(KEY_DEFAULT_CATEGORIES_INITIALIZED)
             .apply()
         
         android.util.Log.d("DatabaseInitializer", "Initialization state reset")
@@ -139,10 +178,12 @@ class DatabaseInitializer @Inject constructor(
      */
     suspend fun getInitializationInfo(): Map<String, Any> {
         return mapOf(
-            "isInitialized" to isDefaultTemplatesInitialized(),
+            "categoriesInitialized" to isDefaultCategoriesInitialized(),
+            "templatesInitialized" to isDefaultTemplatesInitialized(),
             "templateCounts" to getTemplateCounts(),
             "totalTemplates" to DefaultTimerTemplates.getAllDefaultTemplates().size,
-            "categories" to listOf("exercise", "cooking", "study", "drink")
+            "totalCategories" to TimerCategory.getDefaultCategories().size,
+            "categories" to listOf("basic")
         )
     }
 }

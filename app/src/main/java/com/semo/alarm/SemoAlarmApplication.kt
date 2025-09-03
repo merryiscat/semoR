@@ -14,7 +14,7 @@ class SemoAlarmApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         
-        // 기본 타이머 템플릿들 초기화
-        databaseInitializer.initializeDefaultTemplatesIfNeeded()
+        // 기본 카테고리 및 타이머 템플릿들 초기화
+        databaseInitializer.initializeDefaultDataIfNeeded()
     }
 }
