@@ -110,35 +110,6 @@ class NotificationAlarmManager(private val context: Context) {
         notificationManager.cancel(NOTIFICATION_ID_BASE + alarmId)
     }
     
-    /**
-     * 테스트 알람 (30초 후)
-     */
-    fun scheduleTestAlarm() {
-        Log.d(TAG, "Scheduling test notification alarm in 30 seconds...")
-        
-        val testAlarm = Alarm(
-            id = 99999,
-            time = "00:00",
-            label = "🔔 테스트 알람",
-            isActive = true,
-            volume = 0.8f,
-            vibrationEnabled = true
-        )
-        
-        val targetTime = System.currentTimeMillis() + 30000 // 30초 후
-        val notificationIntent = createAlarmNotificationIntent(testAlarm)
-        
-        try {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                targetTime,
-                notificationIntent
-            )
-            Log.d(TAG, "Test notification alarm scheduled for ${Date(targetTime)}")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to schedule test notification alarm", e)
-        }
-    }
     
     /**
      * 알람 알림을 직접 표시하는 PendingIntent 생성

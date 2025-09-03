@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -54,6 +55,7 @@ class TimerCategoryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         setupRecyclerView()
+        setupFab()
         observeTemplates()
         
         // Load templates for this category
@@ -73,6 +75,23 @@ class TimerCategoryFragment : Fragment() {
         }
     }
     
+    private fun setupFab() {
+        binding.fabAddTimer.setOnClickListener {
+            categoryId?.let { id ->
+                Toast.makeText(
+                    context,
+                    "카테고리 ID $id 에 새 타이머 추가 기능은 개발 중입니다",
+                    Toast.LENGTH_SHORT
+                ).show()
+                
+                // TODO: 타이머 생성 화면으로 이동
+                // val intent = Intent(requireContext(), AddEditTimerActivity::class.java)
+                // intent.putExtra("categoryId", id)
+                // startActivity(intent)
+            }
+        }
+    }
+    
     private fun observeTemplates() {
         viewModel.templates.observe(viewLifecycleOwner) { templates ->
             if (templates.isEmpty()) {
@@ -88,16 +107,8 @@ class TimerCategoryFragment : Fragment() {
         binding.recyclerViewTemplates.visibility = View.GONE
         
         // Set category-specific empty state message
-        val categoryName = when(categoryId) {
-            1 -> "운동"
-            2 -> "요리" 
-            3 -> "학습"
-            4 -> "음료"
-            else -> "이 카테고리"
-        }
-        
-        binding.emptyStateTitle.text = "${categoryName} 타이머가 없습니다"
-        binding.emptyStateMessage.text = "+ 버튼을 눌러 새로운 ${categoryName} 타이머를 만들어보세요"
+        binding.emptyStateTitle.text = "아직 타이머가 없습니다"
+        binding.emptyStateMessage.text = "+ 버튼을 눌러 새 타이머를 만들어보세요"
     }
     
     private fun showTemplates(templates: List<TimerTemplate>) {

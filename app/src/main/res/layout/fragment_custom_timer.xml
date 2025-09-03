@@ -1,60 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="?attr/colorSurface"
+    android:background="@color/md_theme_background"
     tools:context=".ui.fragments.CustomTimerFragment">
 
-    <!-- Header with Title -->
+    <!-- Header Section (알람과 동일한 구조) -->
     <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
-        android:gravity="center_vertical">
-        
-        <TextView
+        android:padding="20dp"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="커스텀 타이머"
-            android:textSize="24sp"
-            android:textColor="?attr/colorOnSurface"
-            style="@style/TextAppearance.Material3.HeadlineSmall" />
-            
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabAddCustomTimer"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="커스텀 타이머"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/md_theme_onBackground" />
+
+            <TextView
+                android:id="@+id/categoryCountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="카테고리 0개"
+                android:textSize="14sp"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                android:layout_marginTop="2dp" />
+
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_add"
-            android:contentDescription="새 커스텀 타이머 추가"
-            app:fabSize="normal"
-            app:tint="?attr/colorOnPrimary" />
+            android:text="카테고리+"
+            android:textSize="12sp"
+            style="@style/Widget.Material3.Button.OutlinedButton" />
+
     </LinearLayout>
 
-    <!-- Category Tabs -->
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        app:tabMode="fixed"
-        app:tabGravity="fill"
-        app:tabIndicatorColor="?attr/colorPrimary"
-        app:tabTextColor="?attr/colorOnSurfaceVariant"
-        app:tabSelectedTextColor="?attr/colorPrimary"
-        app:tabIndicatorHeight="3dp"
-        style="@style/Widget.Material3.TabLayout" />
-
-    <!-- ViewPager for Category Content -->
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/viewPager"
+    <!-- Categories RecyclerView (알람과 동일한 구조) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewCategories"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="8dp" />
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@+id/headerLayout"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_category" />
 
-</LinearLayout>
+    <!-- Empty State (알람과 동일한 구조) -->
+    <LinearLayout
+        android:id="@+id/emptyStateLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_timer"
+            android:alpha="0.3"
+            app:tint="@color/md_theme_onSurfaceVariant" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="설정된 카테고리가 없습니다"
+            android:textSize="16sp"
+            android:textColor="@color/md_theme_onSurfaceVariant"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="첫 번째 카테고리를 추가해보세요"
+            android:textSize="14sp"
+            android:textColor="@color/md_theme_onSurfaceVariant"
+            android:alpha="0.7"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

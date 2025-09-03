@@ -1,5 +1,6 @@
 package com.semo.alarm.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -7,9 +8,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.google.android.material.tabs.TabLayoutMediator
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.databinding.FragmentCustomTimerBinding
-import com.semo.alarm.ui.adapters.TimerCategoryPagerAdapter
+import com.semo.alarm.ui.activities.AddEditCategoryActivity
+import com.semo.alarm.ui.activities.TimerListActivity
+import com.semo.alarm.ui.adapters.CategoryListAdapter
 import com.semo.alarm.ui.viewmodels.CustomTimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -20,7 +23,7 @@ class CustomTimerFragment : Fragment() {
     private val binding get() = _binding!!
     
     private val viewModel: CustomTimerViewModel by viewModels()
-    private lateinit var pagerAdapter: TimerCategoryPagerAdapter
+    private lateinit var categoryAdapter: CategoryListAdapter
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -34,56 +37,38 @@ class CustomTimerFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupViewPager()
-        setupTabLayout()
-        setupFab()
+        setupRecyclerView()
+        setupAddCategoryButton()
         observeViewModel()
         
         // Load categories on start
         viewModel.loadAllCategories()
     }
     
-    private fun setupViewPager() {
-        pagerAdapter = TimerCategoryPagerAdapter(requireActivity())
-        binding.viewPager.adapter = pagerAdapter
+    override fun onResume() {
+        super.onResume()
+        // 카테고리 추가 후 돌아왔을 때 목록 새로고침
+        viewModel.loadAllCategories()
     }
     
-    private fun setupTabLayout() {
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            tab.text = pagerAdapter.getCategoryTitle(position)
-        }.attach()
+    private fun setupRecyclerView() {
+        categoryAdapter = CategoryListAdapter { category ->
+            // 카테고리 클릭 시 해당 카테고리의 타이머 목록 화면으로 이동
+            val intent = Intent(requireContext(), TimerListActivity::class.java)
+            intent.putExtra("category", category)
+            startActivity(intent)
+        }
+        
+        binding.recyclerViewCategories.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = categoryAdapter
+        }
     }
     
-    private fun setupFab() {
-        binding.fabAddCustomTimer.setOnClickListener {
-            if (pagerAdapter.isEmpty()) {
-                Toast.makeText(
-                    context,
-                    "먼저 카테고리를 불러와야 합니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-            
-            val currentPosition = binding.viewPager.currentItem
-            val currentCategory = pagerAdapter.getCategory(currentPosition)
-            
-            if (currentCategory != null) {
-                Toast.makeText(
-                    context,
-                    "${currentCategory.getDisplayName()} 타이머 추가 기능은 개발 중입니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-                
-                // Future implementation:
-                // showCreateCustomTimerDialog(currentCategory)
-            } else {
-                Toast.makeText(
-                    context,
-                    "카테고리 정보를 불러올 수 없습니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+    private fun setupAddCategoryButton() {
+        binding.btnAddCategory.setOnClickListener {
+            val intent = Intent(requireContext(), AddEditCategoryActivity::class.java)
+            startActivity(intent)
         }
     }
     
@@ -99,18 +84,24 @@ class CustomTimerFragment : Fragment() {
         // Observe categories
         viewModel.categories.observe(viewLifecycleOwner) { categories ->
             if (categories.isNotEmpty()) {
-                pagerAdapter.updateCategories(categories)
-                setupTabLayout() // Re-setup tabs with new categories
+                categoryAdapter.submitList(categories)
+                binding.emptyStateLayout.visibility = android.view.View.GONE
+                binding.recyclerViewCategories.visibility = android.view.View.VISIBLE
+                
+                // 카테고리 개수 업데이트 (알람과 동일한 방식)
+                binding.categoryCountText.text = "카테고리 ${categories.size}개"
             } else {
-                // Show empty state or error
-                Toast.makeText(context, "카테고리를 불러올 수 없습니다", Toast.LENGTH_SHORT).show()
+                // 카테고리가 없을 때 처리 (알람과 동일한 방식)
+                categoryAdapter.submitList(emptyList())
+                binding.emptyStateLayout.visibility = android.view.View.VISIBLE
+                binding.recyclerViewCategories.visibility = android.view.View.GONE
+                binding.categoryCountText.text = "카테고리 0개"
             }
         }
         
         // Observe loading state
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
             // TODO: Show/hide loading indicator if needed
-            // For now, we can just log or ignore
         }
     }
     

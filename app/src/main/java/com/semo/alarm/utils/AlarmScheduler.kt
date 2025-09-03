@@ -62,64 +62,6 @@ class AlarmScheduler(private val context: Context) {
         Log.d(TAG, "Alarm scheduled successfully for ${alarm.time}")
     }
     
-    /**
-     * 테스트용: 1분 후 울리는 알람 설정
-     */
-    fun scheduleTestAlarm() {
-        Log.d(TAG, "Scheduling test alarm in 1 minute...")
-        
-        val testAlarm = Alarm(
-            id = 99999,
-            time = "00:00",
-            label = "테스트 알람",
-            isActive = true
-        )
-        
-        val intent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra("alarm_id", testAlarm.id)
-            putExtra("alarm", testAlarm)
-        }
-        
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            testAlarm.id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        )
-        
-        val triggerTime = System.currentTimeMillis() + 60000 // 1분 후
-        
-        try {
-            when {
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerTime,
-                        pendingIntent
-                    )
-                }
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> {
-                    alarmManager.setExact(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerTime,
-                        pendingIntent
-                    )
-                }
-                else -> {
-                    @Suppress("DEPRECATION")
-                    alarmManager.set(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerTime,
-                        pendingIntent
-                    )
-                }
-            }
-            Log.d(TAG, "Test alarm scheduled for ${java.util.Date(triggerTime)}")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to schedule test alarm", e)
-        }
-    }
     
     private fun scheduleOnceAlarm(alarm: Alarm, pendingIntent: PendingIntent) {
         val calendar = getNextAlarmTime(alarm)

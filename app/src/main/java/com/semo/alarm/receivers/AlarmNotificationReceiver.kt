@@ -209,7 +209,11 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             Log.d(TAG, "Playing alarm sound with volume: ${alarm.volume}")
             
             val mediaPlayer = MediaPlayer().apply {
-                setDataSource(context, soundUri)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    setDataSource(context.createAttributionContext("alarm_sound"), soundUri)
+                } else {
+                    setDataSource(context, soundUri)
+                }
                 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     setAudioAttributes(
