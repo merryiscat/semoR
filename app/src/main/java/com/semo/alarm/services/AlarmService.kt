@@ -10,6 +10,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.media.RingtoneManager
 import android.os.*
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.semo.alarm.R
 import com.semo.alarm.data.entities.Alarm
@@ -20,6 +21,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class AlarmService : Service() {
     
     companion object {
+        private const val TAG = "AlarmService"
         const val CHANNEL_ID = "alarm_channel"
         const val NOTIFICATION_ID = 1001
         const val ACTION_DISMISS = "action_dismiss"
@@ -32,6 +34,8 @@ class AlarmService : Service() {
     
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "AlarmService created")
+        
         createNotificationChannel()
         
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -44,12 +48,16 @@ class AlarmService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, "AlarmService onStartCommand: action=${intent?.action}")
+        
         when (intent?.action) {
             ACTION_DISMISS -> {
+                Log.d(TAG, "Dismiss alarm action received")
                 dismissAlarm()
                 return START_NOT_STICKY
             }
             ACTION_SNOOZE -> {
+                Log.d(TAG, "Snooze alarm action received")
                 snoozeAlarm()
                 return START_NOT_STICKY
             }
@@ -62,9 +70,13 @@ class AlarmService : Service() {
                     intent?.getParcelableExtra("alarm")
                 }
                 
+                Log.d(TAG, "Starting alarm: ID=$alarmId, Alarm=${alarm?.time}")
+                
                 if (alarm != null) {
                     currentAlarm = alarm
                     startAlarm(alarm)
+                } else {
+                    Log.e(TAG, "Received null alarm!")
                 }
             }
         }
@@ -75,21 +87,36 @@ class AlarmService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
     
     private fun startAlarm(alarm: Alarm) {
-        // Foreground 알림 시작
-        startForeground(NOTIFICATION_ID, createAlarmNotification(alarm))
+        Log.d(TAG, "Starting alarm: ${alarm.label} at ${alarm.time}")
         
-        // 알람음 재생
-        startAlarmSound(alarm)
-        
-        // 진동
-        startVibration()
-        
-        // 30초 후 자동 종료 (무한 재생 방지)
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (mediaPlayer?.isPlaying == true) {
-                dismissAlarm()
+        try {
+            // Foreground 알림 시작
+            Log.d(TAG, "Starting foreground notification")
+            startForeground(NOTIFICATION_ID, createAlarmNotification(alarm))
+            
+            // 알람음 재생
+            Log.d(TAG, "Starting alarm sound with volume: ${alarm.volume}")
+            startAlarmSound(alarm)
+            
+            // 진동
+            if (alarm.vibrationEnabled) {
+                Log.d(TAG, "Starting vibration")
+                startVibration()
+            } else {
+                Log.d(TAG, "Vibration disabled for this alarm")
             }
-        }, 30000)
+            
+            // 30초 후 자동 종료 (무한 재생 방지)
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (mediaPlayer?.isPlaying == true) {
+                    Log.d(TAG, "Auto-dismissing alarm after 30 seconds")
+                    dismissAlarm()
+                }
+            }, 30000)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting alarm", e)
+        }
     }
     
     private fun startAlarmSound(alarm: Alarm) {

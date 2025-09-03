@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.semo.alarm.data.entities.TimerTemplate
+import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.repositories.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -17,6 +18,9 @@ class CustomTimerViewModel @Inject constructor(
     
     private val _templates = MutableLiveData<List<TimerTemplate>>()
     val templates: LiveData<List<TimerTemplate>> get() = _templates
+    
+    private val _categories = MutableLiveData<List<TimerCategory>>()
+    val categories: LiveData<List<TimerCategory>> get() = _categories
     
     private val _loading = MutableLiveData<Boolean>()
     val loading: LiveData<Boolean> get() = _loading
@@ -122,5 +126,72 @@ class CustomTimerViewModel @Inject constructor(
     
     fun clearError() {
         _error.value = null
+    }
+    
+    // Category operations
+    fun loadAllCategories() {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                _error.value = null
+                
+                // Initialize default categories if needed
+                timerRepository.initializeDefaultCategoriesIfNeeded()
+                
+                timerRepository.getAllCategories().observeForever { categories ->
+                    _categories.value = categories ?: emptyList()
+                    _loading.value = false
+                }
+            } catch (e: Exception) {
+                _error.value = "카테고리를 불러오는데 실패했습니다: ${e.message}"
+                _loading.value = false
+                _categories.value = emptyList()
+            }
+        }
+    }
+    
+    suspend fun getCategoryById(id: Int): TimerCategory? {
+        return try {
+            timerRepository.getCategoryById(id)
+        } catch (e: Exception) {
+            _error.value = "카테고리 정보를 불러오는데 실패했습니다: ${e.message}"
+            null
+        }
+    }
+    
+    fun addCategory(category: TimerCategory) {
+        viewModelScope.launch {
+            try {
+                timerRepository.insertCategory(category)
+                // Refresh categories after adding
+                loadAllCategories()
+            } catch (e: Exception) {
+                _error.value = "카테고리 추가에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun updateCategory(category: TimerCategory) {
+        viewModelScope.launch {
+            try {
+                timerRepository.updateCategory(category)
+                // Refresh categories after updating
+                loadAllCategories()
+            } catch (e: Exception) {
+                _error.value = "카테고리 수정에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun deleteCategory(category: TimerCategory) {
+        viewModelScope.launch {
+            try {
+                timerRepository.deleteCategory(category)
+                // Refresh categories after deleting
+                loadAllCategories()
+            } catch (e: Exception) {
+                _error.value = "카테고리 삭제에 실패했습니다: ${e.message}"
+            }
+        }
     }
 }

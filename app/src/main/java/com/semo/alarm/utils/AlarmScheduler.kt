@@ -23,6 +23,14 @@ class AlarmScheduler(private val context: Context) {
     fun scheduleAlarm(alarm: Alarm) {
         Log.d(TAG, "Scheduling alarm: ID=${alarm.id}, Time=${alarm.time}, Active=${alarm.isActive}")
         
+        // 권한 체크
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!alarmManager.canScheduleExactAlarms()) {
+                Log.e(TAG, "Cannot schedule exact alarms - permission not granted!")
+                return
+            }
+        }
+        
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("alarm_id", alarm.id)
             putExtra("alarm", alarm)
@@ -49,6 +57,67 @@ class AlarmScheduler(private val context: Context) {
                 // 한 번만
                 scheduleOnceAlarm(alarm, pendingIntent)
             }
+        }
+        
+        Log.d(TAG, "Alarm scheduled successfully for ${alarm.time}")
+    }
+    
+    /**
+     * 테스트용: 1분 후 울리는 알람 설정
+     */
+    fun scheduleTestAlarm() {
+        Log.d(TAG, "Scheduling test alarm in 1 minute...")
+        
+        val testAlarm = Alarm(
+            id = 99999,
+            time = "00:00",
+            label = "테스트 알람",
+            isActive = true
+        )
+        
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            putExtra("alarm_id", testAlarm.id)
+            putExtra("alarm", testAlarm)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            testAlarm.id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+        
+        val triggerTime = System.currentTimeMillis() + 60000 // 1분 후
+        
+        try {
+            when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT -> {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
+                else -> {
+                    @Suppress("DEPRECATION")
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
+            }
+            Log.d(TAG, "Test alarm scheduled for ${java.util.Date(triggerTime)}")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to schedule test alarm", e)
         }
     }
     
@@ -165,6 +234,7 @@ class AlarmScheduler(private val context: Context) {
     }
     
     private fun getNextAlarmTime(alarm: Alarm): Calendar {
+        val now = System.currentTimeMillis()
         val calendar = Calendar.getInstance().apply {
             val (hour, minute) = alarm.getTimeAsHourMinute()
             set(Calendar.HOUR_OF_DAY, hour)
@@ -173,10 +243,17 @@ class AlarmScheduler(private val context: Context) {
             set(Calendar.MILLISECOND, 0)
         }
         
+        Log.d(TAG, "Current time: ${Calendar.getInstance().time}")
+        Log.d(TAG, "Target time: ${calendar.time}")
+        
         // 현재 시간보다 이전이면 다음 날로 설정
-        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+        if (calendar.timeInMillis <= now) {
             calendar.add(Calendar.DAY_OF_MONTH, 1)
+            Log.d(TAG, "Target time was in the past, moved to next day: ${calendar.time}")
         }
+        
+        val delayMs = calendar.timeInMillis - now
+        Log.d(TAG, "Alarm will trigger in ${delayMs / 1000} seconds")
         
         return calendar
     }

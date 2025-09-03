@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.semo.alarm.data.dao.AlarmDao
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.dao.TimerRoundDao
+import com.semo.alarm.data.dao.TimerCategoryDao
 import com.semo.alarm.data.database.AlarmDatabase
 import dagger.Module
 import dagger.Provides
@@ -36,5 +37,10 @@ object DatabaseModule {
     @Provides
     fun provideTimerRoundDao(database: AlarmDatabase): TimerRoundDao {
         return database.timerRoundDao()
+    }
+    
+    @Provides
+    fun provideTimerCategoryDao(database: AlarmDatabase): TimerCategoryDao {
+        return database.timerCategoryDao()
     }
 }
