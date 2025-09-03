@@ -3,16 +3,19 @@ package com.semo.alarm.data.repositories
 import androidx.lifecycle.LiveData
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.dao.TimerRoundDao
+import com.semo.alarm.data.dao.TimerCategoryDao
 import com.semo.alarm.data.entities.IntervalTimer
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.data.entities.TimerRound
+import com.semo.alarm.data.entities.TimerCategory
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TimerRepository @Inject constructor(
     private val templateDao: TimerTemplateDao,
-    private val roundDao: TimerRoundDao
+    private val roundDao: TimerRoundDao,
+    private val categoryDao: TimerCategoryDao
 ) {
     
     // Template operations
@@ -140,5 +143,49 @@ class TimerRepository @Inject constructor(
     
     suspend fun getCategoryStats(): List<com.semo.alarm.data.entities.CategoryStats> {
         return templateDao.getCategoryStats()
+    }
+    
+    // Category operations
+    fun getAllCategories(): LiveData<List<TimerCategory>> {
+        return categoryDao.getAllCategories()
+    }
+    
+    suspend fun getAllCategoriesSync(): List<TimerCategory> {
+        return categoryDao.getAllCategoriesSync()
+    }
+    
+    suspend fun getCategoryById(id: Int): TimerCategory? {
+        return categoryDao.getCategoryById(id)
+    }
+    
+    suspend fun insertCategory(category: TimerCategory): Long {
+        return categoryDao.insertCategory(category)
+    }
+    
+    suspend fun insertCategories(categories: List<TimerCategory>): List<Long> {
+        return categoryDao.insertCategories(categories)
+    }
+    
+    suspend fun updateCategory(category: TimerCategory) {
+        categoryDao.updateCategory(category)
+    }
+    
+    suspend fun deleteCategory(category: TimerCategory) {
+        categoryDao.deleteCategory(category)
+    }
+    
+    suspend fun getCategoriesWithTemplateCount(): List<com.semo.alarm.data.dao.CategoryWithTemplateCount> {
+        return categoryDao.getCategoriesWithTemplateCount()
+    }
+    
+    suspend fun getDefaultCategoryCount(): Int {
+        return categoryDao.getDefaultCategoryCount()
+    }
+    
+    // Initialize default categories if needed
+    suspend fun initializeDefaultCategoriesIfNeeded() {
+        if (getDefaultCategoryCount() == 0) {
+            insertCategories(TimerCategory.getDefaultCategories())
+        }
     }
 }
