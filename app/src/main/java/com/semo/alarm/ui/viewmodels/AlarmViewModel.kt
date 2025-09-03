@@ -6,7 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.data.repositories.AlarmRepository
-import com.semo.alarm.utils.AlarmScheduler
+import com.semo.alarm.utils.NotificationAlarmManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,7 +17,7 @@ class AlarmViewModel @Inject constructor(
     private val repository: AlarmRepository
 ) : AndroidViewModel(application) {
     
-    private val alarmScheduler = AlarmScheduler(application)
+    private val notificationAlarmManager = NotificationAlarmManager(application)
     
     val allAlarms: LiveData<List<Alarm>> = repository.getAllAlarms()
     val activeAlarms: LiveData<List<Alarm>> = repository.getActiveAlarms()
@@ -28,7 +28,7 @@ class AlarmViewModel @Inject constructor(
             val savedAlarm = alarm.copy(id = alarmId.toInt())
             
             if (savedAlarm.isActive) {
-                alarmScheduler.scheduleAlarm(savedAlarm)
+                notificationAlarmManager.scheduleAlarm(savedAlarm)
             }
         }
     }
@@ -38,9 +38,9 @@ class AlarmViewModel @Inject constructor(
             repository.updateAlarm(alarm)
             
             // 기존 알람 취소 후 재설정
-            alarmScheduler.cancelAlarm(alarm.id)
+            notificationAlarmManager.cancelAlarm(alarm.id)
             if (alarm.isActive) {
-                alarmScheduler.scheduleAlarm(alarm)
+                notificationAlarmManager.scheduleAlarm(alarm)
             }
         }
     }
@@ -48,14 +48,14 @@ class AlarmViewModel @Inject constructor(
     fun deleteAlarm(alarm: Alarm) {
         viewModelScope.launch {
             repository.deleteAlarm(alarm)
-            alarmScheduler.cancelAlarm(alarm.id)
+            notificationAlarmManager.cancelAlarm(alarm.id)
         }
     }
     
     fun deleteAlarmById(id: Int) {
         viewModelScope.launch {
             repository.deleteAlarmById(id)
-            alarmScheduler.cancelAlarm(id)
+            notificationAlarmManager.cancelAlarm(id)
         }
     }
     
@@ -67,9 +67,9 @@ class AlarmViewModel @Inject constructor(
                 val alarm = repository.getAlarmById(id)
                 if (alarm != null) {
                     if (isActive) {
-                        alarmScheduler.scheduleAlarm(alarm.copy(isActive = true))
+                        notificationAlarmManager.scheduleAlarm(alarm.copy(isActive = true))
                     } else {
-                        alarmScheduler.cancelAlarm(id)
+                        notificationAlarmManager.cancelAlarm(id)
                     }
                 }
             } catch (e: Exception) {
