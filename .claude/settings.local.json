@@ -30,7 +30,8 @@
       "Bash(convert:*)",
       "Bash(adb uninstall:*)",
       "Bash(del DefaultTimerTemplates.kt)",
-      "Bash(ren:*)"
+      "Bash(ren:*)",
+      "Bash(.gradlew build)"
     ],
     "deny": [],
     "ask": []

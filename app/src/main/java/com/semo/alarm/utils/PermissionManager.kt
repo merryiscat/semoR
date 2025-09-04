@@ -22,11 +22,16 @@ class PermissionManager(private val activity: AppCompatActivity) {
         private const val REQUEST_POST_NOTIFICATIONS = 1001
         private const val REQUEST_SCHEDULE_EXACT_ALARM = 1002
         private const val REQUEST_BATTERY_OPTIMIZATION = 1003
+        private const val PREFS_PERMISSION_SETUP_COMPLETED = "permission_setup_completed"
     }
     
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var exactAlarmPermissionLauncher: ActivityResultLauncher<Intent>
     private lateinit var batteryOptimizationLauncher: ActivityResultLauncher<Intent>
+    
+    // 순차적 권한 요청을 위한 큐
+    private val permissionQueue = mutableListOf<PermissionInfo>()
+    private var isProcessingPermissions = false
     
     fun initializePermissionLaunchers() {
         // 알림 권한 런처
@@ -35,6 +40,9 @@ class PermissionManager(private val activity: AppCompatActivity) {
         ) { isGranted ->
             if (!isGranted) {
                 showNotificationPermissionDialog()
+            } else {
+                // 다음 권한 요청으로 진행
+                processNextPermission()
             }
         }
         
@@ -44,6 +52,9 @@ class PermissionManager(private val activity: AppCompatActivity) {
         ) { result ->
             if (!hasExactAlarmPermission()) {
                 showExactAlarmPermissionDialog()
+            } else {
+                // 다음 권한 요청으로 진행
+                processNextPermission()
             }
         }
         
@@ -51,19 +62,44 @@ class PermissionManager(private val activity: AppCompatActivity) {
         batteryOptimizationLauncher = activity.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
-            // 결과에 관계없이 사용자에게 설정 완료 메시지 표시
+            // 다음 권한 요청으로 진행
+            processNextPermission()
         }
     }
     
     /**
-     * 모든 필수 권한을 확인하고 요청
+     * 모든 필수 권한을 확인하고 요청 (최초 실행시에만)
      */
     fun checkAndRequestAllPermissions() {
+        // 이미 권한 설정이 완료된 경우 건너뛰기
+        if (isPermissionSetupCompleted()) {
+            return
+        }
+        
         val missingPermissions = getMissingPermissions()
         
         if (missingPermissions.isNotEmpty()) {
             showPermissionRationaleDialog(missingPermissions)
+        } else {
+            // 모든 권한이 이미 허용된 경우 설정 완료로 표시
+            markPermissionSetupCompleted()
         }
+    }
+    
+    /**
+     * 권한 설정 완료 여부 확인
+     */
+    private fun isPermissionSetupCompleted(): Boolean {
+        val prefs = activity.getSharedPreferences("permission_prefs", Context.MODE_PRIVATE)
+        return prefs.getBoolean(PREFS_PERMISSION_SETUP_COMPLETED, false)
+    }
+    
+    /**
+     * 권한 설정 완료로 표시
+     */
+    private fun markPermissionSetupCompleted() {
+        val prefs = activity.getSharedPreferences("permission_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(PREFS_PERMISSION_SETUP_COMPLETED, true).apply()
     }
     
     /**
@@ -119,13 +155,47 @@ class PermissionManager(private val activity: AppCompatActivity) {
      * 누락된 권한들을 순차적으로 요청
      */
     private fun requestMissingPermissions(permissions: List<PermissionInfo>) {
-        permissions.forEach { permission ->
-            when (permission) {
-                PermissionInfo.NOTIFICATION -> requestNotificationPermission()
-                PermissionInfo.EXACT_ALARM -> requestExactAlarmPermission()
-                PermissionInfo.BATTERY_OPTIMIZATION -> requestBatteryOptimizationExclusion()
-            }
+        if (isProcessingPermissions) {
+            return // 이미 권한 요청 처리 중
         }
+        
+        // 권한 큐에 추가하고 순차 처리 시작
+        permissionQueue.clear()
+        permissionQueue.addAll(permissions)
+        isProcessingPermissions = true
+        
+        processNextPermission()
+    }
+    
+    /**
+     * 큐에서 다음 권한 요청 처리
+     */
+    private fun processNextPermission() {
+        if (permissionQueue.isEmpty()) {
+            // 모든 권한 처리 완료
+            isProcessingPermissions = false
+            markPermissionSetupCompleted()
+            showPermissionSetupCompleteMessage()
+            return
+        }
+        
+        val nextPermission = permissionQueue.removeAt(0)
+        when (nextPermission) {
+            PermissionInfo.NOTIFICATION -> requestNotificationPermission()
+            PermissionInfo.EXACT_ALARM -> requestExactAlarmPermission()
+            PermissionInfo.BATTERY_OPTIMIZATION -> requestBatteryOptimizationExclusion()
+        }
+    }
+    
+    /**
+     * 권한 설정 완료 메시지 표시
+     */
+    private fun showPermissionSetupCompleteMessage() {
+        AlertDialog.Builder(activity)
+            .setTitle("권한 설정 완료")
+            .setMessage("세모알의 모든 권한이 설정되었습니다. 이제 정확한 알람 서비스를 제공할 수 있습니다!")
+            .setPositiveButton("확인") { _, _ -> }
+            .show()
     }
     
     /**
@@ -235,6 +305,18 @@ class PermissionManager(private val activity: AppCompatActivity) {
             data = Uri.parse("package:${activity.packageName}")
         }
         activity.startActivity(intent)
+    }
+    
+    /**
+     * 사용자가 수동으로 권한 설정을 다시 시도할 때 사용
+     */
+    fun resetAndRequestAllPermissions() {
+        // 권한 설정 완료 플래그 초기화
+        val prefs = activity.getSharedPreferences("permission_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(PREFS_PERMISSION_SETUP_COMPLETED, false).apply()
+        
+        // 권한 재요청
+        checkAndRequestAllPermissions()
     }
     
     /**

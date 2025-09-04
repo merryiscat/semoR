@@ -98,13 +98,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         
-        // 앱이 다시 포그라운드로 왔을 때 권한 상태 재확인
-        // (사용자가 설정에서 권한을 변경했을 수 있음)
-        if (!permissionManager.hasNotificationPermission() || 
-            !permissionManager.hasExactAlarmPermission() ||
-            !permissionManager.isBatteryOptimizationIgnored()) {
-            // 권한이 아직 부족한 경우, 필요하면 다시 요청 (덜 침입적으로)
-        }
+        // onResume에서는 권한 재요청하지 않음
+        // 권한은 onCreate에서 한 번만 처리하고, 사용자가 원할 때 설정에서 다시 설정 가능
     }
     
 }

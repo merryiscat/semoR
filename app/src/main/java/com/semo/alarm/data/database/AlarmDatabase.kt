@@ -17,7 +17,7 @@ import com.semo.alarm.data.entities.TimerCategory
 
 @Database(
     entities = [Alarm::class, TimerTemplate::class, TimerRound::class, TimerCategory::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AlarmDatabase : RoomDatabase() {
@@ -157,6 +157,13 @@ abstract class AlarmDatabase : RoomDatabase() {
             }
         }
         
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add timerType column to timer_templates table
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN timerType TEXT NOT NULL DEFAULT 'SIMPLE'")
+            }
+        }
+        
         fun getDatabase(context: Context): AlarmDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -164,7 +171,7 @@ abstract class AlarmDatabase : RoomDatabase() {
                     AlarmDatabase::class.java,
                     "alarm_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
                 
                 INSTANCE = instance
