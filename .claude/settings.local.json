@@ -31,7 +31,11 @@
       "Bash(adb uninstall:*)",
       "Bash(del DefaultTimerTemplates.kt)",
       "Bash(ren:*)",
-      "Bash(.gradlew build)"
+      "Bash(.gradlew build)",
+      "Bash(del \"C:\\Users\\minhy\\Study\\LLM_Study\\semoR\\app\\src\\main\\java\\com\\semo\\alarm\\ui\\activities\\TimerRunActivity.kt\")",
+      "Bash(.gradlew clean)",
+      "Bash(dir)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

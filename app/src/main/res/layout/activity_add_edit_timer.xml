@@ -205,6 +205,152 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- 소리 & 진동 설정 -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/md_theme_surface"
+                app:strokeColor="@color/md_theme_outlineVariant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- 제목 -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="소리 &amp; 진동"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
+                        android:layout_marginBottom="16dp" />
+
+                    <!-- 알람음 선택 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="알람음"
+                            android:textSize="16sp"
+                            android:textColor="@color/md_theme_onSurface" />
+
+                        <Button
+                            android:id="@+id/buttonSelectSound"
+                            android:layout_width="wrap_content"
+                            android:layout_height="40dp"
+                            android:text="기본 알람음"
+                            android:textSize="14sp"
+                            android:paddingHorizontal="16dp"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                    <!-- 볼륨 설정 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="볼륨"
+                            android:textSize="16sp"
+                            android:textColor="@color/md_theme_onSurface"
+                            android:layout_marginEnd="16dp" />
+
+                        <SeekBar
+                            android:id="@+id/seekBarVolume"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:max="100"
+                            android:progress="70" />
+
+                        <TextView
+                            android:id="@+id/textViewVolumePercent"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="70%"
+                            android:textSize="14sp"
+                            android:textColor="@color/md_theme_onSurface"
+                            android:layout_marginStart="8dp"
+                            android:minWidth="40dp"
+                            android:gravity="end" />
+
+                        <!-- 볼륨 테스트 버튼 -->
+                        <Button
+                            android:id="@+id/buttonTestVolume"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:text="🔊"
+                            android:textSize="12sp"
+                            android:layout_marginStart="8dp"
+                            android:minWidth="40dp"
+                            android:paddingHorizontal="8dp"
+                            android:backgroundTint="@color/neon_blue"
+                            android:textColor="@android:color/black"
+                            style="@style/Widget.Material3.Button" />
+
+                    </LinearLayout>
+
+                    <!-- 진동 모드 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="진동 모드"
+                                android:textSize="16sp"
+                                android:textColor="@color/md_theme_onSurface" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="볼륨 0%일 때 자동 활성화"
+                                android:textSize="12sp"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchVibrationMode"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            style="@style/SemoRSwitchStyle" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
 
     </ScrollView>

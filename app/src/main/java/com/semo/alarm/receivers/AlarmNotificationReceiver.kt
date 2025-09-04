@@ -31,6 +31,7 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         private const val TAG = "AlarmNotificationReceiver"
         private const val ACTION_DISMISS = "action_dismiss_notification"
         private const val ACTION_SNOOZE = "action_snooze_notification"
+        private const val ACTION_DISMISS_TIMER = "DISMISS_TIMER_ALARM"
         
         // 전역 MediaPlayer 관리 - 알람 해제를 위해 필요
         private var activeMediaPlayer: MediaPlayer? = null
@@ -49,6 +50,9 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             }
             ACTION_SNOOZE -> {
                 handleSnoozeAlarm(context, intent)
+            }
+            ACTION_DISMISS_TIMER -> {
+                handleDismissTimer(context, intent)
             }
             else -> {
                 Log.w(TAG, "Unknown action: ${intent.action}")
@@ -184,6 +188,20 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         stopVibration(context)
         
         Log.d(TAG, "✅ Alarm $alarmId snoozed successfully")
+    }
+    
+    /**
+     * 타이머 알람 해제 처리
+     */
+    private fun handleDismissTimer(context: Context, intent: Intent) {
+        val timerName = intent.getStringExtra("timer_name") ?: "타이머"
+        Log.d(TAG, "⏰ Dismissing timer alarm: $timerName")
+        
+        // NotificationAlarmManager를 통해 타이머 알람 해제
+        val alarmManager = NotificationAlarmManager(context)
+        alarmManager.dismissTimerAlarm()
+        
+        Log.d(TAG, "✅ Timer alarm '$timerName' dismissed successfully")
     }
     
     /**

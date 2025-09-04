@@ -1,5 +1,6 @@
 package com.semo.alarm.ui.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,6 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.databinding.FragmentTimerCategoryBinding
+import com.semo.alarm.ui.activities.AddEditTimerActivity
 import com.semo.alarm.ui.adapters.TimerTemplateAdapter
 import com.semo.alarm.ui.viewmodels.CustomTimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -68,7 +70,9 @@ class TimerCategoryFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = TimerTemplateAdapter(
             onItemClick = { template -> onTemplateClicked(template) },
-            onDeleteClick = { template -> onDeleteTemplate(template) }
+            onDeleteClick = { template -> onDeleteTemplate(template) },
+            onResetTimer = { template -> onResetTimer(template) },
+            onEditClick = { template -> onEditTemplate(template) }
         )
         
         binding.recyclerViewTemplates.apply {
@@ -120,12 +124,22 @@ class TimerCategoryFragment : Fragment() {
     }
     
     private fun onTemplateClicked(template: TimerTemplate) {
-        // TODO: Navigate to timer execution screen or show timer details
-        // For now, increment usage count
-        viewModel.incrementTemplateUsage(template.id)
-        
-        // Show toast or navigate to timer execution
-        // Toast.makeText(context, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
+        if (template.isRunning) {
+            // Pause timer
+            viewModel.pauseTimer(template.id)
+            Toast.makeText(context, "${template.name} 타이머 일시정지", Toast.LENGTH_SHORT).show()
+        } else {
+            // Start timer
+            viewModel.startTimer(template.id)
+            viewModel.incrementTemplateUsage(template.id)
+            Toast.makeText(context, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun onResetTimer(template: TimerTemplate) {
+        // Reset timer
+        viewModel.resetTimer(template.id)
+        Toast.makeText(context, "${template.name} 타이머 리셋", Toast.LENGTH_SHORT).show()
     }
     
     private fun onDeleteTemplate(template: TimerTemplate) {
@@ -138,6 +152,17 @@ class TimerCategoryFragment : Fragment() {
             }
             .setNegativeButton("취소", null)
             .show()
+    }
+    
+    private fun onEditTemplate(template: TimerTemplate) {
+        // 편집 화면으로 이동
+        val intent = Intent(requireContext(), AddEditTimerActivity::class.java)
+        intent.putExtra("categoryId", categoryId)
+        intent.putExtra("templateId", template.id)
+        intent.putExtra("template", template)
+        startActivity(intent)
+        
+        Toast.makeText(context, "${template.name} 편집", Toast.LENGTH_SHORT).show()
     }
     
     override fun onDestroyView() {

@@ -1,12 +1,23 @@
 package com.semo.alarm.ui.activities
 
+import android.app.AlertDialog
+import android.content.Intent
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.semo.alarm.R
 import com.semo.alarm.databinding.ActivityAddEditTimerBinding
 import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.entities.TimerTemplate
@@ -27,8 +38,15 @@ class AddEditTimerActivity : AppCompatActivity() {
     private val viewModel: CustomTimerViewModel by viewModels()
     
     private var category: TimerCategory? = null
+    private var categoryId: Int = -1
     private var templateId: Int = -1
     private var isEditMode = false
+    
+    // 소리 & 진동 설정
+    private var selectedSoundUri: String = ""
+    private var currentVolume: Float = 0.7f
+    private var isVibrationEnabled: Boolean = false
+    private var testMediaPlayer: MediaPlayer? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,13 +55,20 @@ class AddEditTimerActivity : AppCompatActivity() {
         
         // Intent에서 데이터 받기
         category = intent.getParcelableExtra("category")
+        categoryId = intent.getIntExtra("categoryId", -1)
         templateId = intent.getIntExtra("templateId", -1)
         isEditMode = templateId != -1
         
-        Log.d(TAG, "AddEditTimerActivity - Category: ${category?.name}, TemplateId: $templateId, EditMode: $isEditMode")
+        // category가 있으면 categoryId 설정, 없으면 categoryId를 직접 사용
+        if (category != null) {
+            categoryId = category!!.id
+        }
+        
+        Log.d(TAG, "AddEditTimerActivity - Category: ${category?.name}, CategoryId: $categoryId, TemplateId: $templateId, EditMode: $isEditMode")
         
         setupUI()
         setupTimePickers()
+        setupSoundAndVibrationSettings()
         setupButtons()
         
         if (isEditMode) {
@@ -77,7 +102,10 @@ class AddEditTimerActivity : AppCompatActivity() {
             minValue = 0
             maxValue = 59
             value = 5 // 기본값 5분
-            setOnValueChangedListener { _, _, _ -> updateTotalDuration() }
+            setOnValueChangedListener { _, oldVal, newVal -> 
+                handleMinuteChange(oldVal, newVal)
+                updateTotalDuration() 
+            }
         }
         
         // 초 NumberPicker (0-59)
@@ -85,7 +113,10 @@ class AddEditTimerActivity : AppCompatActivity() {
             minValue = 0
             maxValue = 59
             value = 0
-            setOnValueChangedListener { _, _, _ -> updateTotalDuration() }
+            setOnValueChangedListener { _, oldVal, newVal -> 
+                handleSecondChange(oldVal, newVal)
+                updateTotalDuration() 
+            }
         }
         
         // 초기 총 시간 업데이트
@@ -99,10 +130,164 @@ class AddEditTimerActivity : AppCompatActivity() {
         }
     }
     
+    private fun setupSoundAndVibrationSettings() {
+        // 초기 SeekBar 색상 설정 (기본값 70%)
+        updateSeekBarColors(binding.seekBarVolume.progress)
+        
+        // 볼륨 테스트 버튼 설정
+        setupVolumeTestButton()
+        
+        // 알람음 선택 버튼
+        binding.buttonSelectSound.setOnClickListener {
+            showSoundSelectionDialog()
+        }
+        
+        // 볼륨 SeekBar 설정 - 볼륨 기반 진동 모드 자동 전환
+        binding.seekBarVolume.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                binding.textViewVolumePercent.text = "${progress}%"
+                currentVolume = progress / 100f
+                
+                // SeekBar 색상 업데이트
+                updateSeekBarColors(progress)
+                
+                if (fromUser) {
+                    // 볼륨이 0%가 되면 자동으로 진동 모드 활성화
+                    if (progress == 0) {
+                        binding.switchVibrationMode.isChecked = true
+                        isVibrationEnabled = true
+                    }
+                    // 볼륨이 0%에서 올라가면 진동 모드 비활성화
+                    else if (binding.switchVibrationMode.isChecked && progress > 0) {
+                        // 사용자가 SeekBar를 직접 조작했을 때만 진동 모드 해제
+                        binding.switchVibrationMode.isChecked = false
+                        isVibrationEnabled = false
+                    }
+                }
+            }
+            
+            override fun onStartTrackingTouch(seekBar: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
+        })
+        
+        // 진동 모드 스위치 설정
+        binding.switchVibrationMode.setOnCheckedChangeListener { _, isChecked ->
+            isVibrationEnabled = isChecked
+            if (!isChecked && binding.seekBarVolume.progress == 0) {
+                // 진동 모드를 끄면 볼륨을 1%로 설정
+                binding.seekBarVolume.progress = 1
+                currentVolume = 0.01f
+                binding.textViewVolumePercent.text = "1%"
+                updateSeekBarColors(1)
+            }
+        }
+    }
+    
+    private fun setupVolumeTestButton() {
+        binding.buttonTestVolume.setOnClickListener {
+            testVolume()
+        }
+    }
+    
+    private fun showSoundSelectionDialog() {
+        val soundOptions = arrayOf(
+            "기본 알람음",
+            "기본 벨소리",
+            "알림음", 
+            "음악 파일 선택"
+        )
+        
+        AlertDialog.Builder(this)
+            .setTitle("알람음 선택")
+            .setItems(soundOptions) { _, which ->
+                when (which) {
+                    0 -> {
+                        selectedSoundUri = ""
+                        binding.buttonSelectSound.text = "기본 알람음"
+                    }
+                    1 -> {
+                        selectedSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE).toString()
+                        binding.buttonSelectSound.text = "기본 벨소리"
+                    }
+                    2 -> {
+                        selectedSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION).toString()
+                        binding.buttonSelectSound.text = "알림음"
+                    }
+                    3 -> {
+                        // 파일 선택 (나중에 구현)
+                        Toast.makeText(this, "음악 파일 선택 기능은 추후 지원될 예정입니다", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .show()
+    }
+    
+    private fun testVolume() {
+        try {
+            // 기존 테스트 재생 중지
+            testMediaPlayer?.release()
+            
+            val soundUri = if (selectedSoundUri.isNotEmpty()) {
+                Uri.parse(selectedSoundUri)
+            } else {
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            }
+            
+            testMediaPlayer = MediaPlayer().apply {
+                setDataSource(this@AddEditTimerActivity, soundUri)
+                
+                // 오디오 속성 설정
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    setAudioStreamType(android.media.AudioManager.STREAM_ALARM)
+                }
+                
+                isLooping = false
+                prepare()
+                setVolume(currentVolume, currentVolume)
+                start()
+                
+                setOnCompletionListener { mp ->
+                    mp.release()
+                    testMediaPlayer = null
+                }
+            }
+            
+            Log.d(TAG, "🔊 Testing volume: ${(currentVolume * 100).toInt()}%")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to test volume", e)
+            Toast.makeText(this, "알람음 테스트 중 오류가 발생했습니다", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun updateSeekBarColors(progress: Int) {
+        // 진동 모드 (0%) vs 소리 모드 (1%+) 시각적 구분을 위한 색상 업데이트
+        val seekBar = binding.seekBarVolume
+        
+        if (progress == 0) {
+            // 진동 모드: 회색 SeekBar
+            seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.seekbar_thumb_gray)
+            seekBar.progressDrawable = ContextCompat.getDrawable(this, R.drawable.seekbar_progress_gray)
+        } else {
+            // 소리 모드: 네온 블루 SeekBar  
+            seekBar.thumb = ContextCompat.getDrawable(this, R.drawable.seekbar_thumb_neon)
+            seekBar.progressDrawable = ContextCompat.getDrawable(this, R.drawable.seekbar_progress_neon)
+        }
+    }
+    
     private fun setupNewTimer() {
         // 자동 타이머 이름 생성
         lifecycleScope.launch {
-            val categoryId = category?.id ?: return@launch
+            if (categoryId == -1) return@launch
             val existingTemplates = viewModel.getTemplatesByCategory(categoryId)
             val timerCount = existingTemplates.size + 1
             val autoName = "타이머$timerCount"
@@ -144,6 +329,70 @@ class AddEditTimerActivity : AppCompatActivity() {
         binding.textViewTotalDuration.text = "총 시간: $durationText"
     }
     
+    /**
+     * 분 변경 핸들러: 59→00 시 시간 +1, 00→59 시 시간 -1
+     */
+    private fun handleMinuteChange(oldValue: Int, newValue: Int) {
+        when {
+            // 분: 59 → 00 (증가): 시간 +1
+            oldValue == 59 && newValue == 0 -> {
+                val currentHour = binding.hourPicker.value
+                if (currentHour < 23) {
+                    binding.hourPicker.value = currentHour + 1
+                    Log.d(TAG, "분 59→00: 시간 ${currentHour} → ${currentHour + 1}")
+                }
+            }
+            // 분: 00 → 59 (감소): 시간 -1  
+            oldValue == 0 && newValue == 59 -> {
+                val currentHour = binding.hourPicker.value
+                if (currentHour > 0) {
+                    binding.hourPicker.value = currentHour - 1
+                    Log.d(TAG, "분 00→59: 시간 ${currentHour} → ${currentHour - 1}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * 초 변경 핸들러: 59→00 시 분 +1, 00→59 시 분 -1
+     */
+    private fun handleSecondChange(oldValue: Int, newValue: Int) {
+        when {
+            // 초: 59 → 00 (증가): 분 +1
+            oldValue == 59 && newValue == 0 -> {
+                val currentMinute = binding.minutePicker.value
+                if (currentMinute < 59) {
+                    binding.minutePicker.value = currentMinute + 1
+                    Log.d(TAG, "초 59→00: 분 ${currentMinute} → ${currentMinute + 1}")
+                } else {
+                    // 분이 59일 때 시간도 증가 (연쇄 효과)
+                    binding.minutePicker.value = 0
+                    val currentHour = binding.hourPicker.value
+                    if (currentHour < 23) {
+                        binding.hourPicker.value = currentHour + 1
+                        Log.d(TAG, "초 59→00 + 분 59→00: 시간 ${currentHour} → ${currentHour + 1}")
+                    }
+                }
+            }
+            // 초: 00 → 59 (감소): 분 -1
+            oldValue == 0 && newValue == 59 -> {
+                val currentMinute = binding.minutePicker.value
+                if (currentMinute > 0) {
+                    binding.minutePicker.value = currentMinute - 1
+                    Log.d(TAG, "초 00→59: 분 ${currentMinute} → ${currentMinute - 1}")
+                } else {
+                    // 분이 0일 때 시간도 감소 (연쇄 효과)
+                    binding.minutePicker.value = 59
+                    val currentHour = binding.hourPicker.value
+                    if (currentHour > 0) {
+                        binding.hourPicker.value = currentHour - 1
+                        Log.d(TAG, "초 00→59 + 분 00→59: 시간 ${currentHour} → ${currentHour - 1}")
+                    }
+                }
+            }
+        }
+    }
+    
     private fun saveTimer() {
         val name = binding.editTextTimerName.text.toString().trim()
         
@@ -162,9 +411,9 @@ class AddEditTimerActivity : AppCompatActivity() {
             return
         }
         
-        val categoryId = category?.id ?: return
+        if (categoryId == -1) return
         
-        // 단순 타이머 템플릿 생성
+        // 단순 타이머 템플릿 생성 (소리 & 진동 설정 포함)
         val template = TimerTemplate(
             categoryId = categoryId,
             name = name,
@@ -172,7 +421,11 @@ class AddEditTimerActivity : AppCompatActivity() {
             totalDuration = totalDuration,
             timerType = TimerType.SIMPLE.name, // 단순 타이머만 지원
             isDefault = false,
-            createdBy = "user"
+            createdBy = "user",
+            // 소리 & 진동 설정 추가
+            soundUri = selectedSoundUri,
+            volume = currentVolume,
+            vibrationEnabled = isVibrationEnabled
         )
         
         // 하나의 라운드만 생성 (단순 타이머)
@@ -203,5 +456,12 @@ class AddEditTimerActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // MediaPlayer 정리
+        testMediaPlayer?.release()
+        testMediaPlayer = null
     }
 }
