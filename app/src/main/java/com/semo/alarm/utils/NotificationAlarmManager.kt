@@ -110,6 +110,47 @@ class NotificationAlarmManager(private val context: Context) {
         notificationManager.cancel(NOTIFICATION_ID_BASE + alarmId)
     }
     
+    /**
+     * 스누즈 알람 설정
+     */
+    fun scheduleSnoozeAlarm(alarm: Alarm) {
+        Log.d(TAG, "Scheduling snooze alarm for ${alarm.snoozeInterval} minutes")
+        
+        try {
+            val currentTime = System.currentTimeMillis()
+            val snoozeTime = currentTime + (alarm.snoozeInterval * 60 * 1000L) // 분을 밀리초로 변환
+            
+            val snoozeIntent = createAlarmNotificationIntent(alarm.copy(id = alarm.id + 60000)) // 스누즈용 임시 ID
+            
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        snoozeTime,
+                        snoozeIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        snoozeTime,
+                        snoozeIntent
+                    )
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    snoozeTime,
+                    snoozeIntent
+                )
+            }
+            
+            Log.d(TAG, "Snooze alarm scheduled for ${java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(snoozeTime)}")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to schedule snooze alarm", e)
+        }
+    }
+    
     
     /**
      * 알람 알림을 직접 표시하는 PendingIntent 생성

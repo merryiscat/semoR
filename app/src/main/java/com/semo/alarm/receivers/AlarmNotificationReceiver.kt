@@ -31,6 +31,10 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         private const val TAG = "AlarmNotificationReceiver"
         private const val ACTION_DISMISS = "action_dismiss_notification"
         private const val ACTION_SNOOZE = "action_snooze_notification"
+        
+        // 전역 MediaPlayer 관리 - 알람 해제를 위해 필요
+        private var activeMediaPlayer: MediaPlayer? = null
+        private val activeMediaPlayers = mutableMapOf<Int, MediaPlayer>()
     }
     
     override fun onReceive(context: Context, intent: Intent) {
@@ -80,13 +84,46 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
      */
     private fun handleDismissAlarm(context: Context, intent: Intent) {
         val alarmId = intent.getIntExtra("alarm_id", -1)
-        Log.d(TAG, "Dismissing alarm: $alarmId")
+        Log.d(TAG, "🔇 Dismissing alarm: $alarmId")
         
+        // 1. 알림 취소
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(NotificationAlarmManager.NOTIFICATION_ID_BASE + alarmId)
         
-        // 진동 중지
+        // 2. 해당 알람의 MediaPlayer 중지 및 해제
+        activeMediaPlayers[alarmId]?.let { mediaPlayer ->
+            try {
+                if (mediaPlayer.isPlaying) {
+                    mediaPlayer.stop()
+                    Log.d(TAG, "🔇 MediaPlayer stopped for alarm $alarmId")
+                }
+                mediaPlayer.release()
+                Log.d(TAG, "🔇 MediaPlayer released for alarm $alarmId")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error stopping MediaPlayer for alarm $alarmId", e)
+            }
+            activeMediaPlayers.remove(alarmId)
+        }
+        
+        // 3. 전역 MediaPlayer도 확인
+        activeMediaPlayer?.let { mediaPlayer ->
+            try {
+                if (mediaPlayer.isPlaying) {
+                    mediaPlayer.stop()
+                    Log.d(TAG, "🔇 Global MediaPlayer stopped")
+                }
+                mediaPlayer.release()
+                Log.d(TAG, "🔇 Global MediaPlayer released")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error stopping global MediaPlayer", e)
+            }
+            activeMediaPlayer = null
+        }
+        
+        // 4. 진동 중지
         stopVibration(context)
+        
+        Log.d(TAG, "✅ Alarm $alarmId completely dismissed")
     }
     
     /**
@@ -101,22 +138,52 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             intent.getParcelableExtra("alarm")
         }
         
-        Log.d(TAG, "Snoozing alarm: $alarmId")
+        Log.d(TAG, "😴 Snoozing alarm: $alarmId")
         
         if (alarm != null && alarm.snoozeEnabled) {
-            // 현재 알림 취소
+            // 1. 현재 알림 취소
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(NotificationAlarmManager.NOTIFICATION_ID_BASE + alarmId)
             
-            // 스누즈 간격 후 다시 알람 설정
-            val snoozeAlarm = alarm.copy(id = alarmId + 50000) // 스누즈용 임시 ID
-            val alarmManager = NotificationAlarmManager(context)
+            // 2. MediaPlayer 중지 및 해제 (dismiss와 동일한 로직)
+            activeMediaPlayers[alarmId]?.let { mediaPlayer ->
+                try {
+                    if (mediaPlayer.isPlaying) {
+                        mediaPlayer.stop()
+                        Log.d(TAG, "🔇 MediaPlayer stopped for snoozed alarm $alarmId")
+                    }
+                    mediaPlayer.release()
+                    Log.d(TAG, "🔇 MediaPlayer released for snoozed alarm $alarmId")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error stopping MediaPlayer for snoozed alarm $alarmId", e)
+                }
+                activeMediaPlayers.remove(alarmId)
+            }
             
-            // TODO: 스누즈 시간 후 다시 알람 설정 로직
-            Log.d(TAG, "Alarm snoozed for ${alarm.snoozeInterval} minutes")
+            // 3. 전역 MediaPlayer도 정리
+            activeMediaPlayer?.let { mediaPlayer ->
+                try {
+                    if (mediaPlayer.isPlaying) {
+                        mediaPlayer.stop()
+                    }
+                    mediaPlayer.release()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error stopping global MediaPlayer for snooze", e)
+                }
+                activeMediaPlayer = null
+            }
+            
+            // 4. 스누즈 간격 후 다시 알람 설정
+            val alarmManager = NotificationAlarmManager(context)
+            alarmManager.scheduleSnoozeAlarm(alarm)
+            
+            Log.d(TAG, "😴 Alarm snoozed for ${alarm.snoozeInterval} minutes")
         }
         
+        // 5. 진동 중지
         stopVibration(context)
+        
+        Log.d(TAG, "✅ Alarm $alarmId snoozed successfully")
     }
     
     /**
@@ -199,6 +266,18 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
      */
     private fun playAlarmSound(context: Context, alarm: Alarm) {
         try {
+            // 기존 MediaPlayer 정리
+            activeMediaPlayers[alarm.id]?.let { existingPlayer ->
+                try {
+                    if (existingPlayer.isPlaying) {
+                        existingPlayer.stop()
+                    }
+                    existingPlayer.release()
+                } catch (e: Exception) {
+                    Log.w(TAG, "Error releasing existing MediaPlayer", e)
+                }
+            }
+            
             val soundUri = if (alarm.soundUri.isNotEmpty()) {
                 android.net.Uri.parse(alarm.soundUri)
             } else {
@@ -206,7 +285,7 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
                     ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             }
             
-            Log.d(TAG, "Playing alarm sound with volume: ${alarm.volume}")
+            Log.d(TAG, "🔊 Playing alarm sound with volume: ${alarm.volume}")
             
             val mediaPlayer = MediaPlayer().apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -215,6 +294,7 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
                     setDataSource(context, soundUri)
                 }
                 
+                // 먼저 오디오 속성 설정
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     setAudioAttributes(
                         AudioAttributes.Builder()
@@ -227,16 +307,29 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
                     setAudioStreamType(android.media.AudioManager.STREAM_ALARM)
                 }
                 
-                setVolume(alarm.volume, alarm.volume)
-                isLooping = false // 한 번만 재생
+                isLooping = true // 계속 반복 재생 (알람이 확실히 들리도록)
                 prepare()
+                
+                // prepare() 후에 볼륨 설정 (더 확실한 적용을 위해)
+                setVolume(alarm.volume, alarm.volume)
+                Log.d(TAG, "🔊 MediaPlayer volume set to: ${alarm.volume} (${(alarm.volume * 100).toInt()}%)")
+                
                 start()
                 
-                // 30초 후 자동 중지
+                // 완료 리스너 - 루핑이므로 일반적으로 호출되지 않음
                 setOnCompletionListener { mp ->
+                    Log.d(TAG, "MediaPlayer completed for alarm ${alarm.id}")
+                    activeMediaPlayers.remove(alarm.id)
                     mp.release()
                 }
             }
+            
+            // MediaPlayer를 저장하여 나중에 중지할 수 있도록 함
+            activeMediaPlayers[alarm.id] = mediaPlayer
+            activeMediaPlayer = mediaPlayer
+            
+            Log.d(TAG, "🔊 Alarm sound started and stored for alarm ${alarm.id}")
+            
         } catch (e: Exception) {
             Log.e(TAG, "Failed to play alarm sound", e)
         }

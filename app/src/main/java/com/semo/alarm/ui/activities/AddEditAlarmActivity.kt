@@ -1,10 +1,15 @@
 package com.semo.alarm.ui.activities
 
 import android.content.res.ColorStateList
+import android.media.AudioAttributes
+import android.media.MediaPlayer
+import android.media.RingtoneManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +28,7 @@ class AddEditAlarmActivity : AppCompatActivity() {
     private val viewModel: AlarmViewModel by viewModels()
     
     private var alarmId: Int = -1
+    private var testMediaPlayer: MediaPlayer? = null
     private var isEditMode: Boolean = false
     private var currentAlarm: Alarm? = null
     
@@ -373,6 +379,9 @@ class AddEditAlarmActivity : AppCompatActivity() {
         // 초기 SeekBar 색상 설정 (기본값 70%)
         updateSeekBarColors(binding.seekBarVolume.progress)
         
+        // 볼륨 테스트 버튼 설정
+        setupVolumeTestButton()
+        
         // 볼륨 SeekBar 설정 - 볼륨 기반 진동 모드 자동 전환
         binding.seekBarVolume.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
@@ -427,6 +436,79 @@ class AddEditAlarmActivity : AppCompatActivity() {
         // SeekBar는 항상 활성화 - 진동 모드에서도 볼륨 조절 가능해야 함
         binding.seekBarVolume.isEnabled = true
         binding.textViewVolumePercent.alpha = if (enabled) 1.0f else 0.5f
+        binding.buttonTestVolume.isEnabled = enabled
+    }
+    
+    private fun setupVolumeTestButton() {
+        binding.buttonTestVolume.setOnClickListener {
+            val currentVolume = binding.seekBarVolume.progress / 100.0f
+            val currentSoundUri = if (binding.buttonSelectSound.text == "기본 알람음") "" else binding.buttonSelectSound.text.toString()
+            
+            Log.d("VolumeTest", "Testing volume: $currentVolume")
+            
+            if (currentVolume > 0) {
+                testAlarmSound(currentVolume, currentSoundUri)
+            } else {
+                Toast.makeText(this, "진동 모드 (볼륨 0%)에서는 소리를 테스트할 수 없습니다", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun testAlarmSound(volume: Float, soundUri: String) {
+        try {
+            // 기존 테스트 MediaPlayer 정리
+            testMediaPlayer?.let { player ->
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            }
+            
+            // 사운드 URI 설정
+            val uri = if (soundUri.isNotEmpty()) {
+                android.net.Uri.parse(soundUri)
+            } else {
+                RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                    ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            }
+            
+            // 새로운 MediaPlayer 생성
+            testMediaPlayer = MediaPlayer().apply {
+                setDataSource(this@AddEditAlarmActivity, uri)
+                
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    setAudioStreamType(android.media.AudioManager.STREAM_ALARM)
+                }
+                
+                isLooping = false // 테스트는 한 번만 재생
+                prepare()
+                setVolume(volume, volume) // 사용자 설정 볼륨 적용
+                start()
+                
+                Log.d("VolumeTest", "🔊 Volume test started with volume: $volume (${(volume * 100).toInt()}%)")
+                
+                // 3초 후 자동 중지
+                setOnCompletionListener { mp ->
+                    mp.release()
+                    testMediaPlayer = null
+                    Log.d("VolumeTest", "🔇 Volume test completed")
+                }
+            }
+            
+            Toast.makeText(this, "볼륨 테스트: ${(volume * 100).toInt()}%", Toast.LENGTH_SHORT).show()
+            
+        } catch (e: Exception) {
+            Log.e("VolumeTest", "Failed to test alarm sound", e)
+            Toast.makeText(this, "알람음 테스트 실패: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun updateSeekBarColors(progress: Int) {
@@ -540,5 +622,21 @@ class AddEditAlarmActivity : AppCompatActivity() {
             !isAM && hour12 == 12 -> 12 // 12 PM -> 12
             else -> hour12 + 12 // 1~11 PM -> 13~23
         }
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // 테스트 MediaPlayer 정리
+        testMediaPlayer?.let { player ->
+            try {
+                if (player.isPlaying) {
+                    player.stop()
+                }
+                player.release()
+            } catch (e: Exception) {
+                Log.e("AddEditAlarmActivity", "Error releasing test MediaPlayer", e)
+            }
+        }
+        testMediaPlayer = null
     }
 }

@@ -108,16 +108,16 @@
 
         </LinearLayout>
 
-        <!-- Action Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnStartTimer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <!-- Delete Button -->
+        <ImageButton
+            android:id="@+id/btnDeleteTemplate"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:layout_gravity="center_vertical"
-            android:text="시작"
-            android:textSize="14sp"
-            app:cornerRadius="8dp"
-            style="@style/Widget.Material3.Button.UnelevatedButton" />
+            android:src="@drawable/ic_close_white"
+            android:background="@drawable/delete_button_small"
+            android:contentDescription="템플릿 삭제"
+            android:scaleType="center" />
 
     </LinearLayout>
 
