@@ -1,21 +1,25 @@
 package com.semo.alarm.ui.viewmodels
 
+import android.app.Application
+import android.os.CountDownTimer
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.entities.TimerRound
 import com.semo.alarm.data.repositories.TimerRepository
+import com.semo.alarm.utils.NotificationAlarmManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CustomTimerViewModel @Inject constructor(
+    application: Application,
     private val timerRepository: TimerRepository
-) : ViewModel() {
+) : AndroidViewModel(application) {
     
     private val _templates = MutableLiveData<List<TimerTemplate>>()
     val templates: LiveData<List<TimerTemplate>> get() = _templates
@@ -28,6 +32,17 @@ class CustomTimerViewModel @Inject constructor(
     
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> get() = _error
+    
+    // Timer management
+    private val activeTimers = mutableMapOf<Int, CountDownTimer>()
+    private val timerStates = mutableMapOf<Int, TimerState>()
+    private val notificationAlarmManager = NotificationAlarmManager(getApplication())
+    
+    data class TimerState(
+        val templateId: Int,
+        val remainingSeconds: Int,
+        val isRunning: Boolean
+    )
     
     fun loadTemplatesByCategory(categoryId: Int) {
         viewModelScope.launch {
@@ -71,6 +86,16 @@ class CustomTimerViewModel @Inject constructor(
                 timerRepository.incrementUsageCount(templateId)
             } catch (e: Exception) {
                 _error.value = "사용 횟수 업데이트에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun updateTemplateActiveState(templateId: Int, isActive: Boolean) {
+        viewModelScope.launch {
+            try {
+                timerRepository.updateTemplateActiveState(templateId, isActive)
+            } catch (e: Exception) {
+                _error.value = "타이머 상태 업데이트에 실패했습니다: ${e.message}"
             }
         }
     }
@@ -236,5 +261,116 @@ class CustomTimerViewModel @Inject constructor(
                 _loading.value = false
             }
         }
+    }
+    
+    // Timer control methods
+    fun startTimer(templateId: Int) {
+        viewModelScope.launch {
+            try {
+                val template = timerRepository.getTemplateById(templateId)
+                if (template != null && !template.isRunning) {
+                    val remainingTime = if (template.remainingSeconds > 0) template.remainingSeconds else template.totalDuration
+                    startCountDownTimer(template, remainingTime)
+                }
+            } catch (e: Exception) {
+                _error.value = "타이머 시작에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun pauseTimer(templateId: Int) {
+        activeTimers[templateId]?.cancel()
+        activeTimers.remove(templateId)
+        
+        viewModelScope.launch {
+            try {
+                val state = timerStates[templateId]
+                if (state != null) {
+                    timerRepository.updateTimerState(templateId, isRunning = false, remainingSeconds = state.remainingSeconds)
+                    refreshTemplates()
+                }
+            } catch (e: Exception) {
+                _error.value = "타이머 일시정지에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun resetTimer(templateId: Int) {
+        activeTimers[templateId]?.cancel()
+        activeTimers.remove(templateId)
+        timerStates.remove(templateId)
+        
+        viewModelScope.launch {
+            try {
+                timerRepository.updateTimerState(templateId, isRunning = false, remainingSeconds = 0)
+                refreshTemplates()
+            } catch (e: Exception) {
+                _error.value = "타이머 리셋에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    private fun startCountDownTimer(template: TimerTemplate, remainingSeconds: Int) {
+        val timer = object : CountDownTimer(remainingSeconds * 1000L, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                val secondsLeft = (millisUntilFinished / 1000).toInt()
+                timerStates[template.id] = TimerState(template.id, secondsLeft, true)
+                
+                viewModelScope.launch {
+                    timerRepository.updateTimerState(template.id, isRunning = true, remainingSeconds = secondsLeft)
+                    refreshTemplates()
+                }
+            }
+            
+            override fun onFinish() {
+                timerStates.remove(template.id)
+                activeTimers.remove(template.id)
+                
+                viewModelScope.launch {
+                    timerRepository.updateTimerState(template.id, isRunning = false, remainingSeconds = 0)
+                    // TODO: Trigger alarm notification
+                    onTimerComplete(template)
+                    refreshTemplates()
+                }
+            }
+        }
+        
+        activeTimers[template.id] = timer
+        timerStates[template.id] = TimerState(template.id, remainingSeconds, true)
+        timer.start()
+        
+        viewModelScope.launch {
+            timerRepository.updateTimerState(template.id, isRunning = true, remainingSeconds = remainingSeconds)
+            refreshTemplates()
+        }
+    }
+    
+    private fun onTimerComplete(template: TimerTemplate) {
+        // Show persistent timer complete notification with alarm sound
+        notificationAlarmManager.showTimerCompleteNotification(template.name)
+    }
+    
+    private suspend fun refreshTemplates() {
+        // Refresh the current templates list to update UI
+        val currentTemplates = _templates.value
+        if (currentTemplates != null) {
+            val updatedTemplates = currentTemplates.map { template ->
+                val state = timerStates[template.id]
+                if (state != null) {
+                    template.copy(isRunning = state.isRunning, remainingSeconds = state.remainingSeconds)
+                } else {
+                    template
+                }
+            }
+            _templates.postValue(updatedTemplates)
+        }
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        // Cancel all active timers when ViewModel is destroyed
+        activeTimers.values.forEach { it.cancel() }
+        activeTimers.clear()
+        timerStates.clear()
     }
 }

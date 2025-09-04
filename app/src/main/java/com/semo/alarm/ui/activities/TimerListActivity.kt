@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.databinding.ActivityTimerListBinding
 import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.entities.TimerTemplate
+import com.semo.alarm.ui.activities.AddEditTimerActivity
 import com.semo.alarm.ui.adapters.TimerTemplateAdapter
 import com.semo.alarm.ui.viewmodels.CustomTimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -55,7 +56,9 @@ class TimerListActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         adapter = TimerTemplateAdapter(
             onItemClick = { template -> onTemplateClicked(template) },
-            onDeleteClick = { template -> onDeleteTemplate(template) }
+            onDeleteClick = { template -> onDeleteTemplate(template) },
+            onResetTimer = { template -> onResetTimer(template) },
+            onEditClick = { template -> onEditTemplate(template) }
         )
         
         binding.recyclerViewTemplates.apply {
@@ -103,12 +106,22 @@ class TimerListActivity : AppCompatActivity() {
     }
     
     private fun onTemplateClicked(template: TimerTemplate) {
-        // 템플릿 사용 횟수 증가
-        viewModel.incrementTemplateUsage(template.id)
-        
-        Toast.makeText(this, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
-        
-        // TODO: 타이머 실행 화면으로 이동
+        if (template.isRunning) {
+            // Pause timer
+            viewModel.pauseTimer(template.id)
+            Toast.makeText(this, "${template.name} 타이머 일시정지", Toast.LENGTH_SHORT).show()
+        } else {
+            // Start timer
+            viewModel.startTimer(template.id)
+            viewModel.incrementTemplateUsage(template.id)
+            Toast.makeText(this, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun onResetTimer(template: TimerTemplate) {
+        // Reset timer
+        viewModel.resetTimer(template.id)
+        Toast.makeText(this, "${template.name} 타이머 리셋", Toast.LENGTH_SHORT).show()
     }
     
     private fun onDeleteTemplate(template: TimerTemplate) {
@@ -121,5 +134,16 @@ class TimerListActivity : AppCompatActivity() {
             }
             .setNegativeButton("취소", null)
             .show()
+    }
+    
+    private fun onEditTemplate(template: TimerTemplate) {
+        // 편집 화면으로 이동
+        val intent = Intent(this, AddEditTimerActivity::class.java)
+        intent.putExtra("category", category)
+        intent.putExtra("templateId", template.id)
+        intent.putExtra("template", template)
+        startActivity(intent)
+        
+        Toast.makeText(this, "${template.name} 편집", Toast.LENGTH_SHORT).show()
     }
 }

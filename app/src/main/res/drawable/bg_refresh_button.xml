@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pressed state -->
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <solid android:color="#0099CC"/>  <!-- 더 진한 네온 블루 -->
+        </shape>
+    </item>
+    <!-- Enabled state (타이머 실행 중) -->
+    <item android:state_enabled="true">
+        <shape android:shape="oval">
+            <solid android:color="#00D4FF"/>  <!-- 세모알 네온 블루 -->
+        </shape>
+    </item>
+    <!-- Disabled state (타이머 정지 중) -->
+    <item android:state_enabled="false">
+        <shape android:shape="oval">
+            <solid android:color="#6B7280"/>  <!-- 세모알 딥 그레이 -->
+        </shape>
+    </item>
+</selector>

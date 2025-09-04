@@ -4,121 +4,98 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_marginStart="16dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
     app:cardCornerRadius="12dp"
     app:cardElevation="2dp"
-    app:strokeWidth="0dp"
-    style="@style/Widget.Material3.CardView.Elevated">
+    app:cardBackgroundColor="@color/alarm_card_bg"
+    app:strokeWidth="1dp"
+    app:strokeColor="@color/md_theme_outlineVariant"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:paddingStart="20dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
 
-        <!-- Template Icon/Category Indicator -->
-        <LinearLayout
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="16dp"
+        <!-- Category Icon Accent -->
+        <TextView
+            android:id="@+id/tvCategoryIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="@drawable/bg_circle_primary"
             android:gravity="center"
-            android:orientation="vertical">
+            android:textSize="16sp"
+            android:textColor="?attr/colorOnPrimary"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="⏰" />
 
-            <TextView
-                android:id="@+id/tvCategoryIcon"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textColor="?attr/colorOnPrimary"
-                android:textStyle="bold"
-                tools:text="🏃" />
+        <!-- Timer Name -->
+        <TextView
+            android:id="@+id/tvTemplateName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="@color/md_theme_onSurface"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/tvCategoryIcon"
+            tools:text="타이머1" />
 
-        </LinearLayout>
-
-        <!-- Template Info -->
-        <LinearLayout
+        <!-- Duration Display -->
+        <TextView
+            android:id="@+id/tvDuration"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:textSize="14sp"
+            android:textColor="@color/md_theme_onSurfaceVariant"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toBottomOf="@+id/tvTemplateName"
+            app:layout_constraintStart_toStartOf="@+id/tvTemplateName"
+            app:layout_constraintEnd_toStartOf="@+id/btnDeleteTemplate"
+            tools:text="5분 30초" />
 
-            <TextView
-                android:id="@+id/tvTemplateName"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="16sp"
-                android:textColor="?attr/colorOnSurface"
-                android:textStyle="bold"
-                android:layout_marginBottom="4dp"
-                style="@style/TextAppearance.Material3.BodyLarge"
-                tools:text="타바타 운동" />
 
-            <TextView
-                android:id="@+id/tvTemplateDescription"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginBottom="8dp"
-                android:maxLines="2"
-                android:ellipsize="end"
-                style="@style/TextAppearance.Material3.BodyMedium"
-                tools:text="4분간 고강도 인터벌 트레이닝" />
-
-            <!-- Template Stats Row -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/tvDuration"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="?attr/colorPrimary"
-                    android:drawablePadding="4dp"
-                    app:drawableStartCompat="@drawable/ic_timer"
-                    app:drawableTint="?attr/colorPrimary"
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    tools:text="4분" />
-
-                <View
-                    android:layout_width="8dp"
-                    android:layout_height="4dp"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginHorizontal="8dp"
-                    android:background="?attr/colorOnSurfaceVariant"
-                    android:alpha="0.5" />
-
-                <TextView
-                    android:id="@+id/tvUsageCount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textSize="12sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:drawablePadding="4dp"
-                    app:drawableStartCompat="@drawable/ic_play"
-                    app:drawableTint="?attr/colorOnSurfaceVariant"
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    tools:text="5회 사용" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <!-- Delete Button -->
+        <!-- Delete Button (스위치 왼쪽) -->
         <ImageButton
             android:id="@+id/btnDeleteTemplate"
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="8dp"
             android:src="@drawable/ic_close_white"
             android:background="@drawable/delete_button_small"
-            android:contentDescription="템플릿 삭제"
-            android:scaleType="center" />
+            android:contentDescription="타이머 삭제"
+            android:scaleType="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnRefreshTimer"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
-    </LinearLayout>
+        <!-- Refresh Button -->
+        <ImageButton
+            android:id="@+id/btnRefreshTimer"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_refresh"
+            android:background="@drawable/bg_refresh_button"
+            android:contentDescription="타이머 새로고침"
+            android:scaleType="center"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

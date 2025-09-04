@@ -28,12 +28,19 @@ data class TimerTemplate(
     val description: String,       // 상세 설명
     val totalDuration: Int,        // 전체 소요시간 (초)
     val timerType: String = TimerType.SIMPLE.name, // 타이머 타입
+    val isActive: Boolean = true,   // 타이머 활성화 상태
+    val isRunning: Boolean = false, // 타이머 실행 중 상태
+    val remainingSeconds: Int = 0,  // 남은 시간 (실행 중일 때만 사용)
     val isDefault: Boolean = false, // 기본 제공 템플릿
     val rating: Float = 0.0f,      // 평점 (1-5)
     val usageCount: Int = 0,       // 사용 횟수
     val createdBy: String = "user", // "system" 또는 "user"
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    // 소리 & 진동 설정
+    val soundUri: String = "",     // 알람음 URI
+    val volume: Float = 0.7f,      // 볼륨 (0.0-1.0)
+    val vibrationEnabled: Boolean = false  // 진동 활성화
 ) : Parcelable {
     
     // 이제 카테고리 정보는 TimerCategory 엔티티에서 가져옴

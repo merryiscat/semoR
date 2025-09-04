@@ -58,6 +58,12 @@ interface TimerTemplateDao {
     @Query("UPDATE timer_templates SET rating = :rating WHERE id = :id")
     suspend fun updateRating(id: Int, rating: Float)
     
+    @Query("UPDATE timer_templates SET isActive = :isActive WHERE id = :id")
+    suspend fun updateActiveState(id: Int, isActive: Boolean)
+    
+    @Query("UPDATE timer_templates SET isRunning = :isRunning, remainingSeconds = :remainingSeconds WHERE id = :id")
+    suspend fun updateTimerState(id: Int, isRunning: Boolean, remainingSeconds: Int)
+    
     @Query("SELECT * FROM timer_templates WHERE name LIKE :query OR description LIKE :query ORDER BY usageCount DESC")
     suspend fun searchTemplates(query: String): List<TimerTemplate>
     

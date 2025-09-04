@@ -80,6 +80,14 @@ class TimerRepository @Inject constructor(
         templateDao.incrementUsageCount(templateId)
     }
     
+    suspend fun updateTemplateActiveState(templateId: Int, isActive: Boolean) {
+        templateDao.updateActiveState(templateId, isActive)
+    }
+    
+    suspend fun updateTimerState(templateId: Int, isRunning: Boolean, remainingSeconds: Int) {
+        templateDao.updateTimerState(templateId, isRunning, remainingSeconds)
+    }
+    
     suspend fun searchTemplates(query: String): List<TimerTemplate> {
         return templateDao.searchTemplates("%$query%")
     }

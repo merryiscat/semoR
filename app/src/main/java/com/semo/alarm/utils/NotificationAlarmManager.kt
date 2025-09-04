@@ -222,4 +222,66 @@ class NotificationAlarmManager(private val context: Context) {
             Log.d(TAG, "Notification channel created")
         }
     }
+    
+    /**
+     * 타이머 완료 알림 표시 - 지속적인 알람
+     */
+    fun showTimerCompleteNotification(timerName: String) {
+        Log.d(TAG, "Showing persistent timer complete notification: $timerName")
+        
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+        
+        // Dismiss action
+        val dismissIntent = Intent(context, AlarmNotificationReceiver::class.java).apply {
+            action = "DISMISS_TIMER_ALARM"
+            putExtra("timer_name", timerName)
+        }
+        val dismissPendingIntent = PendingIntent.getBroadcast(
+            context,
+            NOTIFICATION_ID_BASE + 1001,
+            dismissIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+        
+        val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_timer)
+            .setContentTitle("⏰ 타이머 완료!")
+            .setContentText("$timerName 타이머가 완료되었습니다!")
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setAutoCancel(false)  // Don't auto cancel - user must dismiss
+            .setOngoing(true)      // Make it persistent
+            .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000))  // Longer vibration pattern
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))  // Alarm sound instead of notification
+            .setContentIntent(pendingIntent)
+            .setFullScreenIntent(pendingIntent, true)
+            .addAction(R.drawable.ic_close_white, "끄기", dismissPendingIntent)  // Add dismiss button
+            .setDeleteIntent(dismissPendingIntent)  // Handle swipe to dismiss
+            .build()
+        
+        // Make notification persistent and high priority
+        notification.flags = notification.flags or android.app.Notification.FLAG_INSISTENT or android.app.Notification.FLAG_NO_CLEAR
+        
+        notificationManager.notify(NOTIFICATION_ID_BASE + 1000, notification)
+        Log.d(TAG, "Persistent timer complete notification displayed: $timerName")
+    }
+    
+    /**
+     * 타이머 알람 해제
+     */
+    fun dismissTimerAlarm() {
+        notificationManager.cancel(NOTIFICATION_ID_BASE + 1000)
+        Log.d(TAG, "Timer alarm dismissed")
+    }
 }

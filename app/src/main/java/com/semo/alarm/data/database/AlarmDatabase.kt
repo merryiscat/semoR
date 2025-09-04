@@ -17,7 +17,7 @@ import com.semo.alarm.data.entities.TimerCategory
 
 @Database(
     entities = [Alarm::class, TimerTemplate::class, TimerRound::class, TimerCategory::class],
-    version = 5,
+    version = 8,
     exportSchema = false
 )
 abstract class AlarmDatabase : RoomDatabase() {
@@ -164,6 +164,30 @@ abstract class AlarmDatabase : RoomDatabase() {
             }
         }
         
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add isActive column to timer_templates table
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN isActive INTEGER NOT NULL DEFAULT 1")
+            }
+        }
+        
+        private val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add timer runtime columns to timer_templates table
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN isRunning INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN remainingSeconds INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+        
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add sound & vibration columns to timer_templates table
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN soundUri TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN volume REAL NOT NULL DEFAULT 0.7")
+                database.execSQL("ALTER TABLE timer_templates ADD COLUMN vibrationEnabled INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+        
         fun getDatabase(context: Context): AlarmDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -171,7 +195,7 @@ abstract class AlarmDatabase : RoomDatabase() {
                     AlarmDatabase::class.java,
                     "alarm_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
                 .build()
                 
                 INSTANCE = instance
