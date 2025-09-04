@@ -9,7 +9,8 @@ import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.databinding.ItemTimerTemplateBinding
 
 class TimerTemplateAdapter(
-    private val onItemClick: (TimerTemplate) -> Unit
+    private val onItemClick: (TimerTemplate) -> Unit,
+    private val onDeleteClick: (TimerTemplate) -> Unit
 ) : ListAdapter<TimerTemplate, TimerTemplateAdapter.TimerTemplateViewHolder>(DiffCallback()) {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimerTemplateViewHolder {
@@ -18,7 +19,7 @@ class TimerTemplateAdapter(
             parent,
             false
         )
-        return TimerTemplateViewHolder(binding, onItemClick)
+        return TimerTemplateViewHolder(binding, onItemClick, onDeleteClick)
     }
     
     override fun onBindViewHolder(holder: TimerTemplateViewHolder, position: Int) {
@@ -27,7 +28,8 @@ class TimerTemplateAdapter(
     
     inner class TimerTemplateViewHolder(
         private val binding: ItemTimerTemplateBinding,
-        private val onItemClick: (TimerTemplate) -> Unit
+        private val onItemClick: (TimerTemplate) -> Unit,
+        private val onDeleteClick: (TimerTemplate) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
         
         fun bind(template: TimerTemplate) {
@@ -43,7 +45,7 @@ class TimerTemplateAdapter(
                 
                 // Set click listeners
                 root.setOnClickListener { onItemClick(template) }
-                btnStartTimer.setOnClickListener { onItemClick(template) }
+                btnDeleteTemplate.setOnClickListener { onDeleteClick(template) }
             }
         }
         

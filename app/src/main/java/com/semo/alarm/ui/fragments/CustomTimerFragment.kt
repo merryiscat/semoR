@@ -6,10 +6,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.databinding.FragmentCustomTimerBinding
+import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.ui.activities.AddEditCategoryActivity
 import com.semo.alarm.ui.activities.TimerListActivity
 import com.semo.alarm.ui.adapters.CategoryListAdapter
@@ -52,12 +54,17 @@ class CustomTimerFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        categoryAdapter = CategoryListAdapter { category ->
-            // 카테고리 클릭 시 해당 카테고리의 타이머 목록 화면으로 이동
-            val intent = Intent(requireContext(), TimerListActivity::class.java)
-            intent.putExtra("category", category)
-            startActivity(intent)
-        }
+        categoryAdapter = CategoryListAdapter(
+            onCategoryClicked = { category ->
+                // 카테고리 클릭 시 해당 카테고리의 타이머 목록 화면으로 이동
+                val intent = Intent(requireContext(), TimerListActivity::class.java)
+                intent.putExtra("category", category)
+                startActivity(intent)
+            },
+            onDeleteClicked = { category -> 
+                onDeleteCategory(category)
+            }
+        )
         
         binding.recyclerViewCategories.apply {
             layoutManager = LinearLayoutManager(requireContext())
@@ -103,6 +110,24 @@ class CustomTimerFragment : Fragment() {
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
             // TODO: Show/hide loading indicator if needed
         }
+    }
+    
+    private fun onDeleteCategory(category: TimerCategory) {
+        // "기본" 카테고리만 삭제 불가 (운동/요리/학습/음료는 삭제 가능)
+        if (category.isDefault && category.name == "기본") {
+            Toast.makeText(context, "기본 카테고리는 삭제할 수 없습니다", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        AlertDialog.Builder(requireContext())
+            .setTitle("카테고리 삭제")
+            .setMessage("'${category.name}' 카테고리를 삭제하시겠습니까?\n카테고리 내 모든 타이머도 함께 삭제됩니다.")
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteCategory(category)
+                Toast.makeText(context, "${category.name} 카테고리가 삭제되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
     
     override fun onDestroyView() {

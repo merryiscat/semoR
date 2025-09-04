@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.databinding.ActivityTimerListBinding
@@ -52,9 +53,10 @@ class TimerListActivity : AppCompatActivity() {
     }
     
     private fun setupRecyclerView() {
-        adapter = TimerTemplateAdapter { template ->
-            onTemplateClicked(template)
-        }
+        adapter = TimerTemplateAdapter(
+            onItemClick = { template -> onTemplateClicked(template) },
+            onDeleteClick = { template -> onDeleteTemplate(template) }
+        )
         
         binding.recyclerViewTemplates.apply {
             layoutManager = LinearLayoutManager(this@TimerListActivity)
@@ -114,5 +116,17 @@ class TimerListActivity : AppCompatActivity() {
         Toast.makeText(this, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
         
         // TODO: 타이머 실행 화면으로 이동
+    }
+    
+    private fun onDeleteTemplate(template: TimerTemplate) {
+        AlertDialog.Builder(this)
+            .setTitle("템플릿 삭제")
+            .setMessage("'${template.name}' 템플릿을 삭제하시겠습니까?\n삭제된 템플릿은 복구할 수 없습니다.")
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteTemplate(template.id)
+                Toast.makeText(this, "${template.name} 템플릿이 삭제되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 }

@@ -162,7 +162,12 @@ class CustomTimerViewModel @Inject constructor(
     fun addCategory(category: TimerCategory) {
         viewModelScope.launch {
             try {
-                timerRepository.insertCategory(category)
+                // 현재 카테고리 중 가장 큰 sortOrder를 찾아서 +1
+                val allCategories = timerRepository.getAllCategoriesSync()
+                val maxSortOrder = allCategories.maxOfOrNull { it.sortOrder } ?: 0
+                val categoryWithSortOrder = category.copy(sortOrder = maxSortOrder + 1)
+                
+                timerRepository.insertCategory(categoryWithSortOrder)
                 // Refresh categories after adding
                 loadAllCategories()
             } catch (e: Exception) {
@@ -191,6 +196,18 @@ class CustomTimerViewModel @Inject constructor(
                 loadAllCategories()
             } catch (e: Exception) {
                 _error.value = "카테고리 삭제에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun deleteTemplate(templateId: Int) {
+        viewModelScope.launch {
+            try {
+                timerRepository.deleteTemplate(templateId)
+                // Refresh current template list
+                _templates.value = _templates.value?.filter { it.id != templateId } ?: emptyList()
+            } catch (e: Exception) {
+                _error.value = "템플릿 삭제에 실패했습니다: ${e.message}"
             }
         }
     }

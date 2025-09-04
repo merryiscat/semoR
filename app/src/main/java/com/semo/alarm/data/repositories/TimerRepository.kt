@@ -68,6 +68,10 @@ class TimerRepository @Inject constructor(
         templateDao.deleteTemplate(template)
     }
     
+    suspend fun deleteTemplate(templateId: Int) {
+        templateDao.deleteTemplateById(templateId)
+    }
+    
     suspend fun incrementUsageCount(templateId: Int) {
         templateDao.incrementUsageCount(templateId)
     }

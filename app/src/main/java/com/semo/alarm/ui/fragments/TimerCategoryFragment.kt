@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -65,9 +66,10 @@ class TimerCategoryFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        adapter = TimerTemplateAdapter { template ->
-            onTemplateClicked(template)
-        }
+        adapter = TimerTemplateAdapter(
+            onItemClick = { template -> onTemplateClicked(template) },
+            onDeleteClick = { template -> onDeleteTemplate(template) }
+        )
         
         binding.recyclerViewTemplates.apply {
             layoutManager = LinearLayoutManager(context)
@@ -124,6 +126,18 @@ class TimerCategoryFragment : Fragment() {
         
         // Show toast or navigate to timer execution
         // Toast.makeText(context, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun onDeleteTemplate(template: TimerTemplate) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("템플릿 삭제")
+            .setMessage("'${template.name}' 템플릿을 삭제하시겠습니까?\n삭제된 템플릿은 복구할 수 없습니다.")
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteTemplate(template.id)
+                Toast.makeText(context, "${template.name} 템플릿이 삭제되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
     
     override fun onDestroyView() {
