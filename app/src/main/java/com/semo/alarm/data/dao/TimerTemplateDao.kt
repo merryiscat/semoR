@@ -13,6 +13,9 @@ interface TimerTemplateDao {
     @Query("SELECT * FROM timer_templates WHERE categoryId = :categoryId ORDER BY usageCount DESC, name ASC")
     fun getTemplatesByCategory(categoryId: Int): LiveData<List<TimerTemplate>>
     
+    @Query("SELECT * FROM timer_templates WHERE categoryId = :categoryId ORDER BY usageCount DESC, name ASC")
+    suspend fun getTemplatesByCategorySync(categoryId: Int): List<TimerTemplate>
+    
     @Query("SELECT * FROM timer_templates WHERE isDefault = 1 ORDER BY categoryId, name ASC")
     fun getDefaultTemplates(): LiveData<List<TimerTemplate>>
     

@@ -67,16 +67,9 @@ class TimerListActivity : AppCompatActivity() {
     private fun setupFab() {
         binding.fabAddTimer.setOnClickListener {
             category?.let { cat ->
-                Toast.makeText(
-                    this,
-                    "${cat.name} 카테고리에 새 타이머 추가 기능은 개발 중입니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-                
-                // TODO: 타이머 생성 화면으로 이동
-                // val intent = Intent(this, AddEditTimerActivity::class.java)
-                // intent.putExtra("categoryId", cat.id)
-                // startActivity(intent)
+                val intent = Intent(this, AddEditTimerActivity::class.java)
+                intent.putExtra("category", cat)
+                startActivity(intent)
             }
         }
     }

@@ -27,6 +27,10 @@ class TimerRepository @Inject constructor(
         return templateDao.getTemplatesByCategory(categoryId)
     }
     
+    suspend fun getTemplatesByCategorySync(categoryId: Int): List<TimerTemplate> {
+        return templateDao.getTemplatesByCategorySync(categoryId)
+    }
+    
     fun getDefaultTemplates(): LiveData<List<TimerTemplate>> {
         return templateDao.getDefaultTemplates()
     }
@@ -191,5 +195,17 @@ class TimerRepository @Inject constructor(
         if (getDefaultCategoryCount() == 0) {
             insertCategories(TimerCategory.getDefaultCategories())
         }
+    }
+    
+    // Insert timer template with rounds (transaction)
+    suspend fun insertTimerTemplateWithRounds(template: TimerTemplate, rounds: List<TimerRound>) {
+        val templateId = templateDao.insertTemplate(template)
+        
+        // Update rounds with the actual template ID
+        val roundsWithTemplateId = rounds.map { round ->
+            round.copy(templateId = templateId.toInt())
+        }
+        
+        roundDao.insertRounds(roundsWithTemplateId)
     }
 }

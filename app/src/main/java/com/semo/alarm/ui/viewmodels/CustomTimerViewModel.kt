@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.data.entities.TimerCategory
+import com.semo.alarm.data.entities.TimerRound
 import com.semo.alarm.data.repositories.TimerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -159,6 +160,15 @@ class CustomTimerViewModel @Inject constructor(
         }
     }
     
+    suspend fun getTemplatesByCategory(categoryId: Int): List<TimerTemplate> {
+        return try {
+            timerRepository.getTemplatesByCategorySync(categoryId)
+        } catch (e: Exception) {
+            _error.value = "카테고리별 템플릿을 불러오는데 실패했습니다: ${e.message}"
+            emptyList()
+        }
+    }
+    
     fun addCategory(category: TimerCategory) {
         viewModelScope.launch {
             try {
@@ -208,6 +218,22 @@ class CustomTimerViewModel @Inject constructor(
                 _templates.value = _templates.value?.filter { it.id != templateId } ?: emptyList()
             } catch (e: Exception) {
                 _error.value = "템플릿 삭제에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+    
+    fun insertTimerTemplate(template: TimerTemplate, rounds: List<TimerRound>) {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                _error.value = null
+                
+                timerRepository.insertTimerTemplateWithRounds(template, rounds)
+                
+                _loading.value = false
+            } catch (e: Exception) {
+                _error.value = "타이머 저장에 실패했습니다: ${e.message}"
+                _loading.value = false
             }
         }
     }

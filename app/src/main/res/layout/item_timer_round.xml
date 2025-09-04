@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardViewRound"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/md_theme_primary">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- 라운드 번호 -->
+        <TextView
+            android:id="@+id/textViewRoundIndex"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:text="1"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white"
+            android:gravity="center"
+            android:background="@drawable/circle_background"
+            android:layout_marginEnd="12dp" />
+
+        <!-- 라운드 정보 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textViewRoundName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="운동"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/textViewRoundDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1분"
+                android:textSize="14sp"
+                android:textColor="@android:color/white"
+                android:alpha="0.8" />
+
+        </LinearLayout>
+
+        <!-- 편집 버튼 -->
+        <ImageButton
+            android:id="@+id/btnEditRound"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_edit"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="라운드 편집"
+            android:layout_marginEnd="8dp"
+            android:scaleType="center"
+            app:tint="@android:color/white" />
+
+        <!-- 삭제 버튼 -->
+        <ImageButton
+            android:id="@+id/btnDeleteRound"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_close_white"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="라운드 삭제"
+            android:scaleType="center"
+            app:tint="@android:color/white" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
