@@ -97,6 +97,20 @@
             android:exported="false"
             android:foregroundServiceType="mediaPlayback|systemExempted" />
 
+        <!-- 타이머 포그라운드 서비스 -->
+        <service
+            android:name=".services.TimerForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="systemExempted" />
+
+        <!-- 수면 추적 포그라운드 서비스 -->
+        <service
+            android:name=".services.SleepTrackingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="systemExempted" />
+
     </application>
 
 </manifest>

@@ -371,8 +371,8 @@ class AddEditAlarmActivity : AppCompatActivity() {
         // SeekBar 색상 초기 설정
         updateSeekBarColors(volumeProgress)
         
-        // 진동 모드 상태에 따라 소리 컨트롤 활성화/비활성화
-        updateSoundControlsEnabled(!alarm.silentMode)
+        // 소리 컨트롤 항상 활성화 (진동과 독립적)
+        updateSoundControlsEnabled(true)
     }
     
     private fun setupSoundAndVibrationSettings() {
@@ -394,13 +394,9 @@ class AddEditAlarmActivity : AppCompatActivity() {
                     // 볼륨이 0%가 되면 자동으로 진동 모드 활성화
                     if (progress == 0) {
                         binding.switchVibrationMode.isChecked = true
-                        updateSoundControlsEnabled(false)
                     }
-                    // 볼륨이 0%에서 올라가면 진동 모드 비활성화
-                    else if (binding.switchVibrationMode.isChecked) {
-                        binding.switchVibrationMode.isChecked = false
-                        updateSoundControlsEnabled(true)
-                    }
+                    // 소리 컨트롤은 항상 활성화 상태 유지
+                    updateSoundControlsEnabled(true)
                 }
             }
             
@@ -413,30 +409,20 @@ class AddEditAlarmActivity : AppCompatActivity() {
             showSoundSelectionDialog()
         }
         
-        // 진동 모드 스위치 - OFF일 때 볼륨을 1%로 자동 조정
+        // 진동 모드 스위치 - 진동과 소리 독립적 제어
         binding.switchVibrationMode.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                // 진동 모드 ON: 볼륨을 0%로, 소리 컨트롤 비활성화
-                binding.seekBarVolume.progress = 0
-                binding.textViewVolumePercent.text = "0%"
-                updateSeekBarColors(0)
-                updateSoundControlsEnabled(false)
-            } else {
-                // 진동 모드 OFF: 볼륨을 1%로, 소리 컨트롤 활성화
-                binding.seekBarVolume.progress = 1
-                binding.textViewVolumePercent.text = "1%"
-                updateSeekBarColors(1)
-                updateSoundControlsEnabled(true)
-            }
+            // 진동 스위치는 단순히 진동만 제어 (소리에 영향 주지 않음)
+            // 소리 컨트롤은 항상 활성화 상태 유지
+            updateSoundControlsEnabled(true)
         }
     }
     
     private fun updateSoundControlsEnabled(enabled: Boolean) {
-        binding.buttonSelectSound.isEnabled = enabled
-        // SeekBar는 항상 활성화 - 진동 모드에서도 볼륨 조절 가능해야 함
+        // 모든 소리 관련 컨트롤 항상 활성화 (진동과 독립적)
+        binding.buttonSelectSound.isEnabled = true
         binding.seekBarVolume.isEnabled = true
-        binding.textViewVolumePercent.alpha = if (enabled) 1.0f else 0.5f
-        binding.buttonTestVolume.isEnabled = enabled
+        binding.textViewVolumePercent.alpha = 1.0f
+        binding.buttonTestVolume.isEnabled = true
     }
     
     private fun setupVolumeTestButton() {
@@ -446,10 +432,12 @@ class AddEditAlarmActivity : AppCompatActivity() {
             
             Log.d("VolumeTest", "Testing volume: $currentVolume")
             
+            // 볼륨이 0%여도 테스트 가능 (진동 + 무음 테스트)
             if (currentVolume > 0) {
                 testAlarmSound(currentVolume, currentSoundUri)
             } else {
-                Toast.makeText(this, "진동 모드 (볼륨 0%)에서는 소리를 테스트할 수 없습니다", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "볼륨 0% - 진동만 테스트됩니다", Toast.LENGTH_SHORT).show()
+                // TODO: 진동 테스트 추가 가능
             }
         }
     }
@@ -563,7 +551,7 @@ class AddEditAlarmActivity : AppCompatActivity() {
         // 소리 & 진동 설정값 가져오기
         val volume = binding.seekBarVolume.progress / 100.0f
         val soundUri = if (binding.buttonSelectSound.text == "기본 알람음") "" else binding.buttonSelectSound.text.toString()
-        val vibrationEnabled = true // 진동은 항상 활성화 (볼륨 0%일 때 무음+진동, 볼륨 있을 때 소리+진동)
+        val vibrationEnabled = binding.switchVibrationMode.isChecked || volume == 0.0f // 진동 스위치 ON이거나 볼륨이 0%면 진동 활성화
         val silentMode = binding.switchVibrationMode.isChecked
         
         val alarm = if (isEditMode && currentAlarm != null) {

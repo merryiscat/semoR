@@ -1,7 +1,11 @@
 package com.semo.alarm.ui.fragments
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,9 +13,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.databinding.FragmentTimerCategoryBinding
+import com.semo.alarm.services.TimerForegroundService
 import com.semo.alarm.ui.activities.AddEditTimerActivity
 import com.semo.alarm.ui.adapters.TimerTemplateAdapter
 import com.semo.alarm.ui.viewmodels.CustomTimerViewModel
@@ -27,6 +33,32 @@ class TimerCategoryFragment : Fragment() {
     private lateinit var adapter: TimerTemplateAdapter
     
     private var categoryId: Int? = null
+    
+    // Timer update broadcast receiver
+    private val timerUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                TimerForegroundService.BROADCAST_TIMER_UPDATE -> {
+                    val timerId = intent.getIntExtra(TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    val remainingSeconds = intent.getIntExtra(TimerForegroundService.EXTRA_REMAINING_SECONDS, 0)
+                    val isRunning = intent.getBooleanExtra(TimerForegroundService.EXTRA_IS_RUNNING, false)
+                    
+                    Log.d("TimerCategoryFragment", "🔄 Timer update: ID=$timerId, ${remainingSeconds}초 남음")
+                    updateTimerInAdapter(timerId, remainingSeconds, isRunning)
+                }
+                TimerForegroundService.BROADCAST_TIMER_COMPLETE -> {
+                    val timerId = intent.getIntExtra(TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    Log.d("TimerCategoryFragment", "Received timer complete: ID=$timerId")
+                    updateTimerInAdapter(timerId, 0, false)
+                }
+                TimerForegroundService.BROADCAST_TIMER_STOPPED -> {
+                    val timerId = intent.getIntExtra(TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    Log.d("TimerCategoryFragment", "Received timer stopped: ID=$timerId")
+                    updateTimerInAdapter(timerId, 0, false)
+                }
+            }
+        }
+    }
     
     companion object {
         private const val ARG_CATEGORY_ID = "category_id"
@@ -61,6 +93,9 @@ class TimerCategoryFragment : Fragment() {
         setupFab()
         observeTemplates()
         
+        // Register broadcast receiver for timer updates
+        registerTimerUpdateReceiver()
+        
         // Load templates for this category
         categoryId?.let { id ->
             viewModel.loadTemplatesByCategory(id)
@@ -84,16 +119,10 @@ class TimerCategoryFragment : Fragment() {
     private fun setupFab() {
         binding.fabAddTimer.setOnClickListener {
             categoryId?.let { id ->
-                Toast.makeText(
-                    context,
-                    "카테고리 ID $id 에 새 타이머 추가 기능은 개발 중입니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-                
-                // TODO: 타이머 생성 화면으로 이동
-                // val intent = Intent(requireContext(), AddEditTimerActivity::class.java)
-                // intent.putExtra("categoryId", id)
-                // startActivity(intent)
+                // 타이머 생성 화면으로 이동
+                val intent = Intent(requireContext(), AddEditTimerActivity::class.java)
+                intent.putExtra("categoryId", id)
+                startActivity(intent)
             }
         }
     }
@@ -167,6 +196,52 @@ class TimerCategoryFragment : Fragment() {
     
     override fun onDestroyView() {
         super.onDestroyView()
+        
+        // Unregister broadcast receiver
+        unregisterTimerUpdateReceiver()
+        
         _binding = null
+    }
+    
+    /**
+     * 타이머 업데이트 브로드캐스트 수신기 등록
+     */
+    private fun registerTimerUpdateReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(TimerForegroundService.BROADCAST_TIMER_UPDATE)
+            addAction(TimerForegroundService.BROADCAST_TIMER_COMPLETE)
+            addAction(TimerForegroundService.BROADCAST_TIMER_STOPPED)
+        }
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(timerUpdateReceiver, filter)
+        Log.d("TimerCategoryFragment", "Timer update receiver registered")
+    }
+    
+    /**
+     * 타이머 업데이트 브로드캐스트 수신기 해제
+     */
+    private fun unregisterTimerUpdateReceiver() {
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(timerUpdateReceiver)
+        Log.d("TimerCategoryFragment", "Timer update receiver unregistered")
+    }
+    
+    /**
+     * 어댑터에서 특정 타이머 상태 업데이트
+     */
+    private fun updateTimerInAdapter(timerId: Int, remainingSeconds: Int, isRunning: Boolean) {
+        val currentList = adapter.currentList.toMutableList()
+        val index = currentList.indexOfFirst { it.id == timerId }
+        
+        if (index != -1) {
+            val updatedTemplate = currentList[index].copy(
+                isRunning = isRunning,
+                remainingSeconds = remainingSeconds
+            )
+            currentList[index] = updatedTemplate
+            adapter.submitList(currentList)
+            
+            Log.d("TimerCategoryFragment", "✅ UI 업데이트: '${updatedTemplate.name}' ${remainingSeconds}초")
+        } else {
+            Log.w("TimerCategoryFragment", "❌ Timer ID $timerId not found in adapter")
+        }
     }
 }

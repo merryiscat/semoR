@@ -1,15 +1,21 @@
 package com.semo.alarm.ui.activities
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.semo.alarm.databinding.ActivityTimerListBinding
 import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.entities.TimerTemplate
+import com.semo.alarm.services.TimerForegroundService
 import com.semo.alarm.ui.activities.AddEditTimerActivity
 import com.semo.alarm.ui.adapters.TimerTemplateAdapter
 import com.semo.alarm.ui.viewmodels.CustomTimerViewModel
@@ -24,6 +30,32 @@ class TimerListActivity : AppCompatActivity() {
     
     private var category: TimerCategory? = null
     
+    // Timer update broadcast receiver
+    private val timerUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                TimerForegroundService.BROADCAST_TIMER_UPDATE -> {
+                    val timerId = intent.getIntExtra(TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    val remainingSeconds = intent.getIntExtra(TimerForegroundService.EXTRA_REMAINING_SECONDS, 0)
+                    val isRunning = intent.getBooleanExtra(TimerForegroundService.EXTRA_IS_RUNNING, false)
+                    
+                    Log.d("TimerListActivity", "🔄 Timer update: ID=$timerId, ${remainingSeconds}초 남음")
+                    updateTimerInAdapter(timerId, remainingSeconds, isRunning)
+                }
+                TimerForegroundService.BROADCAST_TIMER_COMPLETE -> {
+                    val timerId = intent.getIntExtra(TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    Log.d("TimerListActivity", "Timer complete: ID=$timerId")
+                    updateTimerInAdapter(timerId, 0, false)
+                }
+                TimerForegroundService.BROADCAST_TIMER_STOPPED -> {
+                    val timerId = intent.getIntExtra(TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    Log.d("TimerListActivity", "Timer stopped: ID=$timerId")
+                    updateTimerInAdapter(timerId, 0, false)
+                }
+            }
+        }
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTimerListBinding.inflate(layoutInflater)
@@ -36,6 +68,9 @@ class TimerListActivity : AppCompatActivity() {
         setupRecyclerView()
         setupFab()
         observeTemplates()
+        
+        // Register broadcast receiver for timer updates
+        registerTimerUpdateReceiver()
         
         // 해당 카테고리의 템플릿들 로드
         category?.let { cat ->
@@ -145,5 +180,53 @@ class TimerListActivity : AppCompatActivity() {
         startActivity(intent)
         
         Toast.makeText(this, "${template.name} 편집", Toast.LENGTH_SHORT).show()
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregister broadcast receiver
+        unregisterTimerUpdateReceiver()
+    }
+    
+    /**
+     * 타이머 업데이트 브로드캐스트 수신기 등록
+     */
+    private fun registerTimerUpdateReceiver() {
+        val filter = IntentFilter().apply {
+            addAction(TimerForegroundService.BROADCAST_TIMER_UPDATE)
+            addAction(TimerForegroundService.BROADCAST_TIMER_COMPLETE)
+            addAction(TimerForegroundService.BROADCAST_TIMER_STOPPED)
+        }
+        LocalBroadcastManager.getInstance(this).registerReceiver(timerUpdateReceiver, filter)
+        Log.d("TimerListActivity", "Timer update receiver registered")
+    }
+    
+    /**
+     * 타이머 업데이트 브로드캐스트 수신기 해제
+     */
+    private fun unregisterTimerUpdateReceiver() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(timerUpdateReceiver)
+        Log.d("TimerListActivity", "Timer update receiver unregistered")
+    }
+    
+    /**
+     * 어댑터에서 특정 타이머 상태 업데이트
+     */
+    private fun updateTimerInAdapter(timerId: Int, remainingSeconds: Int, isRunning: Boolean) {
+        val currentList = adapter.currentList.toMutableList()
+        val index = currentList.indexOfFirst { it.id == timerId }
+        
+        if (index != -1) {
+            val updatedTemplate = currentList[index].copy(
+                isRunning = isRunning,
+                remainingSeconds = remainingSeconds
+            )
+            currentList[index] = updatedTemplate
+            adapter.submitList(currentList)
+            
+            Log.d("TimerListActivity", "✅ UI 업데이트: '${updatedTemplate.name}' ${remainingSeconds}초")
+        } else {
+            Log.w("TimerListActivity", "❌ Timer ID $timerId not found in adapter")
+        }
     }
 }

@@ -98,4 +98,9 @@
     <!-- Switch Thumb Colors -->
     <color name="switch_thumb_off">#D1D5DB</color>       <!-- OFF 상태 thumb - 밝은 회색 -->
     <color name="switch_track_off">#4B5563</color>       <!-- OFF 상태 track - 어두운 회색 -->
+    
+    <!-- Status Colors for Settings -->
+    <color name="green">#10B981</color>                  <!-- 허용/활성 상태 -->
+    <color name="red">#EF4444</color>                    <!-- 거부/비활성 상태 -->
+    <color name="orange">#F59E0B</color>                 <!-- 경고/설정 필요 상태 -->
 </resources>

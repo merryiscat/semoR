@@ -1,7 +1,10 @@
 package com.semo.alarm.ui.viewmodels
 
 import android.app.Application
+import android.content.Intent
+import android.os.Build
 import android.os.CountDownTimer
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -10,6 +13,7 @@ import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.data.entities.TimerCategory
 import com.semo.alarm.data.entities.TimerRound
 import com.semo.alarm.data.repositories.TimerRepository
+import com.semo.alarm.services.TimerForegroundService
 import com.semo.alarm.utils.NotificationAlarmManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -33,16 +37,8 @@ class CustomTimerViewModel @Inject constructor(
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> get() = _error
     
-    // Timer management
-    private val activeTimers = mutableMapOf<Int, CountDownTimer>()
-    private val timerStates = mutableMapOf<Int, TimerState>()
+    // Timer management - TimerForegroundService 사용으로 간소화됨
     private val notificationAlarmManager = NotificationAlarmManager(getApplication())
-    
-    data class TimerState(
-        val templateId: Int,
-        val remainingSeconds: Int,
-        val isRunning: Boolean
-    )
     
     fun loadTemplatesByCategory(categoryId: Int) {
         viewModelScope.launch {
@@ -270,7 +266,13 @@ class CustomTimerViewModel @Inject constructor(
                 val template = timerRepository.getTemplateById(templateId)
                 if (template != null && !template.isRunning) {
                     val remainingTime = if (template.remainingSeconds > 0) template.remainingSeconds else template.totalDuration
-                    startCountDownTimer(template, remainingTime)
+                    
+                    // 기존 CountDownTimer 방식 대신 TimerForegroundService 사용
+                    startTimerService(template, remainingTime)
+                    
+                    // 데이터베이스 상태 업데이트
+                    timerRepository.updateTimerState(templateId, isRunning = true, remainingSeconds = remainingTime)
+                    refreshTemplates()
                 }
             } catch (e: Exception) {
                 _error.value = "타이머 시작에 실패했습니다: ${e.message}"
@@ -279,16 +281,17 @@ class CustomTimerViewModel @Inject constructor(
     }
     
     fun pauseTimer(templateId: Int) {
-        activeTimers[templateId]?.cancel()
-        activeTimers.remove(templateId)
+        // TimerForegroundService에 일시정지 명령 전송
+        val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_PAUSE_TIMER
+            putExtra(TimerForegroundService.EXTRA_TIMER_ID, templateId)
+        }
+        getApplication<Application>().startService(intent)
         
         viewModelScope.launch {
             try {
-                val state = timerStates[templateId]
-                if (state != null) {
-                    timerRepository.updateTimerState(templateId, isRunning = false, remainingSeconds = state.remainingSeconds)
-                    refreshTemplates()
-                }
+                timerRepository.updateTimerState(templateId, isRunning = false, remainingSeconds = 0) // TODO: 정확한 남은 시간 필요
+                refreshTemplates()
             } catch (e: Exception) {
                 _error.value = "타이머 일시정지에 실패했습니다: ${e.message}"
             }
@@ -296,9 +299,12 @@ class CustomTimerViewModel @Inject constructor(
     }
     
     fun resetTimer(templateId: Int) {
-        activeTimers[templateId]?.cancel()
-        activeTimers.remove(templateId)
-        timerStates.remove(templateId)
+        // TimerForegroundService 중지
+        val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_STOP_TIMER
+            putExtra(TimerForegroundService.EXTRA_TIMER_ID, templateId)
+        }
+        getApplication<Application>().startService(intent)
         
         viewModelScope.launch {
             try {
@@ -310,67 +316,34 @@ class CustomTimerViewModel @Inject constructor(
         }
     }
     
-    private fun startCountDownTimer(template: TimerTemplate, remainingSeconds: Int) {
-        val timer = object : CountDownTimer(remainingSeconds * 1000L, 1000) {
-            override fun onTick(millisUntilFinished: Long) {
-                val secondsLeft = (millisUntilFinished / 1000).toInt()
-                timerStates[template.id] = TimerState(template.id, secondsLeft, true)
-                
-                viewModelScope.launch {
-                    timerRepository.updateTimerState(template.id, isRunning = true, remainingSeconds = secondsLeft)
-                    refreshTemplates()
-                }
-            }
-            
-            override fun onFinish() {
-                timerStates.remove(template.id)
-                activeTimers.remove(template.id)
-                
-                viewModelScope.launch {
-                    timerRepository.updateTimerState(template.id, isRunning = false, remainingSeconds = 0)
-                    // TODO: Trigger alarm notification
-                    onTimerComplete(template)
-                    refreshTemplates()
-                }
-            }
+    private fun startTimerService(template: TimerTemplate, remainingSeconds: Int) {
+        // TimerForegroundService 시작
+        val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
+            action = TimerForegroundService.ACTION_START_TIMER
+            putExtra(TimerForegroundService.EXTRA_TIMER_NAME, template.name)
+            putExtra(TimerForegroundService.EXTRA_TIMER_DURATION, remainingSeconds)
+            putExtra(TimerForegroundService.EXTRA_TIMER_ID, template.id)
         }
         
-        activeTimers[template.id] = timer
-        timerStates[template.id] = TimerState(template.id, remainingSeconds, true)
-        timer.start()
-        
-        viewModelScope.launch {
-            timerRepository.updateTimerState(template.id, isRunning = true, remainingSeconds = remainingSeconds)
-            refreshTemplates()
+        // API 26 이상에서는 startForegroundService, 이하에서는 startService 사용
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getApplication<Application>().startForegroundService(intent)
+        } else {
+            getApplication<Application>().startService(intent)
         }
-    }
-    
-    private fun onTimerComplete(template: TimerTemplate) {
-        // Show persistent timer complete notification with alarm sound
-        notificationAlarmManager.showTimerCompleteNotification(template.name)
     }
     
     private suspend fun refreshTemplates() {
-        // Refresh the current templates list to update UI
-        val currentTemplates = _templates.value
-        if (currentTemplates != null) {
-            val updatedTemplates = currentTemplates.map { template ->
-                val state = timerStates[template.id]
-                if (state != null) {
-                    template.copy(isRunning = state.isRunning, remainingSeconds = state.remainingSeconds)
-                } else {
-                    template
-                }
-            }
-            _templates.postValue(updatedTemplates)
+        // TimerForegroundService 사용으로 상태 관리가 서비스로 이동됨
+        // 데이터베이스에서 최신 상태를 다시 로드
+        val currentCategoryId = _templates.value?.firstOrNull()?.categoryId
+        if (currentCategoryId != null) {
+            loadTemplatesByCategory(currentCategoryId)
         }
     }
     
     override fun onCleared() {
         super.onCleared()
-        // Cancel all active timers when ViewModel is destroyed
-        activeTimers.values.forEach { it.cancel() }
-        activeTimers.clear()
-        timerStates.clear()
+        // TimerForegroundService는 별도로 실행되므로 여기서 정리할 필요 없음
     }
 }
