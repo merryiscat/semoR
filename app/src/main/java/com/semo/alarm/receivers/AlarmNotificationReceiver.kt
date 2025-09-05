@@ -283,6 +283,12 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
      * 알람음 재생
      */
     private fun playAlarmSound(context: Context, alarm: Alarm) {
+        // 볼륨이 0이면 소리를 재생하지 않음 (진동만 모드)
+        if (alarm.volume == 0.0f) {
+            Log.d(TAG, "🔇 Volume is 0% - skipping sound playback (vibration only mode)")
+            return
+        }
+        
         try {
             // 기존 MediaPlayer 정리
             activeMediaPlayers[alarm.id]?.let { existingPlayer ->
@@ -357,7 +363,13 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
      * 진동 시작
      */
     private fun startVibration(context: Context, alarm: Alarm) {
-        if (!alarm.vibrationEnabled) return
+        // 진동 조건: vibrationEnabled이거나 볼륨이 0%인 경우
+        val shouldVibrate = alarm.vibrationEnabled || alarm.volume == 0.0f
+        
+        if (!shouldVibrate) {
+            Log.d(TAG, "Vibration disabled - vibrationEnabled: ${alarm.vibrationEnabled}, volume: ${alarm.volume}")
+            return
+        }
         
         try {
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -368,21 +380,22 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
                 context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
             
-            val pattern = longArrayOf(0, 1000, 500, 1000, 500, 1000)
+            // 더 긴 진동 패턴으로 알람 진동 강화
+            val pattern = longArrayOf(0, 1000, 500, 1000, 500, 1000, 500, 1000)
             
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(
-                    VibrationEffect.createWaveform(pattern, -1), // 한 번만 진동
+                    VibrationEffect.createWaveform(pattern, 0), // 무한 반복 진동
                     AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_ALARM)
                         .build()
                 )
             } else {
                 @Suppress("DEPRECATION")
-                vibrator.vibrate(pattern, -1)
+                vibrator.vibrate(pattern, 0) // 무한 반복
             }
             
-            Log.d(TAG, "Vibration started")
+            Log.d(TAG, "🔊 Vibration started - vibrationEnabled: ${alarm.vibrationEnabled}, volume: ${alarm.volume}")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start vibration", e)
         }

@@ -47,6 +47,7 @@ class TimerTemplateAdapter(
                 if (template.isRunning && template.remainingSeconds > 0) {
                     tvDuration.text = formatDuration(template.remainingSeconds)
                     tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.md_theme_error))
+                    android.util.Log.d("TimerTemplateAdapter", "🔴 ${template.name}: ${template.remainingSeconds}초")
                 } else {
                     tvDuration.text = formatDuration(template.totalDuration)
                     tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.md_theme_onSurfaceVariant))

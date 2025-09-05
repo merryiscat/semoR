@@ -10,14 +10,18 @@ import com.semo.alarm.data.dao.AlarmDao
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.dao.TimerRoundDao
 import com.semo.alarm.data.dao.TimerCategoryDao
+import com.semo.alarm.data.dao.SleepRecordDao
+import com.semo.alarm.data.dao.ReportDao
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.data.entities.TimerRound
 import com.semo.alarm.data.entities.TimerCategory
+import com.semo.alarm.data.entities.SleepRecord
+import com.semo.alarm.data.entities.ReportData
 
 @Database(
-    entities = [Alarm::class, TimerTemplate::class, TimerRound::class, TimerCategory::class],
-    version = 8,
+    entities = [Alarm::class, TimerTemplate::class, TimerRound::class, TimerCategory::class, SleepRecord::class, ReportData::class],
+    version = 10,
     exportSchema = false
 )
 abstract class AlarmDatabase : RoomDatabase() {
@@ -26,6 +30,8 @@ abstract class AlarmDatabase : RoomDatabase() {
     abstract fun timerTemplateDao(): TimerTemplateDao
     abstract fun timerRoundDao(): TimerRoundDao
     abstract fun timerCategoryDao(): TimerCategoryDao
+    abstract fun sleepRecordDao(): SleepRecordDao
+    abstract fun reportDao(): ReportDao
     
     companion object {
         @Volatile
@@ -188,6 +194,57 @@ abstract class AlarmDatabase : RoomDatabase() {
             }
         }
         
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create sleep_records table for sleep tracking
+                database.execSQL("""
+                    CREATE TABLE sleep_records (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        bedtime INTEGER NOT NULL,
+                        wakeupTime INTEGER,
+                        totalDuration INTEGER NOT NULL DEFAULT 0,
+                        qualityScore REAL NOT NULL DEFAULT 0.0,
+                        snoringDetected INTEGER NOT NULL DEFAULT 0,
+                        snoringData TEXT NOT NULL DEFAULT '',
+                        movementData TEXT NOT NULL DEFAULT '',
+                        notes TEXT NOT NULL DEFAULT '',
+                        isActive INTEGER NOT NULL DEFAULT 0,
+                        createdAt INTEGER NOT NULL
+                    )
+                """)
+                
+                // Create index for better query performance
+                database.execSQL("CREATE INDEX index_sleep_records_createdAt ON sleep_records (createdAt)")
+                database.execSQL("CREATE INDEX index_sleep_records_isActive ON sleep_records (isActive)")
+            }
+        }
+        
+        private val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create report_data table for analytics and reporting
+                database.execSQL("""
+                    CREATE TABLE report_data (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        date TEXT NOT NULL,
+                        alarmDismissalTime INTEGER NOT NULL DEFAULT 0,
+                        snoozeCount INTEGER NOT NULL DEFAULT 0,
+                        timerUsageMinutes INTEGER NOT NULL DEFAULT 0,
+                        timerCompletionRate REAL NOT NULL DEFAULT 0.0,
+                        sleepDuration INTEGER NOT NULL DEFAULT 0,
+                        sleepQualityScore REAL NOT NULL DEFAULT 0.0,
+                        snoringPercentage REAL NOT NULL DEFAULT 0.0,
+                        productivityScore REAL NOT NULL DEFAULT 0.0,
+                        lifestyleScore REAL NOT NULL DEFAULT 0.0,
+                        createdAt INTEGER NOT NULL
+                    )
+                """)
+                
+                // Create indexes for better query performance
+                database.execSQL("CREATE UNIQUE INDEX index_report_data_date ON report_data (date)")
+                database.execSQL("CREATE INDEX index_report_data_createdAt ON report_data (createdAt)")
+            }
+        }
+        
         fun getDatabase(context: Context): AlarmDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -195,7 +252,7 @@ abstract class AlarmDatabase : RoomDatabase() {
                     AlarmDatabase::class.java,
                     "alarm_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
                 .build()
                 
                 INSTANCE = instance

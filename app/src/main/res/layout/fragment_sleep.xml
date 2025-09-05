@@ -1,19 +1,256 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
+    android:fillViewport="true"
     tools:context=".ui.fragments.SleepFragment">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:text="수면 추적 기능\n\n(Phase 2에서 구현 예정)"
-        android:textSize="18sp"
-        android:textAlignment="center"
-        style="@style/TextAppearance.Material3.BodyLarge" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
 
-</LinearLayout>
+        <!-- 제목 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🌙 수면 추적"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"
+            style="@style/TextAppearance.Material3.HeadlineSmall" />
+
+        <!-- 수면 상태 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- 현재 상태 -->
+                <TextView
+                    android:id="@+id/textSleepStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="💤 수면 상태: 대기 중"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="16dp"
+                    style="@style/TextAppearance.Material3.TitleMedium" />
+
+                <!-- 경과 시간 표시 (수면 중일 때만) -->
+                <TextView
+                    android:id="@+id/textElapsedTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="경과 시간: 0시간 0분"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="20dp"
+                    android:visibility="gone"
+                    style="@style/TextAppearance.Material3.BodyLarge" />
+
+                <!-- 버튼들 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:weightSum="2">
+
+                    <!-- 취침 시작 버튼 -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonStartSleep"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:text="🛌 취침 시작"
+                        android:textSize="16sp"
+                        android:backgroundTint="#00D4FF"
+                        android:textColor="#000000"
+                        app:cornerRadius="12dp" />
+
+                    <!-- 기상 버튼 -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/buttonStopSleep"
+                        android:layout_width="0dp"
+                        android:layout_height="56dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:text="⏰ 기상"
+                        android:textSize="16sp"
+                        android:backgroundTint="#6B7280"
+                        android:textColor="#FFFFFF"
+                        android:enabled="false"
+                        app:cornerRadius="12dp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 오늘 수면 요약 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardTodaysSummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📊 오늘 수면"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"
+                    style="@style/TextAppearance.Material3.TitleMedium" />
+
+                <TextView
+                    android:id="@+id/textTodaysSleepTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="23:30 → 07:15 (7시간 45분)"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="8dp"
+                    style="@style/TextAppearance.Material3.BodyLarge" />
+
+                <TextView
+                    android:id="@+id/textTodaysSnoring"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="😴 코골이: 1시간 12분 (16%)"
+                    android:textSize="16sp"
+                    style="@style/TextAppearance.Material3.BodyLarge" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 최근 7일 평균 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📈 최근 7일 평균"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"
+                    style="@style/TextAppearance.Material3.TitleMedium" />
+
+                <TextView
+                    android:id="@+id/textAverageSleep"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="수면: 7시간 23분"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="8dp"
+                    style="@style/TextAppearance.Material3.BodyLarge" />
+
+                <TextView
+                    android:id="@+id/textAverageSnoring"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="코골이: 14% (평균)"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="8dp"
+                    style="@style/TextAppearance.Material3.BodyLarge" />
+
+                <TextView
+                    android:id="@+id/textRecordCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="기록 개수: 7일"
+                    android:textSize="14sp"
+                    android:textColor="@android:color/darker_gray"
+                    style="@style/TextAppearance.Material3.BodyMedium" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 코골이 감지 설정 카드 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="20dp"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔊 코골이 감지"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp"
+                        style="@style/TextAppearance.Material3.TitleMedium" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="수면 중 코골이 패턴을 자동으로 감지합니다"
+                        android:textSize="14sp"
+                        android:textColor="@android:color/darker_gray"
+                        style="@style/TextAppearance.Material3.BodyMedium" />
+
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchSnoringDetection"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="true"
+                    app:thumbTint="#00D4FF"
+                    app:trackTint="#6B7280" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+
+</ScrollView>

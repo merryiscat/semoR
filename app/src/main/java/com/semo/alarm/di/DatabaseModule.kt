@@ -1,11 +1,14 @@
 package com.semo.alarm.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.room.Room
 import com.semo.alarm.data.dao.AlarmDao
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.dao.TimerRoundDao
 import com.semo.alarm.data.dao.TimerCategoryDao
+import com.semo.alarm.data.dao.SleepRecordDao
+import com.semo.alarm.data.dao.ReportDao
 import com.semo.alarm.data.database.AlarmDatabase
 import dagger.Module
 import dagger.Provides
@@ -42,5 +45,21 @@ object DatabaseModule {
     @Provides
     fun provideTimerCategoryDao(database: AlarmDatabase): TimerCategoryDao {
         return database.timerCategoryDao()
+    }
+    
+    @Provides
+    fun provideSleepRecordDao(database: AlarmDatabase): SleepRecordDao {
+        return database.sleepRecordDao()
+    }
+    
+    @Provides
+    fun provideReportDao(database: AlarmDatabase): ReportDao {
+        return database.reportDao()
+    }
+    
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences {
+        return context.getSharedPreferences("semo_alarm_prefs", Context.MODE_PRIVATE)
     }
 }

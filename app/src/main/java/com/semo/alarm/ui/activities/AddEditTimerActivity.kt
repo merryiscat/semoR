@@ -142,7 +142,7 @@ class AddEditTimerActivity : AppCompatActivity() {
             showSoundSelectionDialog()
         }
         
-        // 볼륨 SeekBar 설정 - 볼륨 기반 진동 모드 자동 전환
+        // 볼륨 SeekBar 설정 - 스마트 볼륨-진동 모드 시스템
         binding.seekBarVolume.setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
                 binding.textViewVolumePercent.text = "${progress}%"
@@ -152,17 +152,13 @@ class AddEditTimerActivity : AppCompatActivity() {
                 updateSeekBarColors(progress)
                 
                 if (fromUser) {
-                    // 볼륨이 0%가 되면 자동으로 진동 모드 활성화
+                    // 볼륨이 0%가 되면 자동으로 진동 모드 활성화 (무음에서 알림 받기 위함)
                     if (progress == 0) {
                         binding.switchVibrationMode.isChecked = true
                         isVibrationEnabled = true
                     }
-                    // 볼륨이 0%에서 올라가면 진동 모드 비활성화
-                    else if (binding.switchVibrationMode.isChecked && progress > 0) {
-                        // 사용자가 SeekBar를 직접 조작했을 때만 진동 모드 해제
-                        binding.switchVibrationMode.isChecked = false
-                        isVibrationEnabled = false
-                    }
+                    // 📍 중요 변경: 볼륨이 올라가도 진동 모드는 자동으로 꺼지지 않음
+                    // 사용자가 진동+소리 동시 사용을 원할 수 있음
                 }
             }
             
@@ -170,16 +166,18 @@ class AddEditTimerActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(seekBar: android.widget.SeekBar?) {}
         })
         
-        // 진동 모드 스위치 설정
+        // 진동 모드 스위치 - 진동과 소리 독립적 제어
         binding.switchVibrationMode.setOnCheckedChangeListener { _, isChecked ->
             isVibrationEnabled = isChecked
+            
+            // 진동을 끄고 소리도 0%인 경우에만 소리를 1%로 설정 (알림 받기 위함)
             if (!isChecked && binding.seekBarVolume.progress == 0) {
-                // 진동 모드를 끄면 볼륨을 1%로 설정
                 binding.seekBarVolume.progress = 1
                 currentVolume = 0.01f
                 binding.textViewVolumePercent.text = "1%"
                 updateSeekBarColors(1)
             }
+            // 📍 진동을 켜는 것은 소리에 전혀 영향을 주지 않음 (완전 독립)
         }
     }
     

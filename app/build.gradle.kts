@@ -32,11 +32,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = false
@@ -83,6 +83,12 @@ dependencies {
     
     // RecyclerView
     implementation(libs.androidx.recyclerview)
+    
+    // LocalBroadcastManager
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.1.0")
+    
+    // Charts for Report functionality
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     
     // Testing
     testImplementation(libs.junit)
