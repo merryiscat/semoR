@@ -43,14 +43,24 @@ class TimerTemplateAdapter(
                 // Set template info
                 tvTemplateName.text = template.name
                 
-                // Show countdown or original duration
-                if (template.isRunning && template.remainingSeconds > 0) {
+                // Show remaining time if available, otherwise show total duration
+                if (template.remainingSeconds > 0) {
+                    // 실행 중이거나 일시정지 상태 - 남은 시간 표시
                     tvDuration.text = formatDuration(template.remainingSeconds)
-                    tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.md_theme_error))
-                    android.util.Log.d("TimerTemplateAdapter", "🔴 ${template.name}: ${template.remainingSeconds}초")
+                    if (template.isRunning) {
+                        // 실행 중 - 빨간색
+                        tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.md_theme_error))
+                        android.util.Log.d("TimerTemplateAdapter", "🔴 실행 중: ${template.name}: ${template.remainingSeconds}초")
+                    } else {
+                        // 일시정지 - 주황색으로 구분
+                        tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.orange))
+                        android.util.Log.d("TimerTemplateAdapter", "🟡 일시정지: ${template.name}: ${template.remainingSeconds}초")
+                    }
                 } else {
+                    // 완전 정지 상태 - 초기 설정 시간 표시
                     tvDuration.text = formatDuration(template.totalDuration)
                     tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.md_theme_onSurfaceVariant))
+                    android.util.Log.d("TimerTemplateAdapter", "⚪ 정지: ${template.name}: ${template.totalDuration}초")
                 }
                 
                 // Set category icon (기본값 사용, 나중에 카테고리 정보와 함께 업데이트)

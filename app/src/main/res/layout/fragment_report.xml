@@ -11,9 +11,10 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="📊 리포트"
+        android:text="리포트"
         android:textSize="24sp"
         android:textStyle="bold"
+        android:textColor="@color/md_theme_onBackground"
         android:padding="16dp"
         style="@style/TextAppearance.Material3.HeadlineSmall" />
 
@@ -31,22 +32,22 @@
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📅 오늘" />
+            android:text="오늘" />
         
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📈 주간" />
+            android:text="주간" />
             
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📊 월간" />
+            android:text="월간" />
             
         <com.google.android.material.tabs.TabItem
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🏆 종합" />
+            android:text="종합" />
     </com.google.android.material.tabs.TabLayout>
 
     <!-- ViewPager2 for Tab Content -->

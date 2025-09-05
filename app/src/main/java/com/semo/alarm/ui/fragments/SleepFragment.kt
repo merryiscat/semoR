@@ -117,10 +117,10 @@ class SleepFragment : Fragment() {
     private fun updateUIForTrackingState(state: SleepTrackingState) {
         when (state) {
             SleepTrackingState.IDLE -> {
-                binding.textSleepStatus.text = "💤 수면 상태: 대기 중"
+                binding.textSleepStatus.text = "수면 상태: 대기 중"
                 binding.textElapsedTime.visibility = View.GONE
                 binding.buttonStartSleep.isEnabled = true
-                binding.buttonStartSleep.text = "🛌 취침 시작"
+                binding.buttonStartSleep.text = "취침 시작"
                 binding.buttonStartSleep.backgroundTintList = 
                     android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
                 binding.buttonStopSleep.isEnabled = false
@@ -130,25 +130,25 @@ class SleepFragment : Fragment() {
             }
             
             SleepTrackingState.STARTING -> {
-                binding.textSleepStatus.text = "💤 수면 상태: 시작 중..."
+                binding.textSleepStatus.text = "수면 상태: 시작 중..."
                 binding.buttonStartSleep.isEnabled = false
                 binding.buttonStopSleep.isEnabled = false
             }
             
             SleepTrackingState.TRACKING -> {
-                binding.textSleepStatus.text = "😴 수면 상태: 수면 중"
+                binding.textSleepStatus.text = "수면 상태: 수면 중"
                 binding.textElapsedTime.visibility = View.VISIBLE
                 binding.buttonStartSleep.isEnabled = false
                 binding.buttonStartSleep.backgroundTintList = 
                     android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#6B7280"))
                 binding.buttonStopSleep.isEnabled = true
-                binding.buttonStopSleep.text = "⏰ 기상"
+                binding.buttonStopSleep.text = "기상"
                 binding.buttonStopSleep.backgroundTintList = 
                     android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#00D4FF"))
             }
             
             SleepTrackingState.STOPPING -> {
-                binding.textSleepStatus.text = "💤 수면 상태: 종료 중..."
+                binding.textSleepStatus.text = "수면 상태: 종료 중..."
                 binding.buttonStartSleep.isEnabled = false
                 binding.buttonStopSleep.isEnabled = false
             }

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     
-    <!-- Background Track -->
+    <!-- Background Track (오른쪽 비어있는 부분 - 딥 그레이) -->
     <item android:id="@android:id/background">
         <shape>
-            <solid android:color="@color/md_theme_outline" />
+            <solid android:color="@color/deep_gray" />
             <corners android:radius="4dp" />
         </shape>
     </item>
     
-    <!-- Progress Track -->
+    <!-- Progress Track (왼쪽 채워진 부분 - 더 어두운 그레이) -->
     <item android:id="@android:id/progress">
         <clip>
             <shape>
-                <solid android:color="@color/day_chip_off_bg" />
+                <solid android:color="@color/md_theme_outline" />
                 <corners android:radius="4dp" />
             </shape>
         </clip>

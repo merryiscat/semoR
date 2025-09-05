@@ -28,9 +28,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🌟 오늘의 요약"
+                    android:text="오늘의 요약"
                     android:textSize="18sp"
                     android:textStyle="bold"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="16dp"
                     style="@style/TextAppearance.Material3.TitleMedium" />
 
@@ -51,7 +52,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="😴"
+                            android:text="수면"
                             android:textSize="24sp"
                             android:layout_marginBottom="4dp" />
 
@@ -87,7 +88,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="⏰"
+                            android:text="알람"
                             android:textSize="24sp"
                             android:layout_marginBottom="4dp" />
 
@@ -123,7 +124,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="⏱️"
+                            android:text="타이머"
                             android:textSize="24sp"
                             android:layout_marginBottom="4dp" />
 
@@ -179,9 +180,10 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="⚡ 생산성 점수"
+                        android:text="생산성 점수"
                         android:textSize="18sp"
                         android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
                         style="@style/TextAppearance.Material3.TitleMedium" />
 
                     <TextView
@@ -252,9 +254,10 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="🏆 라이프스타일 점수"
+                        android:text="라이프스타일 점수"
                         android:textSize="18sp"
                         android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
                         style="@style/TextAppearance.Material3.TitleMedium" />
 
                     <TextView
@@ -316,9 +319,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💡 개인 맞춤 제안"
+                    android:text="개인 맞춤 제안"
                     android:textSize="18sp"
                     android:textStyle="bold"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="16dp"
                     style="@style/TextAppearance.Material3.TitleMedium" />
 
