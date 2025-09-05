@@ -158,9 +158,8 @@ class TimerCategoryFragment : Fragment() {
             viewModel.pauseTimer(template.id)
             Toast.makeText(context, "${template.name} 타이머 일시정지", Toast.LENGTH_SHORT).show()
         } else {
-            // Start timer
+            // Start timer (resume from where it was paused or start fresh)
             viewModel.startTimer(template.id)
-            viewModel.incrementTemplateUsage(template.id)
             Toast.makeText(context, "${template.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
         }
     }

@@ -7,10 +7,10 @@ import com.semo.alarm.data.entities.TimerCategory
 @Dao
 interface TimerCategoryDao {
     
-    @Query("SELECT * FROM timer_categories ORDER BY sortOrder ASC, name ASC")
+    @Query("SELECT * FROM timer_categories ORDER BY isDefault DESC, sortOrder ASC, name ASC")
     fun getAllCategories(): LiveData<List<TimerCategory>>
     
-    @Query("SELECT * FROM timer_categories ORDER BY sortOrder ASC, name ASC")
+    @Query("SELECT * FROM timer_categories ORDER BY isDefault DESC, sortOrder ASC, name ASC")
     suspend fun getAllCategoriesSync(): List<TimerCategory>
     
     @Query("SELECT * FROM timer_categories WHERE id = :id")
@@ -64,7 +64,7 @@ interface TimerCategoryDao {
         FROM timer_categories c 
         LEFT JOIN timer_templates t ON c.id = t.categoryId 
         GROUP BY c.id 
-        ORDER BY c.sortOrder ASC, c.name ASC
+        ORDER BY c.isDefault DESC, c.sortOrder ASC, c.name ASC
     """)
     suspend fun getCategoriesWithTemplateCount(): List<CategoryWithTemplateCount>
     

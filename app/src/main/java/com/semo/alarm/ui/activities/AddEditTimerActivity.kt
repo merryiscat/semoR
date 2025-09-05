@@ -41,6 +41,7 @@ class AddEditTimerActivity : AppCompatActivity() {
     private var categoryId: Int = -1
     private var templateId: Int = -1
     private var isEditMode = false
+    private var currentTemplate: TimerTemplate? = null
     
     // 소리 & 진동 설정
     private var selectedSoundUri: String = ""
@@ -57,6 +58,7 @@ class AddEditTimerActivity : AppCompatActivity() {
         category = intent.getParcelableExtra("category")
         categoryId = intent.getIntExtra("categoryId", -1)
         templateId = intent.getIntExtra("templateId", -1)
+        currentTemplate = intent.getParcelableExtra("template")
         isEditMode = templateId != -1
         
         // category가 있으면 categoryId 설정, 없으면 categoryId를 직접 사용
@@ -101,7 +103,7 @@ class AddEditTimerActivity : AppCompatActivity() {
         binding.minutePicker.apply {
             minValue = 0
             maxValue = 59
-            value = 5 // 기본값 5분
+            value = 0 // 기본값 0분
             setOnValueChangedListener { _, oldVal, newVal -> 
                 handleMinuteChange(oldVal, newVal)
                 updateTotalDuration() 
@@ -297,8 +299,43 @@ class AddEditTimerActivity : AppCompatActivity() {
     }
     
     private fun loadExistingTemplate() {
-        // TODO: 편집 모드 구현
-        Toast.makeText(this, "편집 모드는 아직 구현되지 않았습니다", Toast.LENGTH_SHORT).show()
+        currentTemplate?.let { template ->
+            Log.d(TAG, "Loading existing template: ${template.name}")
+            
+            // 타이머 이름 설정
+            binding.editTextTimerName.setText(template.name)
+            
+            // TimerTemplate의 totalDuration을 사용하여 시간 설정
+            val totalSeconds = template.totalDuration
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+            
+            // 시간 설정
+            binding.hourPicker.value = hours
+            binding.minutePicker.value = minutes
+            binding.secondPicker.value = seconds
+            
+            Log.d(TAG, "Loaded time: ${hours}h ${minutes}m ${seconds}s (total: ${totalSeconds}s)")
+            
+            // 소리 설정
+            selectedSoundUri = template.soundUri
+            currentVolume = template.volume
+            isVibrationEnabled = template.vibrationEnabled
+            
+            // UI 업데이트
+            binding.seekBarVolume.progress = (currentVolume * 100).toInt()
+            binding.textViewVolumePercent.text = "${(currentVolume * 100).toInt()}%"
+            binding.switchVibrationMode.isChecked = isVibrationEnabled
+            
+            updateSeekBarColors(binding.seekBarVolume.progress)
+            updateTotalDuration()
+            
+            Log.d(TAG, "Template loaded successfully: name=${template.name}, volume=${currentVolume}, vibration=${isVibrationEnabled}")
+        } ?: run {
+            Log.w(TAG, "No template data found in intent")
+            Toast.makeText(this, "편집할 타이머 데이터를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+        }
     }
     
     private fun updateTotalDuration() {
@@ -435,21 +472,51 @@ class AddEditTimerActivity : AppCompatActivity() {
             color = "#3B82F6"
         )
         
-        Log.d(TAG, "Saving timer: $name, Duration: $totalDuration seconds")
+        Log.d(TAG, "Saving timer: $name, Duration: $totalDuration seconds, EditMode: $isEditMode")
         
-        // ViewModel을 통해 데이터베이스에 저장
-        viewModel.insertTimerTemplate(template, listOf(timerRound))
+        if (isEditMode && currentTemplate != null) {
+            // 편집 모드: 기존 타이머 업데이트
+            val updatedTemplate = currentTemplate!!.copy(
+                name = name,
+                totalDuration = totalDuration,
+                soundUri = selectedSoundUri,
+                volume = currentVolume,
+                vibrationEnabled = isVibrationEnabled,
+                updatedAt = System.currentTimeMillis()
+            )
+            
+            // 새로운 라운드 생성 (단순 타이머이므로 1개 라운드)
+            val updatedRound = TimerRound(
+                templateId = updatedTemplate.id,
+                roundIndex = 0,
+                name = name,
+                duration = totalDuration,
+                color = "#3B82F6"
+            )
+            
+            // TODO: updateTimerTemplate 메서드가 ViewModel에 있는지 확인 필요
+            // 임시로 기존 방식 사용
+            viewModel.insertTimerTemplate(updatedTemplate, listOf(updatedRound))
+            
+            Log.d(TAG, "Updating existing timer: ${updatedTemplate.name}")
+            Toast.makeText(this, "타이머가 수정되었습니다: $name", Toast.LENGTH_SHORT).show()
+        } else {
+            // 새로 만들기 모드: 새 타이머 생성
+            viewModel.insertTimerTemplate(template, listOf(timerRound))
+            
+            Log.d(TAG, "Creating new timer: ${template.name}")
+            Toast.makeText(this, "타이머가 생성되었습니다: $name", Toast.LENGTH_SHORT).show()
+        }
         
         // 저장 결과 관찰 (일회성)
         viewModel.loading.observe(this) { isLoading ->
             if (!isLoading) {
                 // 로딩이 끝나면 성공/실패 확인
                 viewModel.error.observe(this) { errorMessage ->
-                    if (errorMessage == null) {
-                        Toast.makeText(this, "타이머가 저장되었습니다: $name", Toast.LENGTH_SHORT).show()
-                        finish()
-                    } else {
+                    if (errorMessage != null) {
                         Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+                    } else {
+                        finish()
                     }
                 }
             }

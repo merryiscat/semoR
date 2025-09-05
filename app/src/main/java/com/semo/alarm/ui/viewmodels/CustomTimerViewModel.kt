@@ -76,15 +76,6 @@ class CustomTimerViewModel @Inject constructor(
         }
     }
     
-    fun incrementTemplateUsage(templateId: Int) {
-        viewModelScope.launch {
-            try {
-                timerRepository.incrementUsageCount(templateId)
-            } catch (e: Exception) {
-                _error.value = "사용 횟수 업데이트에 실패했습니다: ${e.message}"
-            }
-        }
-    }
     
     fun updateTemplateActiveState(templateId: Int, isActive: Boolean) {
         viewModelScope.launch {
@@ -193,10 +184,27 @@ class CustomTimerViewModel @Inject constructor(
     fun addCategory(category: TimerCategory) {
         viewModelScope.launch {
             try {
-                // 현재 카테고리 중 가장 큰 sortOrder를 찾아서 +1
+                // 사용자 카테고리는 기본 카테고리 이후에 배치
+                // 기본 카테고리의 최대 sortOrder를 찾고, 사용자 카테고리 중 최대값 + 1 설정
                 val allCategories = timerRepository.getAllCategoriesSync()
-                val maxSortOrder = allCategories.maxOfOrNull { it.sortOrder } ?: 0
-                val categoryWithSortOrder = category.copy(sortOrder = maxSortOrder + 1)
+                val defaultCategories = allCategories.filter { it.isDefault }
+                val userCategories = allCategories.filter { !it.isDefault }
+                
+                val maxDefaultOrder = defaultCategories.maxOfOrNull { it.sortOrder } ?: 0
+                val maxUserOrder = userCategories.maxOfOrNull { it.sortOrder } ?: maxDefaultOrder
+                
+                // 새 사용자 카테고리는 기존 사용자 카테고리 다음에 배치
+                val newSortOrder = if (userCategories.isEmpty()) {
+                    maxDefaultOrder + 1
+                } else {
+                    maxUserOrder + 1
+                }
+                
+                val categoryWithSortOrder = category.copy(
+                    sortOrder = newSortOrder,
+                    isDefault = false,  // 사용자 추가 카테고리는 기본 카테고리가 아님
+                    createdBy = "user"  // 사용자가 생성한 카테고리
+                )
                 
                 timerRepository.insertCategory(categoryWithSortOrder)
                 // Refresh categories after adding
@@ -288,14 +296,10 @@ class CustomTimerViewModel @Inject constructor(
         }
         getApplication<Application>().startService(intent)
         
-        viewModelScope.launch {
-            try {
-                timerRepository.updateTimerState(templateId, isRunning = false, remainingSeconds = 0) // TODO: 정확한 남은 시간 필요
-                refreshTemplates()
-            } catch (e: Exception) {
-                _error.value = "타이머 일시정지에 실패했습니다: ${e.message}"
-            }
-        }
+        // TimerForegroundService가 알아서 DB 업데이트할 것이므로 여기서는 하지 않음
+        // viewModelScope.launch {
+        //     refreshTemplates() // 필요시 새로고침만
+        // }
     }
     
     fun resetTimer(templateId: Int) {

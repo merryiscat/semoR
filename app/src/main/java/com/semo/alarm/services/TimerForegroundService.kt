@@ -13,14 +13,26 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.semo.alarm.R
+import com.semo.alarm.data.repositories.TimerRepository
 import com.semo.alarm.ui.activities.MainActivity
 import com.semo.alarm.utils.NotificationAlarmManager
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * 타이머 백그라운드 실행을 위한 Foreground Service
  * 앱이 종료되어도 타이머가 계속 실행되도록 함
  */
+@AndroidEntryPoint
 class TimerForegroundService : Service() {
+    
+    @Inject
+    lateinit var timerRepository: TimerRepository
+    
+    private val serviceScope = CoroutineScope(Dispatchers.IO)
     
     companion object {
         private const val TAG = "TimerForegroundService"
@@ -112,6 +124,16 @@ class TimerForegroundService : Service() {
         remainingSeconds = durationSeconds
         isTimerRunning = true
         
+        // DB에 타이머 실행 상태 업데이트
+        serviceScope.launch {
+            try {
+                timerRepository.updateTimerState(timerId, isRunning = true, remainingSeconds = remainingSeconds)
+                Log.d(TAG, "Timer started: ID=$timerId, durationSeconds=$durationSeconds")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update timer state on start: ${e.message}")
+            }
+        }
+        
         // Foreground notification 시작
         startForeground(NOTIFICATION_ID, createTimerNotification())
         
@@ -142,6 +164,16 @@ class TimerForegroundService : Service() {
         countDownTimer?.cancel()
         isTimerRunning = false
         
+        // DB에 일시정지 상태 및 현재 남은 시간 저장
+        serviceScope.launch {
+            try {
+                timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = remainingSeconds)
+                Log.d(TAG, "Timer paused: ID=$timerId, remainingSeconds=$remainingSeconds")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update timer state on pause: ${e.message}")
+            }
+        }
+        
         // UI에 일시정지 브로드캐스트
         sendTimerUpdateBroadcast()
         
@@ -153,6 +185,16 @@ class TimerForegroundService : Service() {
         countDownTimer?.cancel()
         isTimerRunning = false
         remainingSeconds = 0
+        
+        // DB에 타이머 중지 상태 업데이트 (리셋)
+        serviceScope.launch {
+            try {
+                timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = 0)
+                Log.d(TAG, "Timer stopped/reset: ID=$timerId")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update timer state on stop: ${e.message}")
+            }
+        }
         
         // UI에 중지 브로드캐스트
         sendTimerStoppedBroadcast()
@@ -166,6 +208,16 @@ class TimerForegroundService : Service() {
         countDownTimer?.cancel()
         isTimerRunning = false
         remainingSeconds = 0
+        
+        // DB에 타이머 완료 상태 업데이트
+        serviceScope.launch {
+            try {
+                timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = 0)
+                Log.d(TAG, "Timer completed: ID=$timerId")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update timer state on complete: ${e.message}")
+            }
+        }
         
         // UI에 완료 브로드캐스트
         sendTimerCompleteBroadcast()

@@ -281,7 +281,10 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:max="100"
-                            android:progress="70" />
+                            android:progress="70"
+                            android:progressTint="@color/neon_blue"
+                            android:progressBackgroundTint="@color/deep_gray"
+                            android:thumbTint="@color/neon_blue" />
 
                         <TextView
                             android:id="@+id/textViewVolumePercent"

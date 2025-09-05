@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/neon_blue" />
-    <corners android:radius="4dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Background Track (오른쪽 비어있는 부분 - 딥 그레이) -->
+    <item android:id="@android:id/background">
+        <shape>
+            <solid android:color="@color/deep_gray" />
+            <corners android:radius="4dp" />
+        </shape>
+    </item>
+    
+    <!-- Progress Track (왼쪽 채워진 부분 - 네온 블루) -->
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape>
+                <solid android:color="@color/neon_blue" />
+                <corners android:radius="4dp" />
+            </shape>
+        </clip>
+    </item>
+    
+</layer-list>

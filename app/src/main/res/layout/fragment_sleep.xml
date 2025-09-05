@@ -17,9 +17,10 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="🌙 수면 추적"
+            android:text="수면 추적"
             android:textSize="24sp"
             android:textStyle="bold"
+            android:textColor="@color/md_theme_onBackground"
             android:layout_marginBottom="24dp"
             style="@style/TextAppearance.Material3.HeadlineSmall" />
 
@@ -42,9 +43,10 @@
                     android:id="@+id/textSleepStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="💤 수면 상태: 대기 중"
+                    android:text="수면 상태: 대기 중"
                     android:textSize="18sp"
                     android:textStyle="bold"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="16dp"
                     style="@style/TextAppearance.Material3.TitleMedium" />
 
@@ -55,6 +57,7 @@
                     android:layout_height="wrap_content"
                     android:text="경과 시간: 0시간 0분"
                     android:textSize="16sp"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="20dp"
                     android:visibility="gone"
                     style="@style/TextAppearance.Material3.BodyLarge" />
@@ -74,7 +77,7 @@
                         android:layout_height="56dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="8dp"
-                        android:text="🛌 취침 시작"
+                        android:text="취침 시작"
                         android:textSize="16sp"
                         android:backgroundTint="#00D4FF"
                         android:textColor="#000000"
@@ -87,7 +90,7 @@
                         android:layout_height="56dp"
                         android:layout_weight="1"
                         android:layout_marginStart="8dp"
-                        android:text="⏰ 기상"
+                        android:text="기상"
                         android:textSize="16sp"
                         android:backgroundTint="#6B7280"
                         android:textColor="#FFFFFF"
@@ -119,9 +122,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📊 오늘 수면"
+                    android:text="오늘 수면"
                     android:textSize="18sp"
                     android:textStyle="bold"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="12dp"
                     style="@style/TextAppearance.Material3.TitleMedium" />
 
@@ -129,8 +133,9 @@
                     android:id="@+id/textTodaysSleepTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="23:30 → 07:15 (7시간 45분)"
+                    android:text="23:30 - 07:15 (7시간 45분)"
                     android:textSize="16sp"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="8dp"
                     style="@style/TextAppearance.Material3.BodyLarge" />
 
@@ -138,8 +143,9 @@
                     android:id="@+id/textTodaysSnoring"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="😴 코골이: 1시간 12분 (16%)"
+                    android:text="코골이: 1시간 12분 (16%)"
                     android:textSize="16sp"
+                    android:textColor="@color/md_theme_onSurface"
                     style="@style/TextAppearance.Material3.BodyLarge" />
 
             </LinearLayout>
@@ -163,9 +169,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📈 최근 7일 평균"
+                    android:text="최근 7일 평균"
                     android:textSize="18sp"
                     android:textStyle="bold"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="12dp"
                     style="@style/TextAppearance.Material3.TitleMedium" />
 
@@ -175,6 +182,7 @@
                     android:layout_height="wrap_content"
                     android:text="수면: 7시간 23분"
                     android:textSize="16sp"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="8dp"
                     style="@style/TextAppearance.Material3.BodyLarge" />
 
@@ -184,6 +192,7 @@
                     android:layout_height="wrap_content"
                     android:text="코골이: 14% (평균)"
                     android:textSize="16sp"
+                    android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="8dp"
                     style="@style/TextAppearance.Material3.BodyLarge" />
 
@@ -193,7 +202,7 @@
                     android:layout_height="wrap_content"
                     android:text="기록 개수: 7일"
                     android:textSize="14sp"
-                    android:textColor="@android:color/darker_gray"
+                    android:textColor="@color/md_theme_onSurfaceVariant"
                     style="@style/TextAppearance.Material3.BodyMedium" />
 
             </LinearLayout>
@@ -223,9 +232,10 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🔊 코골이 감지"
+                        android:text="코골이 감지"
                         android:textSize="18sp"
                         android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
                         android:layout_marginBottom="4dp"
                         style="@style/TextAppearance.Material3.TitleMedium" />
 
@@ -234,7 +244,7 @@
                         android:layout_height="wrap_content"
                         android:text="수면 중 코골이 패턴을 자동으로 감지합니다"
                         android:textSize="14sp"
-                        android:textColor="@android:color/darker_gray"
+                        android:textColor="@color/md_theme_onSurfaceVariant"
                         style="@style/TextAppearance.Material3.BodyMedium" />
 
                 </LinearLayout>
