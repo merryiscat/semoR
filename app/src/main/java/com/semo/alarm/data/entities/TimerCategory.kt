@@ -11,7 +11,7 @@ data class TimerCategory(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,                    // "홈트레이닝", "베이킹", "독서" 등
-    val icon: String = "⏰",             // 이모지 아이콘
+    val icon: String = "",               // 이모지 아이콘
     val color: String = "#3B82F6",      // 카테고리 색상 (HEX)
     val description: String = "",        // 카테고리 설명
     val isDefault: Boolean = false,      // 기본 제공 카테고리 여부
@@ -27,7 +27,7 @@ data class TimerCategory(
             return listOf(
                 TimerCategory(
                     name = "기본",
-                    icon = "⏰",
+                    icon = "",
                     color = "#3B82F6",
                     description = "기본 타이머 카테고리",
                     isDefault = true,
@@ -53,7 +53,7 @@ data class TimerCategory(
     }
     
     fun getDisplayName(): String {
-        return "$icon $name"
+        return if (icon.isNotEmpty()) "$icon $name" else name
     }
     
     fun isCustomCategory(): Boolean {
