@@ -72,7 +72,7 @@ class AddEditCategoryActivity : AppCompatActivity() {
             TimerCategory(
                 name = name,
                 description = "",
-                icon = "📁", // 기본 아이콘
+                icon = "", // 기본 아이콘 없음
                 color = "#6B7280", // 기본 색상 (딥 그레이)
                 isDefault = false,
                 createdBy = "user"
