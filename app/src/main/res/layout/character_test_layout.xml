@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 세모알 캐릭터 시스템 테스트용 임시 레이아웃 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@drawable/card_background">
+    
+    <!-- 캐릭터 테스트 섹션 타이틀 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🐱 Merry 캐릭터 시스템 테스트"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/neon_blue"
+        android:layout_marginBottom="16dp"
+        android:gravity="center" />
+    
+    <!-- 캐릭터 뷰 영역 -->
+    <com.semo.alarm.character.AlarmCharacterView
+        android:id="@+id/character_merry"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:layout_gravity="center"
+        android:background="@drawable/circle_background"
+        android:padding="8dp"
+        android:layout_marginBottom="24dp" />
+    
+    <!-- 현재 상태 표시 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="현재 상태:"
+            android:textSize="14sp"
+            android:textColor="@color/md_theme_onBackground" />
+        
+        <TextView
+            android:id="@+id/tv_character_state"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="IDLE"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="@color/neon_blue"
+            android:gravity="end" />
+    </LinearLayout>
+    
+    <!-- 애니메이션 제어 버튼들 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="애니메이션 테스트"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/md_theme_onBackground"
+        android:layout_marginBottom="12dp" />
+    
+    <!-- 첫 번째 버튼 행 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+        
+        <Button
+            android:id="@+id/btn_appearing"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="등장"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+        
+        <Button
+            android:id="@+id/btn_idle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="대기"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+        
+        <Button
+            android:id="@+id/btn_attention"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="관심끌기"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+    </LinearLayout>
+    
+    <!-- 두 번째 버튼 행 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        
+        <Button
+            android:id="@+id/btn_spinning"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="회전 ⭐"
+            android:backgroundTint="@color/neon_blue"
+            android:textColor="@color/md_theme_background"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+        
+        <Button
+            android:id="@+id/btn_urgent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="독촉"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+        
+        <Button
+            android:id="@+id/btn_special"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="특별"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+    </LinearLayout>
+    
+    <!-- 효과 제어 버튼들 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="브랜드 효과 테스트"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/md_theme_onBackground"
+        android:layout_marginBottom="12dp" />
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        
+        <Button
+            android:id="@+id/btn_highlight"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="네온 블루"
+            android:backgroundTint="@color/neon_blue"
+            android:textColor="@color/md_theme_background"
+            android:textSize="12sp" />
+        
+        <Button
+            android:id="@+id/btn_fade"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:text="그레이 페이드"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+        
+        <Button
+            android:id="@+id/btn_normal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="기본 색상"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+    </LinearLayout>
+    
+    <!-- 시나리오 테스트 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="알람 시나리오 테스트"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/md_theme_onBackground"
+        android:layout_marginBottom="12dp" />
+    
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        
+        <Button
+            android:id="@+id/btn_start_scenario"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="4dp"
+            android:text="알람 시작"
+            android:backgroundTint="@color/neon_blue"
+            android:textColor="@color/md_theme_background"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+        
+        <Button
+            android:id="@+id/btn_stop_scenario"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="알람 해제"
+            android:backgroundTint="@color/deep_gray"
+            android:textColor="@color/md_theme_onBackground"
+            android:textSize="12sp" />
+    </LinearLayout>
+    
+</LinearLayout>

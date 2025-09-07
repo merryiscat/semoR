@@ -88,4 +88,20 @@
         <item name="colorOnSurface">@color/switch_thumb_off</item>    <!-- thumb 색상 -->
         <item name="colorOutline">@color/switch_track_off</item>      <!-- outline 색상 -->
     </style>
+
+    <!-- 🐱 Fullscreen Alarm Theme -->
+    <style name="Theme.FullScreenAlarm" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowBackground">@drawable/fullscreen_alarm_background</item>
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        
+        <!-- Alarm specific colors -->
+        <item name="colorPrimary">@color/alarm_time_color</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="android:textColorPrimary">@color/alarm_label_color</item>
+    </style>
 </resources>

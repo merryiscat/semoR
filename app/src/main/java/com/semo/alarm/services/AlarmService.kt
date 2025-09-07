@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import com.semo.alarm.R
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.ui.activities.MainActivity
+import com.semo.alarm.ui.activities.AlarmFullScreenActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -233,11 +234,24 @@ class AlarmService : Service() {
     }
     
     private fun createAlarmNotification(alarm: Alarm): android.app.Notification {
+        // 🐱 메리 캐릭터 풀스크린 알람 Intent
+        val fullScreenIntent = Intent(this, AlarmFullScreenActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(AlarmFullScreenActivity.EXTRA_ALARM, alarm)
+            putExtra(AlarmFullScreenActivity.EXTRA_ALARM_ID, alarm.id)
+        }
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this, 0, fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        // 백업용 MainActivity Intent
         val mainIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val mainPendingIntent = PendingIntent.getActivity(
-            this, 0, mainIntent,
+            this, 1, mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
@@ -262,12 +276,12 @@ class AlarmService : Service() {
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
-            .setContentTitle(alarm.label.ifEmpty { "알람" })
-            .setContentText("${alarm.time} - 터치하여 확인")
+            .setContentTitle(alarm.label.ifEmpty { "🐱 메리가 깨우고 있어요!" })
+            .setContentText("${alarm.time} - 메리를 만나보세요")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setFullScreenIntent(mainPendingIntent, true)
-            .setContentIntent(mainPendingIntent)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .setContentIntent(fullScreenPendingIntent)
             .setAutoCancel(false)
             .setOngoing(true)
             .addAction(

@@ -15,6 +15,9 @@
     <!-- 알림 권한 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
+    <!-- 풀스크린 인텐트 권한 (Android 14+) -->
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    
     <!-- 오디오 권한 (코골이 감지용) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
@@ -59,6 +62,23 @@
             android:name=".ui.activities.AddEditTimerActivity"
             android:exported="false"
             android:parentActivityName=".ui.activities.TimerListActivity" />
+
+        <!-- 🐱 캐릭터 시스템 테스트 액티비티 (개발자용 히든 기능) -->
+        <activity
+            android:name=".character.CharacterTestActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.SemoR" />
+
+        <!-- 🐱 메리 캐릭터 풀스크린 알람 액티비티 -->
+        <activity
+            android:name=".ui.activities.AlarmFullScreenActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.FullScreenAlarm" />
 
         <!-- 알람 수신자 -->
         <receiver

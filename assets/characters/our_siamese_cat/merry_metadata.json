@@ -1,0 +1,72 @@
+{
+  "character": "Merry the Siamese Cat",
+  "brand": "SemoR Alarm App",
+  "canvas_size": [
+    64,
+    64
+  ],
+  "character_area": [
+    32,
+    32
+  ],
+  "color_palette": {
+    "body_base": "#F5E6D3",
+    "points_dark": "#3C2415",
+    "eyes_blue": "#87CEEB",
+    "eyes_glow": "#00D4FF",
+    "nose_pink": "#FF69B4",
+    "mouth_brown": "#8B4513",
+    "outline_dark": "#2F1B14",
+    "shadow_cream": "#E5D6C3"
+  },
+  "animations": {
+    "appearing": [
+      "appear_01",
+      "appear_02",
+      "appear_03",
+      "appear_04",
+      "appear_05"
+    ],
+    "idle": [
+      "idle_01",
+      "idle_02",
+      "idle_03",
+      "idle_04"
+    ],
+    "spinning": [
+      "spin_01",
+      "spin_02",
+      "spin_03",
+      "spin_04",
+      "spin_05",
+      "spin_06",
+      "spin_07",
+      "spin_08"
+    ],
+    "attention": [
+      "attention_01",
+      "attention_02",
+      "attention_03"
+    ],
+    "urgent": [
+      "urgent_01",
+      "urgent_02",
+      "urgent_03",
+      "urgent_04"
+    ],
+    "special": [
+      "grooming_01",
+      "grooming_02",
+      "grooming_03",
+      "stretch_01",
+      "stretch_02",
+      "play_01",
+      "play_02"
+    ]
+  },
+  "notes": {
+    "key_feature": "Ice blue eyes with neon blue (#00D4FF) SemoR brand highlights",
+    "style": "8-bit pixel art, no anti-aliasing",
+    "priority": "idle_01 is the foundation frame for all other animations"
+  }
+}

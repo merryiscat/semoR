@@ -13,10 +13,13 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
+import android.os.PowerManager
+import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.semo.alarm.R
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.ui.activities.MainActivity
+import com.semo.alarm.ui.activities.AlarmFullScreenActivity
 import com.semo.alarm.utils.NotificationAlarmManager
 
 /**
@@ -76,6 +79,10 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         
         if (alarm != null) {
             showAlarmNotification(context, alarm)
+            
+            // 🔥 강제로 화면 켜기 및 풀스크린 시도
+            wakeUpScreenAndStartFullScreen(context, alarm)
+            
             playAlarmSound(context, alarm)
             startVibration(context, alarm)
         } else {
@@ -210,12 +217,24 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
     private fun showAlarmNotification(context: Context, alarm: Alarm) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         
-        // 메인 액티비티로 이동하는 인텐트
+        // 🐱 메리 캐릭터 풀스크린 알람 Intent
+        val fullScreenIntent = Intent(context, AlarmFullScreenActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(AlarmFullScreenActivity.EXTRA_ALARM, alarm)
+            putExtra(AlarmFullScreenActivity.EXTRA_ALARM_ID, alarm.id)
+        }
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            context, 0, fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        // 백업용 MainActivity Intent (알림 탭)
         val mainIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val mainPendingIntent = PendingIntent.getActivity(
-            context, 0, mainIntent,
+            context, 1, mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
@@ -243,18 +262,24 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
         
-        // 알림 생성
+        // 알림 생성 - 최고 우선순위로 풀스크린 강제 실행
         val notification = NotificationCompat.Builder(context, NotificationAlarmManager.ALARM_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
-            .setContentTitle(alarm.label.ifEmpty { "🔔 알람" })
-            .setContentText("${alarm.time} - 터치하여 확인")
+            .setLargeIcon(android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.character_merry_idle_01))
+            .setContentTitle(alarm.label.ifEmpty { "🐱 메리가 깨우고 있어요!" })
+            .setContentText("${alarm.time} - 탭하면 메리를 만날 수 있어요!")
+            .setSubText("알람이 울리고 있습니다")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setFullScreenIntent(mainPendingIntent, true)
-            .setContentIntent(mainPendingIntent)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .setContentIntent(fullScreenPendingIntent)
             .setAutoCancel(false)
             .setOngoing(true)
-            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setVibrate(longArrayOf(0, 1000, 500, 1000))
+            .setLights(0xFF00D4FF.toInt(), 1000, 500)
+            .setDefaults(0) // 기본값 제거하고 수동 설정
+            .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM))
+            .setOnlyAlertOnce(false) // 반복 알림 허용
             .addAction(
                 R.drawable.ic_alarm,
                 "해제",
@@ -271,12 +296,27 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             }
             .build()
         
+        // 풀스크린 강제 실행을 위한 플래그 추가
+        notification.flags = notification.flags or 
+                android.app.Notification.FLAG_INSISTENT or // 계속 알림
+                android.app.Notification.FLAG_NO_CLEAR or  // 삭제 방지
+                android.app.Notification.FLAG_SHOW_LIGHTS // LED 표시
+        
         notificationManager.notify(
             NotificationAlarmManager.NOTIFICATION_ID_BASE + alarm.id,
             notification
         )
         
-        Log.d(TAG, "Alarm notification displayed: ${alarm.label}")
+        Log.d(TAG, "🐱 High-priority alarm notification with fullscreen intent displayed: ${alarm.label}")
+        
+        // Android 14+ 추가 디버그 로그
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val canUseFullScreen = notificationManager.canUseFullScreenIntent()
+            Log.d(TAG, "📱 Full Screen Intent Permission Status: $canUseFullScreen")
+            if (!canUseFullScreen) {
+                Log.w(TAG, "⚠️ Full Screen Intent permission not granted! Please enable it in Settings.")
+            }
+        }
     }
     
     /**
@@ -418,6 +458,49 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             Log.d(TAG, "Vibration stopped")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to stop vibration", e)
+        }
+    }
+    
+    /**
+     * 🔥 화면 켜기 및 풀스크린 알람 강제 실행
+     */
+    private fun wakeUpScreenAndStartFullScreen(context: Context, alarm: Alarm) {
+        try {
+            Log.d(TAG, "🔥 Attempting to wake up screen and start fullscreen alarm")
+            
+            // 1. 화면 켜기
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val wakeLock = powerManager.newWakeLock(
+                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or 
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or 
+                PowerManager.ON_AFTER_RELEASE,
+                "SemoAlarm:WakeUp"
+            )
+            
+            wakeLock.acquire(5000) // 5초 동안 화면 유지
+            
+            // 2. 풀스크린 액티비티 실행
+            val fullScreenIntent = Intent(context, AlarmFullScreenActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                putExtra(AlarmFullScreenActivity.EXTRA_ALARM, alarm)
+                putExtra(AlarmFullScreenActivity.EXTRA_ALARM_ID, alarm.id)
+            }
+            
+            context.startActivity(fullScreenIntent)
+            Log.d(TAG, "🔥 Screen woken up and AlarmFullScreenActivity started!")
+            
+            // 3초 후 WakeLock 해제
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                if (wakeLock.isHeld) {
+                    wakeLock.release()
+                    Log.d(TAG, "🔥 WakeLock released")
+                }
+            }, 3000)
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "🚫 Failed to wake up screen and start fullscreen", e)
         }
     }
 }

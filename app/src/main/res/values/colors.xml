@@ -103,4 +103,13 @@
     <color name="green">#10B981</color>                  <!-- 허용/활성 상태 -->
     <color name="red">#EF4444</color>                    <!-- 거부/비활성 상태 -->
     <color name="orange">#F59E0B</color>                 <!-- 경고/설정 필요 상태 -->
+    
+    <!-- 🐱 Fullscreen Alarm Colors -->
+    <color name="fullscreen_background_start">#000000</color>    <!-- 순수한 검정 -->
+    <color name="fullscreen_background_end">#1a1a1a</color>      <!-- 약간 밝은 검정 -->
+    <color name="alarm_time_color">@color/neon_blue</color>      <!-- 시간 표시용 네온블루 -->
+    <color name="alarm_label_color">#FFFFFF</color>              <!-- 라벨 텍스트 흰색 -->
+    <color name="button_dismiss_color">@color/neon_blue</color>  <!-- 해제 버튼 네온블루 -->
+    <color name="button_secondary_color">@color/deep_gray</color> <!-- 보조 버튼 딥그레이 -->
+    <color name="character_glow_color">#4000D4FF</color>         <!-- 캐릭터 글로우 효과 -->
 </resources>

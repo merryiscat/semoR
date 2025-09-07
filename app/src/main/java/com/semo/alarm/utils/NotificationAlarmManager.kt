@@ -15,6 +15,7 @@ import com.semo.alarm.R
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.receivers.AlarmNotificationReceiver
 import com.semo.alarm.ui.activities.MainActivity
+import com.semo.alarm.ui.activities.AlarmFullScreenActivity
 import java.util.*
 
 /**
@@ -199,15 +200,22 @@ class NotificationAlarmManager(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 ALARM_CHANNEL_ID,
-                "알람 알림",
-                NotificationManager.IMPORTANCE_HIGH
+                "🐱 메리 캐릭터 알람",
+                NotificationManager.IMPORTANCE_MAX
             ).apply {
-                description = "알람이 울릴 때 표시되는 알림"
+                description = "메리가 알람 시간에 풀스크린으로 나타납니다"
                 setShowBadge(true)
                 setBypassDnd(true)
                 enableLights(true)
+                lightColor = 0xFF00D4FF.toInt() // 네온 블루
                 enableVibration(true)
+                vibrationPattern = longArrayOf(0, 1000, 500, 1000)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                
+                // 풀스크린 인텐트 허용을 위한 설정
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    setAllowBubbles(true)
+                }
                 
                 // 알람음 설정
                 val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
@@ -229,14 +237,43 @@ class NotificationAlarmManager(private val context: Context) {
     fun showTimerCompleteNotification(timerName: String) {
         Log.d(TAG, "Showing persistent timer complete notification: $timerName")
         
-        val intent = Intent(context, MainActivity::class.java).apply {
+        // 🐱 메리 캐릭터 풀스크린 타이머 Intent (타이머용 더미 알람 생성)
+        val timerAlarm = Alarm(
+            id = -1,
+            time = "00:00",
+            label = "⏰ $timerName 완료!",
+            isActive = true,
+            days = "once",
+            soundUri = "",
+            volume = 1.0f,
+            vibrationEnabled = true,
+            snoozeEnabled = false,
+            snoozeInterval = 5
+        )
+        
+        val fullScreenIntent = Intent(context, AlarmFullScreenActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(AlarmFullScreenActivity.EXTRA_ALARM, timerAlarm)
+            putExtra(AlarmFullScreenActivity.EXTRA_ALARM_ID, -1)
+        }
+        
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        // 백업용 MainActivity Intent
+        val mainIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         
-        val pendingIntent = PendingIntent.getActivity(
+        val mainPendingIntent = PendingIntent.getActivity(
             context,
-            0,
-            intent,
+            1,
+            mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
@@ -256,18 +293,18 @@ class NotificationAlarmManager(private val context: Context) {
         
         val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle("⏰ 타이머 완료!")
-            .setContentText("$timerName 타이머가 완료되었습니다!")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentTitle("🐱 메리가 타이머 완료를 알려줘요!")
+            .setContentText("⏰ $timerName - 메리를 만나보세요")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setAutoCancel(false)  // Don't auto cancel - user must dismiss
-            .setOngoing(true)      // Make it persistent
-            .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000))  // Longer vibration pattern
-            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))  // Alarm sound instead of notification
-            .setContentIntent(pendingIntent)
-            .setFullScreenIntent(pendingIntent, true)
-            .addAction(R.drawable.ic_close_white, "끄기", dismissPendingIntent)  // Add dismiss button
-            .setDeleteIntent(dismissPendingIntent)  // Handle swipe to dismiss
+            .setAutoCancel(false)
+            .setOngoing(true)
+            .setVibrate(longArrayOf(0, 1000, 500, 1000, 500, 1000))
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
+            .setContentIntent(fullScreenPendingIntent)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .addAction(R.drawable.ic_close_white, "끄기", dismissPendingIntent)
+            .setDeleteIntent(dismissPendingIntent)
             .build()
         
         // Make notification persistent and high priority

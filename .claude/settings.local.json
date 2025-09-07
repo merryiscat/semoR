@@ -87,7 +87,20 @@
       "Read(/C:\\Users\\minhy\\Study\\LLM_Study\\semoR\\app\\src\\main\\java\\com\\semo\\alarm/**)",
       "Bash(echo $JAVA_HOME)",
       "Bash(export:*)",
-      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")"
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Read(//c/Users/minhy/Downloads/merry/**)",
+      "Read(//c/Users/minhy/.config/**)",
+      "Read(//c/Users/minhy/**)",
+      "Bash(cat:*)",
+      "Bash(env)",
+      "Bash(claude mcp:*)",
+      "mcp__imagegen-mcp__text-to-image",
+      "mcp__imagegen-mcp__image-to-image",
+      "Bash(.gradlew assembleDebug)",
+      "Bash(.\\gradlew.bat:*)",
+      "Bash(cmd /c gradlew:*)",
+      "Bash(.gradlew.bat assembleDebug)",
+      "Bash(cmd /c:*)"
     ],
     "deny": [],
     "ask": []

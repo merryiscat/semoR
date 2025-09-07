@@ -68,21 +68,29 @@ class PermissionManager(private val activity: AppCompatActivity) {
     }
     
     /**
-     * 모든 필수 권한을 확인하고 요청 (최초 실행시에만)
+     * 모든 필수 권한을 확인하고 요청
      */
     fun checkAndRequestAllPermissions() {
-        // 이미 권한 설정이 완료된 경우 건너뛰기
-        if (isPermissionSetupCompleted()) {
-            return
-        }
-        
         val missingPermissions = getMissingPermissions()
         
         if (missingPermissions.isNotEmpty()) {
-            showPermissionRationaleDialog(missingPermissions)
+            // 처음 요청인지 확인
+            val isFirstTime = !isPermissionSetupCompleted()
+            
+            if (isFirstTime) {
+                // 최초 실행 시에만 설명 다이얼로그 표시
+                showPermissionRationaleDialog(missingPermissions)
+            } else {
+                // 이후에는 사용자가 권한을 취소했을 수 있으므로 로그만 출력
+                android.util.Log.d("PermissionManager", "Missing permissions detected: ${missingPermissions.map { it.title }}")
+                // 필요하다면 권한 재요청 (조용히)
+                showQuietPermissionDialog(missingPermissions)
+            }
         } else {
-            // 모든 권한이 이미 허용된 경우 설정 완료로 표시
-            markPermissionSetupCompleted()
+            // 모든 권한이 허용된 경우
+            if (!isPermissionSetupCompleted()) {
+                markPermissionSetupCompleted()
+            }
         }
     }
     
@@ -131,7 +139,7 @@ class PermissionManager(private val activity: AppCompatActivity) {
     }
     
     /**
-     * 권한 설명 다이얼로그 표시
+     * 권한 설명 다이얼로그 표시 (최초 실행 시)
      */
     private fun showPermissionRationaleDialog(missingPermissions: List<PermissionInfo>) {
         val permissionMessages = missingPermissions.joinToString("\n\n") { 
@@ -139,16 +147,33 @@ class PermissionManager(private val activity: AppCompatActivity) {
         }
         
         AlertDialog.Builder(activity)
-            .setTitle("알람 앱 권한 필요")
+            .setTitle("🔔 알람 앱 권한 필요")
             .setMessage("세모알이 정상적으로 작동하려면 다음 권한이 필요합니다:\n\n$permissionMessages\n\n지금 설정하시겠습니까?")
             .setPositiveButton("설정하기") { _, _ ->
                 requestMissingPermissions(missingPermissions)
             }
             .setNegativeButton("나중에") { _, _ ->
-                // 사용자가 나중에 선택한 경우에도 앱은 계속 작동
+                android.util.Log.d("PermissionManager", "User chose to skip permission setup")
             }
             .setCancelable(false)
             .show()
+    }
+    
+    /**
+     * 조용한 권한 요청 다이얼로그 (권한이 취소된 경우)
+     */
+    private fun showQuietPermissionDialog(missingPermissions: List<PermissionInfo>) {
+        // 배터리 최적화가 포함된 경우에만 표시 (가장 중요한 권한)
+        if (missingPermissions.contains(PermissionInfo.BATTERY_OPTIMIZATION)) {
+            AlertDialog.Builder(activity)
+                .setTitle("⚠️ 알람 동작 확인")
+                .setMessage("배터리 최적화로 인해 알람이 정상 작동하지 않을 수 있습니다.\n\n배터리 최적화를 제외하시겠습니까?")
+                .setPositiveButton("설정") { _, _ ->
+                    requestBatteryOptimizationExclusion()
+                }
+                .setNegativeButton("무시") { _, _ -> }
+                .show()
+        }
     }
     
     /**
