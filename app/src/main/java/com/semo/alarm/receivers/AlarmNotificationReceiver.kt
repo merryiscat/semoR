@@ -78,11 +78,13 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         Log.d(TAG, "Processing alarm notification: ID=$alarmId, Alarm=${alarm?.time}")
         
         if (alarm != null) {
-            showAlarmNotification(context, alarm)
-            
-            // 🔥 강제로 화면 켜기 및 풀스크린 시도
+            // 🔥 최우선: 화면 켜기 및 풀스크린 실행 (알림보다 먼저)
             wakeUpScreenAndStartFullScreen(context, alarm)
             
+            // 알림 표시 (백업용)
+            showAlarmNotification(context, alarm)
+            
+            // 사운드와 진동 시작  
             playAlarmSound(context, alarm)
             startVibration(context, alarm)
         } else {
@@ -468,39 +470,64 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         try {
             Log.d(TAG, "🔥 Attempting to wake up screen and start fullscreen alarm")
             
-            // 1. 화면 켜기
+            // 1. 화면 켜기 - 더 강력한 WakeLock
             val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
             val wakeLock = powerManager.newWakeLock(
-                PowerManager.SCREEN_BRIGHT_WAKE_LOCK or 
+                PowerManager.FULL_WAKE_LOCK or 
                 PowerManager.ACQUIRE_CAUSES_WAKEUP or 
                 PowerManager.ON_AFTER_RELEASE,
-                "SemoAlarm:WakeUp"
+                "SemoAlarm:FullWakeUp"
             )
             
-            wakeLock.acquire(5000) // 5초 동안 화면 유지
+            wakeLock.acquire(10000) // 10초 동안 화면 유지
+            Log.d(TAG, "🔥 WakeLock acquired - screen should turn on")
             
-            // 2. 풀스크린 액티비티 실행
-            val fullScreenIntent = Intent(context, AlarmFullScreenActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP
-                putExtra(AlarmFullScreenActivity.EXTRA_ALARM, alarm)
-                putExtra(AlarmFullScreenActivity.EXTRA_ALARM_ID, alarm.id)
-            }
+            // 2. 짧은 지연 후 풀스크린 액티비티 실행 (화면이 완전히 켜진 후)
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                try {
+                    val fullScreenIntent = Intent(context, AlarmFullScreenActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK or  // CLEAR_TASK로 변경
+                                Intent.FLAG_ACTIVITY_NO_ANIMATION or
+                                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                        putExtra(AlarmFullScreenActivity.EXTRA_ALARM, alarm)
+                        putExtra(AlarmFullScreenActivity.EXTRA_ALARM_ID, alarm.id)
+                        putExtra("WAKE_UP_SCREEN", true) // 추가 플래그
+                    }
+                    
+                    context.startActivity(fullScreenIntent)
+                    Log.d(TAG, "🔥 AlarmFullScreenActivity started with enhanced flags!")
+                    
+                } catch (activityException: Exception) {
+                    Log.e(TAG, "🚫 Failed to start AlarmFullScreenActivity", activityException)
+                    
+                    // 백업: MainActivity 실행
+                    try {
+                        val backupIntent = Intent(context, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            putExtra("SHOW_ALARM_NOTIFICATION", alarm.id)
+                        }
+                        context.startActivity(backupIntent)
+                        Log.d(TAG, "🔄 Backup: MainActivity started instead")
+                    } catch (backupException: Exception) {
+                        Log.e(TAG, "🚫 Even backup MainActivity failed!", backupException)
+                    }
+                }
+            }, 500) // 500ms 지연
             
-            context.startActivity(fullScreenIntent)
-            Log.d(TAG, "🔥 Screen woken up and AlarmFullScreenActivity started!")
-            
-            // 3초 후 WakeLock 해제
+            // 10초 후 WakeLock 해제
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 if (wakeLock.isHeld) {
                     wakeLock.release()
-                    Log.d(TAG, "🔥 WakeLock released")
+                    Log.d(TAG, "🔥 WakeLock released after 10 seconds")
                 }
-            }, 3000)
+            }, 10000)
             
         } catch (e: Exception) {
             Log.e(TAG, "🚫 Failed to wake up screen and start fullscreen", e)
+            
+            // 최후의 수단: 알림만으로라도 사용자 알림
+            Log.w(TAG, "⚠️ Fallback: Relying on high-priority notification only")
         }
     }
 }

@@ -72,11 +72,22 @@ class AlarmFullScreenActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_alarm_fullscreen)
         
+        android.util.Log.d(TAG, "🔥 AlarmFullScreenActivity.onCreate() started!")
+        
         setupFullScreenMode()
+        
+        // 특별 처리: 화면 깨우기 시나리오
+        if (intent.getBooleanExtra("WAKE_UP_SCREEN", false)) {
+            android.util.Log.d(TAG, "🔥 Wake-up scenario detected - ensuring screen is active")
+            ensureScreenIsActive()
+        }
+        
         initializeViews()
         loadAlarmData()
         setupButtonListeners()
         startMerryAnimation()
+        
+        android.util.Log.d(TAG, "🔥 AlarmFullScreenActivity.onCreate() completed!")
     }
     
     private fun setupFullScreenMode() {
@@ -101,6 +112,49 @@ class AlarmFullScreenActivity : AppCompatActivity() {
         
         // 화면 켜짐 유지
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+    
+    /**
+     * 화면이 확실히 활성화되도록 보장 (알람 시나리오용)
+     */
+    private fun ensureScreenIsActive() {
+        try {
+            android.util.Log.d(TAG, "🔥 Ensuring screen is fully active...")
+            
+            // 추가 window flags 설정
+            window.addFlags(
+                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            )
+            
+            // PowerManager를 통한 추가 화면 켜기
+            val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                if (!powerManager.isInteractive) {
+                    android.util.Log.d(TAG, "🔥 Screen is not interactive - attempting to activate")
+                    val wakeLock = powerManager.newWakeLock(
+                        PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                        "SemoAlarm:ActivityWakeUp"
+                    )
+                    wakeLock.acquire(3000) // 3초 동안
+                    
+                    // 3초 후 해제
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        if (wakeLock.isHeld) {
+                            wakeLock.release()
+                            android.util.Log.d(TAG, "🔥 Activity WakeLock released")
+                        }
+                    }, 3000)
+                }
+            }
+            
+            android.util.Log.d(TAG, "✅ Screen activation measures applied")
+            
+        } catch (e: Exception) {
+            android.util.Log.e(TAG, "🚫 Failed to ensure screen is active", e)
+        }
     }
     
     private fun initializeViews() {
