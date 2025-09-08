@@ -42,3 +42,6 @@ captures/
 # Gradle cache / zip
 gradle.zip
 gradle-*/
+
+# Claude MCP Configuration (contains API keys)
+claude.config.json
