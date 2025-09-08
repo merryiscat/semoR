@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    android:gravity="center_vertical"
+    android:background="?android:attr/selectableItemBackground">
+
+    <!-- 코골이 아이콘 -->
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="12dp"
+        android:src="@drawable/ic_sleep"
+        android:background="@drawable/circle_background"
+        android:backgroundTint="#E3F2FD"
+        android:padding="8dp"
+        app:tint="#00D4FF" />
+
+    <!-- 녹음 정보 -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <!-- 시간 및 강도 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/textRecordingTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="03:24"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/md_theme_onSurface"
+                style="@style/TextAppearance.Material3.BodyLarge" />
+
+            <TextView
+                android:id="@+id/textIntensityLevel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="보통"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/chip_background_selected"
+                android:backgroundTint="#00D4FF"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                style="@style/TextAppearance.Material3.LabelSmall" />
+
+        </LinearLayout>
+
+        <!-- 지속시간 및 크기 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/textDuration"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="12초"
+                android:textSize="14sp"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                style="@style/TextAppearance.Material3.BodyMedium" />
+
+            <TextView
+                android:id="@+id/textFileSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="245KB"
+                android:textSize="12sp"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                style="@style/TextAppearance.Material3.BodySmall" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 재생/일시정지 버튼 -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/buttonPlayPause"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="12dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        app:icon="@drawable/ic_play"
+        app:iconSize="24dp"
+        app:iconPadding="0dp"
+        app:iconTint="#FFFFFF"
+        app:backgroundTint="#00D4FF"
+        app:cornerRadius="24dp"
+        style="@style/Widget.Material3.Button.UnelevatedButton" />
+
+</LinearLayout>

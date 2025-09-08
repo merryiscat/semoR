@@ -131,6 +131,7 @@ class MainActivity : AppCompatActivity() {
         android.util.Log.d("MainActivity", "  📱 Notification Permission: ${permissionManager.hasNotificationPermission()}")
         android.util.Log.d("MainActivity", "  ⏰ Exact Alarm Permission: ${permissionManager.hasExactAlarmPermission()}")
         android.util.Log.d("MainActivity", "  🔋 Battery Optimization Ignored: ${permissionManager.isBatteryOptimizationIgnored()}")
+        android.util.Log.d("MainActivity", "  🎙️ Record Audio Permission: ${permissionManager.hasRecordAudioPermission()}")
         
         if (!permissionManager.isBatteryOptimizationIgnored()) {
             android.util.Log.w("MainActivity", "  ⚠️ Battery optimization is ENABLED - this may prevent alarms from working!")

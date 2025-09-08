@@ -286,11 +286,12 @@ class SleepTrackingService : Service() {
     private fun initializeSnoringDetector() {
         snoringDetector = SnoringDetector(
             context = this,
-            onSnoringDetected = { decibelLevel, duration ->
+            onSnoringDetected = { decibelLevel, duration, audioFilePath ->
                 val event = SnoringEvent(
                     timestamp = System.currentTimeMillis(),
                     decibelLevel = decibelLevel,
-                    duration = duration
+                    duration = duration,
+                    audioFilePath = audioFilePath  // 🎙️ 오디오 파일 경로 추가
                 )
                 snoringEvents.add(event)
                 

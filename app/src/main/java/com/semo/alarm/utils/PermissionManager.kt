@@ -22,12 +22,14 @@ class PermissionManager(private val activity: AppCompatActivity) {
         private const val REQUEST_POST_NOTIFICATIONS = 1001
         private const val REQUEST_SCHEDULE_EXACT_ALARM = 1002
         private const val REQUEST_BATTERY_OPTIMIZATION = 1003
+        private const val REQUEST_RECORD_AUDIO = 1004
         private const val PREFS_PERMISSION_SETUP_COMPLETED = "permission_setup_completed"
     }
     
     private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var exactAlarmPermissionLauncher: ActivityResultLauncher<Intent>
     private lateinit var batteryOptimizationLauncher: ActivityResultLauncher<Intent>
+    private lateinit var recordAudioPermissionLauncher: ActivityResultLauncher<String>
     
     // 순차적 권한 요청을 위한 큐
     private val permissionQueue = mutableListOf<PermissionInfo>()
@@ -65,6 +67,18 @@ class PermissionManager(private val activity: AppCompatActivity) {
             // 다음 권한 요청으로 진행
             processNextPermission()
         }
+        
+        // 오디오 녹음 권한 런처
+        recordAudioPermissionLauncher = activity.registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            if (!isGranted) {
+                showRecordAudioPermissionDialog()
+            } else {
+                // 다음 권한 요청으로 진행
+                processNextPermission()
+            }
+        }
     }
     
     /**
@@ -73,21 +87,15 @@ class PermissionManager(private val activity: AppCompatActivity) {
     fun checkAndRequestAllPermissions() {
         val missingPermissions = getMissingPermissions()
         
+        android.util.Log.d("PermissionManager", "🔍 Permission check - Missing: ${missingPermissions.map { it.title }}")
+        
         if (missingPermissions.isNotEmpty()) {
-            // 처음 요청인지 확인
-            val isFirstTime = !isPermissionSetupCompleted()
-            
-            if (isFirstTime) {
-                // 최초 실행 시에만 설명 다이얼로그 표시
-                showPermissionRationaleDialog(missingPermissions)
-            } else {
-                // 이후에는 사용자가 권한을 취소했을 수 있으므로 로그만 출력
-                android.util.Log.d("PermissionManager", "Missing permissions detected: ${missingPermissions.map { it.title }}")
-                // 필요하다면 권한 재요청 (조용히)
-                showQuietPermissionDialog(missingPermissions)
-            }
+            // 새로운 권한(오디오 녹음)이 추가되었으므로 항상 권한 요청 표시
+            android.util.Log.d("PermissionManager", "📋 Requesting permissions: ${missingPermissions.map { it.title }}")
+            showPermissionRationaleDialog(missingPermissions)
         } else {
             // 모든 권한이 허용된 경우
+            android.util.Log.d("PermissionManager", "✅ All permissions granted")
             if (!isPermissionSetupCompleted()) {
                 markPermissionSetupCompleted()
             }
@@ -133,6 +141,11 @@ class PermissionManager(private val activity: AppCompatActivity) {
         // 3. 배터리 최적화 제외
         if (!isBatteryOptimizationIgnored()) {
             missing.add(PermissionInfo.BATTERY_OPTIMIZATION)
+        }
+        
+        // 4. 오디오 녹음 권한
+        if (!hasRecordAudioPermission()) {
+            missing.add(PermissionInfo.RECORD_AUDIO)
         }
         
         return missing
@@ -209,6 +222,7 @@ class PermissionManager(private val activity: AppCompatActivity) {
             PermissionInfo.NOTIFICATION -> requestNotificationPermission()
             PermissionInfo.EXACT_ALARM -> requestExactAlarmPermission()
             PermissionInfo.BATTERY_OPTIMIZATION -> requestBatteryOptimizationExclusion()
+            PermissionInfo.RECORD_AUDIO -> requestRecordAudioPermission()
         }
     }
     
@@ -262,6 +276,16 @@ class PermissionManager(private val activity: AppCompatActivity) {
     }
     
     /**
+     * 오디오 녹음 권한 확인
+     */
+    fun hasRecordAudioPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            activity,
+            Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    /**
      * 알림 권한 요청
      */
     private fun requestNotificationPermission() {
@@ -295,6 +319,13 @@ class PermissionManager(private val activity: AppCompatActivity) {
     }
     
     /**
+     * 오디오 녹음 권한 요청
+     */
+    private fun requestRecordAudioPermission() {
+        recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
+    
+    /**
      * 알림 권한 거부 시 설명 다이얼로그
      */
     private fun showNotificationPermissionDialog() {
@@ -319,6 +350,22 @@ class PermissionManager(private val activity: AppCompatActivity) {
                 requestExactAlarmPermission()
             }
             .setNegativeButton("취소") { _, _ -> }
+            .show()
+    }
+    
+    /**
+     * 오디오 녹음 권한 거부 시 설명 다이얼로그
+     */
+    private fun showRecordAudioPermissionDialog() {
+        AlertDialog.Builder(activity)
+            .setTitle("오디오 녹음 권한 필요")
+            .setMessage("수면 중 코골이 감지 및 녹음 기능을 사용하려면 오디오 녹음 권한이 필요합니다. 설정에서 권한을 허용해주세요.")
+            .setPositiveButton("설정으로 이동") { _, _ ->
+                openAppSettings()
+            }
+            .setNegativeButton("취소") { _, _ ->
+                processNextPermission()
+            }
             .show()
     }
     
@@ -350,6 +397,7 @@ class PermissionManager(private val activity: AppCompatActivity) {
     enum class PermissionInfo(val title: String, val description: String) {
         NOTIFICATION("알림 권한", "알람이 울릴 때 화면에 알림을 표시합니다"),
         EXACT_ALARM("정확한 알람 권한", "설정한 시간에 정확히 알람을 울립니다"),
-        BATTERY_OPTIMIZATION("배터리 최적화 제외", "백그라운드에서도 알람이 정상 작동합니다")
+        BATTERY_OPTIMIZATION("배터리 최적화 제외", "백그라운드에서도 알람이 정상 작동합니다"),
+        RECORD_AUDIO("오디오 녹음 권한", "수면 중 코골이 감지 및 녹음을 수행합니다")
     }
 }

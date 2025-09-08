@@ -18,8 +18,13 @@
     <!-- 풀스크린 인텐트 권한 (Android 14+) -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     
-    <!-- 오디오 권한 (코골이 감지용) -->
+    <!-- 🎙️ 코골이 녹음 권한 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
 
     <application
         android:name=".SemoAlarmApplication"

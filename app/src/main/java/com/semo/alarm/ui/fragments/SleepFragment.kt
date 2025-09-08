@@ -9,10 +9,16 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.semo.alarm.databinding.FragmentSleepBinding
+import com.semo.alarm.ui.adapters.SnoringRecordingAdapter
 import com.semo.alarm.ui.viewmodels.SleepViewModel
 import com.semo.alarm.ui.viewmodels.SleepTrackingState
+import com.semo.alarm.utils.AudioFileInfo
+import com.semo.alarm.utils.PlaybackState
+import com.semo.alarm.utils.SnoringAudioPlayer
+import com.semo.alarm.utils.SnoringAudioRecorder
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -30,6 +36,11 @@ class SleepFragment : Fragment() {
     private var elapsedTimeRunnable: Runnable? = null
     private var sleepStartTime: Long = 0L
     
+    // 🎙️ 코골이 녹음 관련 컴포넌트
+    private lateinit var snoringRecordingAdapter: SnoringRecordingAdapter
+    private var audioPlayer: SnoringAudioPlayer? = null
+    private var audioRecorder: SnoringAudioRecorder? = null
+    
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -42,6 +53,7 @@ class SleepFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupUI()
+        setupSnoringRecording()
         observeViewModel()
     }
     
@@ -184,9 +196,150 @@ class SleepFragment : Fragment() {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
     
+    // ═══════════════════════════════════════════════════
+    // 🎙️ 코골이 녹음 기능
+    // ═══════════════════════════════════════════════════
+    
+    private fun setupSnoringRecording() {
+        // 오디오 플레이어 초기화
+        audioPlayer = SnoringAudioPlayer(
+            context = requireContext(),
+            onPlaybackStateChanged = { state ->
+                snoringRecordingAdapter.updatePlaybackState(audioPlayer?.getCurrentFilePath(), state)
+            },
+            onError = { errorMessage ->
+                showSnackbar("재생 오류: $errorMessage")
+            }
+        )
+        
+        // 오디오 레코더 초기화 (저장소 사용량 표시용)
+        audioRecorder = SnoringAudioRecorder(
+            context = requireContext(),
+            onRecordingSaved = { _, _ -> 
+                updateStorageUsage()
+                loadRecentRecordings()
+            },
+            onError = { errorMessage ->
+                showSnackbar("녹음 오류: $errorMessage")
+            }
+        )
+        
+        // 리사이클러뷰 설정
+        snoringRecordingAdapter = SnoringRecordingAdapter(
+            onPlayPauseClick = { audioFile ->
+                handlePlayPauseClick(audioFile)
+            },
+            onItemClick = { audioFile ->
+                // 아이템 클릭 시 재생/일시정지 토글
+                handlePlayPauseClick(audioFile)
+            }
+        )
+        
+        binding.recyclerViewSnoringRecordings.apply {
+            adapter = snoringRecordingAdapter
+            layoutManager = LinearLayoutManager(requireContext())
+        }
+        
+        // 모든 녹음 보기 버튼
+        binding.buttonViewAllRecordings.setOnClickListener {
+            // TODO: 전체 녹음 목록 화면으로 이동
+            showSnackbar("전체 녹음 목록 화면 준비 중입니다")
+        }
+        
+        // 초기 데이터 로드
+        loadRecentRecordings()
+        updateStorageUsage()
+    }
+    
+    private fun handlePlayPauseClick(audioFile: AudioFileInfo) {
+        val player = audioPlayer ?: return
+        
+        when {
+            player.getCurrentFilePath() == audioFile.filePath && player.isPlaying() -> {
+                // 현재 재생 중인 파일 일시정지
+                player.pause()
+            }
+            player.getCurrentFilePath() == audioFile.filePath && player.getCurrentState() == PlaybackState.PAUSED -> {
+                // 현재 일시정지된 파일 재개
+                player.resume()
+            }
+            else -> {
+                // 새로운 파일 재생
+                player.play(audioFile.filePath)
+            }
+        }
+    }
+    
+    private fun loadRecentRecordings() {
+        lifecycleScope.launch {
+            try {
+                val recorder = audioRecorder ?: return@launch
+                val recentFiles = recorder.getAllRecordingFiles().take(3) // 최근 3개만 표시
+                
+                val audioFileInfos = recentFiles.map { file ->
+                    AudioFileInfo(
+                        filePath = file.absolutePath,
+                        fileName = file.name,
+                        duration = 0L, // 실제 구현에서는 파일에서 읽어와야 함
+                        fileSize = file.length(),
+                        timestamp = file.lastModified()
+                    )
+                }
+                
+                // UI 업데이트
+                if (audioFileInfos.isNotEmpty()) {
+                    binding.cardSnoringRecordings.visibility = View.VISIBLE
+                    binding.textRecordingCount.text = "${audioFileInfos.size}개"
+                    snoringRecordingAdapter.submitList(audioFileInfos)
+                } else {
+                    binding.cardSnoringRecordings.visibility = View.GONE
+                }
+                
+            } catch (e: Exception) {
+                showSnackbar("녹음 목록 로드 실패: ${e.message}")
+            }
+        }
+    }
+    
+    private fun updateStorageUsage() {
+        lifecycleScope.launch {
+            try {
+                val recorder = audioRecorder ?: return@launch
+                val totalUsage = recorder.getTotalStorageUsage()
+                val maxStorage = 100 * 1024 * 1024L // 100MB
+                
+                val usageMB = String.format("%.1f", totalUsage / (1024.0 * 1024.0))
+                val maxMB = String.format("%.0f", maxStorage / (1024.0 * 1024.0))
+                
+                binding.textStorageUsage.text = "${usageMB}MB / ${maxMB}MB"
+                
+                // 사용량이 80% 이상이면 경고 색상
+                if (totalUsage > maxStorage * 0.8) {
+                    binding.textStorageUsage.setTextColor(
+                        android.graphics.Color.parseColor("#F44336") // 빨간색
+                    )
+                } else {
+                    binding.textStorageUsage.setTextColor(
+                        androidx.core.content.ContextCompat.getColor(
+                            requireContext(), 
+                            com.semo.alarm.R.color.md_theme_onSurface
+                        )
+                    )
+                }
+                
+            } catch (e: Exception) {
+                binding.textStorageUsage.text = "사용량 확인 실패"
+            }
+        }
+    }
+    
     override fun onDestroyView() {
         super.onDestroyView()
         stopElapsedTimeUpdates()
+        audioPlayer?.release()
+        audioRecorder?.release()
+        audioPlayer = null
+        audioRecorder = null
         _binding = null
     }
 }

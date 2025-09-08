@@ -30,7 +30,7 @@ object CharacterConfig {
     // ═══════════════════════════════════════════════════
     
     /** 등장 애니메이션 총 소요 시간 (ms) */
-    const val APPEARING_DURATION = 800L
+    const val APPEARING_DURATION = 2500L
     
     /** 대기 애니메이션 한 사이클 시간 (ms) */
     const val IDLE_DURATION = 3000L
@@ -68,15 +68,21 @@ object CharacterConfig {
     // ═══════════════════════════════════════════════════
     
     /**
-     * 등장 애니메이션 프레임 (5개)
-     * appear_01.png → appear_05.png
+     * 등장 애니메이션 프레임 (반복 + 최종)
+     * 1~4프레임 반복 → 5프레임으로 IDLE 전환
+     * 
+     * ✅ 실제 Merry 등장 애니메이션! 왼쪽에서 걸어와 중앙에서 앉는 시퀀스
      */
     val APPEARING_FRAMES = intArrayOf(
-        R.drawable.ic_alarm,  // 임시 - 실제 character_merry_appear_01로 교체 예정
-        R.drawable.ic_alarm,  // 임시 - 실제 character_merry_appear_02로 교체 예정  
-        R.drawable.ic_alarm,  // 임시 - 실제 character_merry_appear_03로 교체 예정
-        R.drawable.ic_alarm,  // 임시 - 실제 character_merry_appear_04로 교체 예정
-        R.drawable.ic_alarm   // 임시 - 실제 character_merry_appear_05로 교체 예정
+        R.drawable.character_merry_appear_01,  // ✅ 왼쪽 20% 위치, 걷기 자세
+        R.drawable.character_merry_appear_02,  // ✅ 40% 위치, 걷기 동작  
+        R.drawable.character_merry_appear_03,  // ✅ 중앙 도착, 앉기 시작
+        R.drawable.character_merry_appear_04,  // ✅ 앉기 진행 중
+        R.drawable.character_merry_appear_01,  // 🔄 반복: 다시 걷기 자세
+        R.drawable.character_merry_appear_02,  // 🔄 반복: 걷기 동작
+        R.drawable.character_merry_appear_03,  // 🔄 반복: 앉기 시작
+        R.drawable.character_merry_appear_04,  // 🔄 반복: 앉기 진행
+        R.drawable.character_merry_appear_05   // ✅ 최종: 완전히 앉은 자세 (IDLE과 연결)
     )
     
     /**
@@ -104,13 +110,18 @@ object CharacterConfig {
     )
     
     /**
-     * 관심 끌기 애니메이션 프레임 (3개)
-     * attention_01.png → attention_03.png
+     * 관심 끌기 애니메이션 프레임 (6개)
+     * attention_01.png → attention_06.png
+     * 
+     * ✅ 실제 Merry attention 애니메이션! 주목끌기 동작 시퀀스
      */
     val ATTENTION_FRAMES = intArrayOf(
-        R.drawable.ic_settings, // 임시 - 실제 character_merry_attention_01로 교체 예정
-        R.drawable.ic_settings, // 임시 - 실제 character_merry_attention_02로 교체 예정
-        R.drawable.ic_settings  // 임시 - 실제 character_merry_attention_03로 교체 예정
+        R.drawable.character_merry_attention_01,  // ✅ 실제 Merry attention 프레임 1
+        R.drawable.character_merry_attention_02,  // ✅ 실제 Merry attention 프레임 2
+        R.drawable.character_merry_attention_03,  // ✅ 실제 Merry attention 프레임 3
+        R.drawable.character_merry_attention_04,  // ✅ 실제 Merry attention 프레임 4
+        R.drawable.character_merry_attention_05,  // ✅ 실제 Merry attention 프레임 5
+        R.drawable.character_merry_attention_06   // ✅ 실제 Merry attention 프레임 6
     )
     
     /**
