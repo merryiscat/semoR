@@ -18,6 +18,7 @@ import com.semo.alarm.character.AlarmCharacterView
 import com.semo.alarm.character.CharacterAnimationManager
 import com.semo.alarm.character.CharacterState
 import com.semo.alarm.character.AnimationType
+import com.semo.alarm.utils.NotificationAlarmManager
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.SimpleDateFormat
 import java.util.*
@@ -77,11 +78,18 @@ class AlarmFullScreenActivity : AppCompatActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         
-        // 잠금 화면 위에 표시
+        // 잠금 화면 위에 표시 (현대적 접근법)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
+            // Android 10+에서는 keyguard manager 사용
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val keyguardManager = getSystemService(KEYGUARD_SERVICE) as android.app.KeyguardManager
+                keyguardManager.requestDismissKeyguard(this, null)
+            }
         } else {
+            // 구버전 Android 지원
+            @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
@@ -99,24 +107,39 @@ class AlarmFullScreenActivity : AppCompatActivity() {
         try {
             android.util.Log.d(TAG, "🔥 Ensuring screen is fully active...")
             
-            // 추가 window flags 설정
-            window.addFlags(
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-            )
+            // 추가 window flags 설정 (구버전 호환성 유지)
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) {
+                @Suppress("DEPRECATION")
+                window.addFlags(
+                    WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                )
+            } else {
+                // 최신 API는 이미 setupFullScreenMode()에서 처리됨
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
             
-            // PowerManager를 통한 추가 화면 켜기
+            // PowerManager를 통한 추가 화면 켜기 (현대적 접근법)
             val powerManager = getSystemService(POWER_SERVICE) as PowerManager
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
                 if (!powerManager.isInteractive) {
                     android.util.Log.d(TAG, "🔥 Screen is not interactive - attempting to activate")
+                    
+                    // 최신 API에서는 SCREEN_BRIGHT_WAKE_LOCK 사용 권장
+                    val wakeLockType = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        PowerManager.SCREEN_BRIGHT_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP
+                    } else {
+                        @Suppress("DEPRECATION")
+                        PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP
+                    }
+                    
                     val wakeLock = powerManager.newWakeLock(
-                        PowerManager.FULL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                        wakeLockType,
                         "SemoAlarm:ActivityWakeUp"
                     )
-                    wakeLock.acquire(3000) // 3초 동안
+                    wakeLock.acquire(3000L) // 3초 동안
                     
                     // 3초 후 해제
                     Handler(Looper.getMainLooper()).postDelayed({
@@ -124,7 +147,7 @@ class AlarmFullScreenActivity : AppCompatActivity() {
                             wakeLock.release()
                             android.util.Log.d(TAG, "🔥 Activity WakeLock released")
                         }
-                    }, 3000)
+                    }, 3000L)
                 }
             }
             
@@ -228,13 +251,21 @@ class AlarmFullScreenActivity : AppCompatActivity() {
     private fun handleDismissAlarm() {
         stopAlarmScenario()
         
-        // AlarmNotificationReceiver에 해제 신호 전송
         currentAlarm?.let { alarm ->
-            val dismissIntent = Intent(this, AlarmNotificationReceiver::class.java).apply {
-                action = "action_dismiss_notification"
-                putExtra("alarm_id", alarm.id)
+            if (alarm.id == -1) {
+                // 타이머 알람인 경우 - NotificationAlarmManager로 알림 제거
+                android.util.Log.d(TAG, "🎯 Timer alarm detected - dismissing via NotificationAlarmManager")
+                val notificationAlarmManager = NotificationAlarmManager(this)
+                notificationAlarmManager.dismissTimerAlarm()
+            } else {
+                // 일반 알람인 경우 - AlarmNotificationReceiver로 처리
+                android.util.Log.d(TAG, "🔔 Regular alarm detected - dismissing via broadcast")
+                val dismissIntent = Intent(this, AlarmNotificationReceiver::class.java).apply {
+                    action = "action_dismiss_notification"
+                    putExtra("alarm_id", alarm.id)
+                }
+                sendBroadcast(dismissIntent)
             }
-            sendBroadcast(dismissIntent)
         }
         
         android.util.Log.d(TAG, "✅ Alarm dismissed")
@@ -297,5 +328,7 @@ class AlarmFullScreenActivity : AppCompatActivity() {
     override fun onBackPressed() {
         // 뒷 버튼 무시 (알람 해제 방지)
         // 의도적으로 super.onBackPressed() 호출하지 않음
+        android.util.Log.d(TAG, "⬅️ Back button pressed - ignored for alarm safety")
     }
+    
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.semo.alarm.data.entities.SleepRecord
 import com.semo.alarm.data.repositories.SleepRepository
 import com.semo.alarm.services.SleepTrackingService
+import com.semo.alarm.utils.PermissionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,6 +44,32 @@ class SleepViewModel @Inject constructor(
     init {
         loadTodaysSummary()
         loadAverageStats()
+        // 앱 재시작 시 수면 추적 상태 동기화
+        checkCurrentSleepTrackingState()
+    }
+    
+    /**
+     * 앱 재시작 시 실제 수면 추적 상태를 확인하고 UI를 동기화
+     */
+    private fun checkCurrentSleepTrackingState() {
+        viewModelScope.launch {
+            try {
+                val activeSleep = sleepRepository.getActiveSleepRecordSync()
+                if (activeSleep != null) {
+                    // 활성화된 수면 기록이 있으면 TRACKING 상태로 설정
+                    currentSleepRecordId = activeSleep.id
+                    _sleepTrackingState.value = SleepTrackingState.TRACKING
+                } else {
+                    // 활성화된 수면 기록이 없으면 IDLE 상태로 설정
+                    currentSleepRecordId = -1L
+                    _sleepTrackingState.value = SleepTrackingState.IDLE
+                }
+            } catch (e: Exception) {
+                // 오류 발생 시 IDLE 상태로 설정
+                _sleepTrackingState.value = SleepTrackingState.IDLE
+                _errorMessage.value = "수면 추적 상태 확인 실패: ${e.message}"
+            }
+        }
     }
     
     fun startSleepTracking() {
@@ -58,6 +85,9 @@ class SleepViewModel @Inject constructor(
                     currentSleepRecordId = activeSleep.id
                     return@launch
                 }
+                
+                // 배터리 최적화 상태 체크 및 경고 (중요한 기능이므로 확인)
+                checkBatteryOptimizationForSleepTracking()
                 
                 // Start new sleep tracking session
                 currentSleepRecordId = sleepRepository.startSleepTracking()
@@ -174,10 +204,45 @@ class SleepViewModel @Inject constructor(
         _errorMessage.value = null
     }
     
+    /**
+     * Fragment의 onResume 시점에 호출되어 상태를 다시 동기화
+     */
+    fun refreshTrackingState() {
+        checkCurrentSleepTrackingState()
+    }
+    
+    /**
+     * 오늘의 수면 기록을 삭제합니다
+     */
+    fun deleteTodaysSleepRecord() {
+        viewModelScope.launch {
+            try {
+                val todaysRecord = sleepRepository.getTodaysSleepRecord()
+                if (todaysRecord != null) {
+                    sleepRepository.deleteSleepRecordById(todaysRecord.id)
+                    // UI 새로고침
+                    loadTodaysSummary()
+                    loadAverageStats()
+                } else {
+                    _errorMessage.value = "삭제할 수면 기록이 없습니다."
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "수면 기록 삭제 실패: ${e.message}"
+            }
+        }
+    }
+    
     private fun calculateSnoringPercentage(sleepRecord: SleepRecord): Int {
         // TODO: Parse snoringData JSON and calculate actual percentage
         // For now, return simple boolean-based percentage
         return if (sleepRecord.snoringDetected) 15 else 0
+    }
+    
+    private fun checkBatteryOptimizationForSleepTracking() {
+        val powerManager = application.getSystemService(Application.POWER_SERVICE) as android.os.PowerManager
+        if (!powerManager.isIgnoringBatteryOptimizations(application.packageName)) {
+            _errorMessage.value = "수면 추적의 정확성을 위해 배터리 최적화를 해제해 주세요. 설정에서 변경할 수 있습니다."
+        }
     }
     
     private fun formatDuration(millis: Long): String {

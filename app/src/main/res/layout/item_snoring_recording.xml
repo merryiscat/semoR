@@ -90,20 +90,40 @@
 
     </LinearLayout>
 
-    <!-- 재생/일시정지 버튼 -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/buttonPlayPause"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+    <!-- 버튼 그룹 -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
         android:layout_marginStart="12dp"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        app:icon="@drawable/ic_play"
-        app:iconSize="24dp"
-        app:iconPadding="0dp"
-        app:iconTint="#FFFFFF"
-        app:backgroundTint="#00D4FF"
-        app:cornerRadius="24dp"
-        style="@style/Widget.Material3.Button.UnelevatedButton" />
+        android:gravity="center_vertical">
+
+        <!-- 삭제 버튼 -->
+        <ImageButton
+            android:id="@+id/buttonDelete"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_close_white"
+            android:background="@drawable/delete_button_small"
+            android:contentDescription="녹음 파일 삭제"
+            android:scaleType="center" />
+
+        <!-- 재생/일시정지 버튼 -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonPlayPause"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/ic_play"
+            app:iconSize="24dp"
+            app:iconPadding="0dp"
+            app:iconTint="#FFFFFF"
+            app:backgroundTint="#00D4FF"
+            app:cornerRadius="24dp"
+            style="@style/Widget.Material3.Button.UnelevatedButton" />
+
+    </LinearLayout>
 
 </LinearLayout>

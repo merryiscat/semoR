@@ -304,7 +304,6 @@ class NotificationAlarmManager(private val context: Context) {
             .setContentIntent(fullScreenPendingIntent)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .addAction(R.drawable.ic_close_white, "끄기", dismissPendingIntent)
-            .setDeleteIntent(dismissPendingIntent)
             .build()
         
         // Make notification persistent and high priority

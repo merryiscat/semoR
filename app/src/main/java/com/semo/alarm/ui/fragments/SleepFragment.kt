@@ -57,6 +57,12 @@ class SleepFragment : Fragment() {
         observeViewModel()
     }
     
+    override fun onResume() {
+        super.onResume()
+        // 앱 재진입 시 수면 추적 상태 동기화
+        sleepViewModel.refreshTrackingState()
+    }
+    
     private fun setupUI() {
         binding.buttonStartSleep.setOnClickListener {
             sleepViewModel.startSleepTracking()
@@ -64,6 +70,10 @@ class SleepFragment : Fragment() {
         
         binding.buttonStopSleep.setOnClickListener {
             sleepViewModel.stopSleepTracking()
+        }
+        
+        binding.buttonDeleteTodaysSleep.setOnClickListener {
+            showDeleteSleepConfirmDialog()
         }
         
         binding.switchSnoringDetection.setOnCheckedChangeListener { _, isChecked ->
@@ -196,6 +206,47 @@ class SleepFragment : Fragment() {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
     }
     
+    private fun showDeleteSleepConfirmDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("수면 기록 삭제")
+            .setMessage("오늘의 수면 기록을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.")
+            .setPositiveButton("삭제") { _, _ ->
+                sleepViewModel.deleteTodaysSleepRecord()
+                showSnackbar("오늘의 수면 기록이 삭제되었습니다")
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+    
+    private fun showDeleteRecordingConfirmDialog(audioFile: AudioFileInfo) {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("녹음 파일 삭제")
+            .setMessage("'${audioFile.fileName}' 파일을 삭제하시겠습니까?\n삭제된 파일은 복구할 수 없습니다.")
+            .setPositiveButton("삭제") { _, _ ->
+                deleteRecordingFile(audioFile)
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+    
+    private fun deleteRecordingFile(audioFile: AudioFileInfo) {
+        lifecycleScope.launch {
+            try {
+                val file = java.io.File(audioFile.filePath)
+                if (file.exists() && file.delete()) {
+                    showSnackbar("녹음 파일이 삭제되었습니다")
+                    // 목록 새로고침
+                    loadRecentRecordings()
+                    updateStorageUsage()
+                } else {
+                    showSnackbar("파일 삭제에 실패했습니다")
+                }
+            } catch (e: Exception) {
+                showSnackbar("파일 삭제 중 오류가 발생했습니다: ${e.message}")
+            }
+        }
+    }
+    
     // ═══════════════════════════════════════════════════
     // 🎙️ 코골이 녹음 기능
     // ═══════════════════════════════════════════════════
@@ -232,6 +283,9 @@ class SleepFragment : Fragment() {
             onItemClick = { audioFile ->
                 // 아이템 클릭 시 재생/일시정지 토글
                 handlePlayPauseClick(audioFile)
+            },
+            onDeleteClick = { audioFile ->
+                showDeleteRecordingConfirmDialog(audioFile)
             }
         )
         

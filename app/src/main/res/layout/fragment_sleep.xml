@@ -119,15 +119,35 @@
                 android:orientation="vertical"
                 android:padding="20dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- 헤더 (제목 + 삭제 버튼) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="오늘 수면"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/md_theme_onSurface"
-                    android:layout_marginBottom="12dp"
-                    style="@style/TextAppearance.Material3.TitleMedium" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="오늘 수면"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/md_theme_onSurface"
+                        style="@style/TextAppearance.Material3.TitleMedium" />
+
+                    <ImageButton
+                        android:id="@+id/buttonDeleteTodaysSleep"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginStart="8dp"
+                        android:src="@drawable/ic_close_white"
+                        android:background="@drawable/delete_button_small"
+                        android:contentDescription="수면 기록 삭제"
+                        android:scaleType="center" />
+
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/textTodaysSleepTime"
@@ -255,8 +275,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:checked="true"
-                    app:thumbTint="#00D4FF"
-                    app:trackTint="#6B7280" />
+                    app:thumbTint="@color/switch_thumb_selector"
+                    app:trackTint="@color/switch_track_selector" />
 
             </LinearLayout>
 

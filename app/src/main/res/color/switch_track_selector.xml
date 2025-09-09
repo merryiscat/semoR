@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 체크된 상태 (ON) - 네온 블루 (투명도 30%) -->
+    <item android:state_checked="true" android:color="#4D00D4FF" />
+    <!-- 체크 해제 상태 (OFF) - 딥 그레이 (투명도 50%) -->
+    <item android:state_checked="false" android:color="#806B7280" />
+    <!-- 기본 상태 - 딥 그레이 (투명도 50%) -->
+    <item android:color="#806B7280" />
+</selector>

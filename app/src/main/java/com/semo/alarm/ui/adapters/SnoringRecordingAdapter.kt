@@ -21,7 +21,8 @@ import java.util.*
  */
 class SnoringRecordingAdapter(
     private val onPlayPauseClick: (AudioFileInfo) -> Unit,
-    private val onItemClick: (AudioFileInfo) -> Unit = {}
+    private val onItemClick: (AudioFileInfo) -> Unit = {},
+    private val onDeleteClick: (AudioFileInfo) -> Unit = {}
 ) : ListAdapter<AudioFileInfo, SnoringRecordingAdapter.SnoringRecordingViewHolder>(DiffCallback()) {
     
     // 현재 재생 중인 파일과 상태 추적
@@ -87,6 +88,10 @@ class SnoringRecordingAdapter(
             // 클릭 리스너 설정
             binding.buttonPlayPause.setOnClickListener {
                 onPlayPauseClick(audioFile)
+            }
+            
+            binding.buttonDelete.setOnClickListener {
+                onDeleteClick(audioFile)
             }
             
             binding.root.setOnClickListener {

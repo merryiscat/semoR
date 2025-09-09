@@ -12,6 +12,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.semo.alarm.R
+import android.content.SharedPreferences
+import javax.inject.Inject
 import com.semo.alarm.databinding.ActivityMainBinding
 import com.semo.alarm.ui.fragments.AlarmFragment
 import com.semo.alarm.ui.fragments.CustomTimerFragment
@@ -121,6 +123,42 @@ class MainActivity : AppCompatActivity() {
         
         // 앱이 처음 실행되거나 권한이 없는 경우 권한 요청
         permissionManager.checkAndRequestAllPermissions()
+        
+        // 🔋 배터리 최적화 즉시 체크 및 요청 (알람 신뢰성을 위해 필수)
+        checkAndRequestBatteryOptimization()
+    }
+    
+    /**
+     * 🔋 배터리 최적화 해제를 적극적으로 요청
+     * 알람 앱의 핵심 기능이므로 앱 시작 시마다 체크
+     */
+    private fun checkAndRequestBatteryOptimization() {
+        if (!permissionManager.isBatteryOptimizationIgnored()) {
+            android.util.Log.i("MainActivity", "⚡ Requesting battery optimization exemption for alarm reliability")
+            
+            AlertDialog.Builder(this)
+                .setTitle("⏰ 세모알 알람 보장 설정")
+                .setMessage("""
+                    알람이 정확한 시간에 울리도록 하기 위해 
+                    배터리 최적화에서 세모알을 제외해주세요.
+                    
+                    ✅ 알람이 정확한 시간에 울립니다
+                    ✅ 수면 추적이 중단되지 않습니다  
+                    ✅ 타이머가 백그라운드에서 계속 작동합니다
+                    
+                    📱 다음 화면에서 "허용" 버튼을 눌러주세요.
+                """.trimIndent())
+                .setPositiveButton("지금 설정하기") { _, _ ->
+                    permissionManager.openBatteryOptimizationSettings()
+                }
+                .setNegativeButton("나중에") { _, _ -> 
+                    android.util.Log.w("MainActivity", "⚠️ User postponed battery optimization setup")
+                }
+                .setCancelable(false) // 중요한 설정이므로 취소 방지
+                .show()
+        } else {
+            android.util.Log.d("MainActivity", "✅ Battery optimization already disabled - all systems ready")
+        }
     }
     
     /**

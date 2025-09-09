@@ -63,6 +63,12 @@ class SettingsFragment : Fragment() {
         loadSettings()
     }
     
+    override fun onResume() {
+        super.onResume()
+        // 외부 설정에서 돌아왔을 때 권한 상태 새로고침
+        updatePermissionStatus()
+    }
+    
     private fun setupUI() {
         // 앱 버전 표시
         try {
@@ -246,18 +252,111 @@ class SettingsFragment : Fragment() {
     }
     
     private fun openBatteryOptimizationSettings() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val intent = Intent().apply {
-                action = Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS
-            }
-            
-            try {
-                startActivity(intent)
-                Toast.makeText(requireContext(), "세모알을 배터리 최적화에서 제외해주세요", Toast.LENGTH_LONG).show()
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "설정 화면을 열 수 없습니다", Toast.LENGTH_SHORT).show()
-            }
+        // 현재 배터리 최적화 상태 확인
+        val powerManager = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
+        val isIgnoringBatteryOptimizations = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            powerManager.isIgnoringBatteryOptimizations(requireContext().packageName)
+        } else {
+            true
         }
+        
+        if (isIgnoringBatteryOptimizations) {
+            // 이미 설정되어 있는 경우
+            AlertDialog.Builder(requireContext())
+                .setTitle("✅ 배터리 최적화 설정 완료")
+                .setMessage("세모알이 이미 배터리 최적화에서 제외되어 있습니다.\n알람과 수면 추적이 안정적으로 동작합니다.")
+                .setPositiveButton("확인") { _, _ -> }
+                .setNeutralButton("다시 설정") { _, _ ->
+                    openBatteryOptimizationSettingsForced()
+                }
+                .show()
+        } else {
+            // 설정이 필요한 경우
+            AlertDialog.Builder(requireContext())
+                .setTitle("⚡ 알람 안정성 개선")
+                .setMessage("""
+                    수면 추적과 알람의 안정적 동작을 위해 배터리 최적화에서 세모알을 제외해주세요.
+                    
+                    ✅ 알람이 정확한 시간에 울립니다
+                    ✅ 수면 추적이 중단되지 않습니다  
+                    ✅ 코골이 감지가 정상 작동합니다
+                    
+                    ⭐ 설정 후 이 화면으로 돌아오면 상태가 자동으로 업데이트됩니다.
+                """.trimIndent())
+                .setPositiveButton("설정하러 가기") { _, _ ->
+                    openBatteryOptimizationSettingsForced()
+                }
+                .setNegativeButton("나중에") { _, _ -> }
+                .show()
+        }
+    }
+    
+    private fun openBatteryOptimizationSettingsForced() {
+        try {
+            // 1차: 직접 배터리 최적화 요청
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${requireContext().packageName}")
+                }
+                startActivity(intent)
+                return
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsFragment", "Direct battery optimization failed", e)
+        }
+        
+        try {
+            // 2차: 배터리 최적화 목록 화면
+            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            startActivity(intent)
+            Toast.makeText(requireContext(), "목록에서 '세모알'을 찾아 '최적화 안함'으로 설정해주세요", Toast.LENGTH_LONG).show()
+            return
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsFragment", "Battery optimization list failed", e)
+        }
+        
+        try {
+            // 3차: 앱 정보 화면
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:${requireContext().packageName}")
+            }
+            startActivity(intent)
+            Toast.makeText(requireContext(), "배터리 항목에서 '제한 없음'으로 설정해주세요", Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            showManualBatteryOptimizationGuide()
+        }
+    }
+    
+    private fun showManualBatteryOptimizationGuide() {
+        AlertDialog.Builder(requireContext())
+            .setTitle("⚡ 배터리 최적화 설정 안내")
+            .setMessage("""
+                알람의 안정적 동작을 위해 다음 단계를 따라주세요:
+                
+                📱 **일반적인 경우:**
+                1️⃣ 설정 → 배터리 (또는 전원 관리)
+                2️⃣ 앱 전원 관리 (또는 배터리 최적화)
+                3️⃣ 세모알 앱 찾기
+                4️⃣ '제한 없음' 또는 '최적화 안함' 선택
+                
+                📱 **삼성 갤럭시:**
+                설정 → 디바이스 케어 → 배터리 → 앱 전원 관리 → 세모알 → 제한 없음
+                
+                📱 **샤오미:**
+                설정 → 앱 → 권한 → 자동실행 → 세모알 활성화
+                
+                ⚠️ 이 설정을 하지 않으면 수면 추적이 정상 작동하지 않을 수 있습니다.
+            """.trimIndent())
+            .setPositiveButton("일반 설정으로 이동") { _, _ ->
+                try {
+                    val intent = Intent(Settings.ACTION_SETTINGS)
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(requireContext(), "설정 화면을 열 수 없습니다", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("나중에") { _, _ -> }
+            .show()
     }
     
     private fun showBackupDialog() {
@@ -356,11 +455,6 @@ class SettingsFragment : Fragment() {
             .setMessage(licenseText)
             .setPositiveButton("확인", null)
             .show()
-    }
-    
-    override fun onResume() {
-        super.onResume()
-        updatePermissionStatus()
     }
     
     override fun onDestroyView() {

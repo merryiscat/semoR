@@ -2,6 +2,7 @@ package com.semo.alarm.utils
 
 import android.Manifest
 import android.app.AlarmManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -64,6 +65,18 @@ class PermissionManager(private val activity: AppCompatActivity) {
         batteryOptimizationLauncher = activity.registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) { result ->
+            // 실제 배터리 최적화 상태 확인 및 사용자에게 피드백
+            android.util.Log.d("PermissionManager", "Battery optimization request returned, checking actual status...")
+            
+            val isNowIgnored = isBatteryOptimizationIgnored()
+            if (isNowIgnored) {
+                android.util.Log.i("PermissionManager", "✅ Battery optimization successfully disabled")
+                showBatteryOptimizationSuccessDialog()
+            } else {
+                android.util.Log.w("PermissionManager", "⚠️ Battery optimization still enabled after user interaction")
+                showBatteryOptimizationFailureDialog()
+            }
+            
             // 다음 권한 요청으로 진행
             processNextPermission()
         }
@@ -311,11 +324,71 @@ class PermissionManager(private val activity: AppCompatActivity) {
      */
     private fun requestBatteryOptimizationExclusion() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:${activity.packageName}")
+            // 삼성 갤럭시 우선 처리
+            if (isSamsungDevice()) {
+                requestSamsungBatteryOptimization()
+            } else {
+                // 일반 Android 방식
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${activity.packageName}")
+                }
+                batteryOptimizationLauncher.launch(intent)
             }
-            batteryOptimizationLauncher.launch(intent)
         }
+    }
+    
+    /**
+     * 삼성 디바이스 확인
+     */
+    private fun isSamsungDevice(): Boolean {
+        return Build.MANUFACTURER.equals("samsung", ignoreCase = true)
+    }
+    
+    /**
+     * 삼성 갤럭시 전용 배터리 최적화 설정
+     */
+    private fun requestSamsungBatteryOptimization() {
+        android.util.Log.d("PermissionManager", "🔋 Samsung Galaxy detected - using Samsung-specific battery optimization")
+        
+        // 삼성 디바이스 케어 직접 접근 시도
+        try {
+            // 1차: 삼성 디바이스 케어 → 배터리 → 앱 전원 관리
+            val samsungIntent = Intent().apply {
+                component = ComponentName(
+                    "com.samsung.android.lool",
+                    "com.samsung.android.sm.ui.battery.BatteryActivity"
+                )
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            batteryOptimizationLauncher.launch(samsungIntent)
+            android.util.Log.d("PermissionManager", "✅ Samsung Device Care battery settings launched")
+            return
+        } catch (e: Exception) {
+            android.util.Log.w("PermissionManager", "Samsung Device Care access failed, trying alternative: ${e.message}")
+        }
+        
+        // 2차: 삼성 설정 앱의 배터리 섹션 직접 접근
+        try {
+            val batteryIntent = Intent().apply {
+                component = ComponentName(
+                    "com.android.settings",
+                    "com.android.settings.fuelgauge.BatteryOptimizationSettings"
+                )
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            batteryOptimizationLauncher.launch(batteryIntent)
+            android.util.Log.d("PermissionManager", "✅ Samsung battery optimization settings launched")
+            return
+        } catch (e: Exception) {
+            android.util.Log.w("PermissionManager", "Samsung battery settings access failed: ${e.message}")
+        }
+        
+        // 3차: 표준 Android 방식으로 폴백
+        android.util.Log.d("PermissionManager", "🔄 Falling back to standard Android battery optimization")
+        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+            data = Uri.parse("package:${activity.packageName}")
+        }
+        batteryOptimizationLauncher.launch(intent)
     }
     
     /**
@@ -380,6 +453,69 @@ class PermissionManager(private val activity: AppCompatActivity) {
     }
     
     /**
+     * 배터리 최적화 설정을 위한 스마트 이동
+     */
+    fun openBatteryOptimizationSettings() {
+        try {
+            // 1차: 직접 배터리 최적화 요청
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                    data = Uri.parse("package:${activity.packageName}")
+                }
+                activity.startActivity(intent)
+                return
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("PermissionManager", "Direct battery optimization failed", e)
+        }
+        
+        try {
+            // 2차: 배터리 최적화 목록 화면
+            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            activity.startActivity(intent)
+            return
+        } catch (e: Exception) {
+            android.util.Log.e("PermissionManager", "Battery optimization list failed", e)
+        }
+        
+        try {
+            // 3차: 앱 정보 화면
+            openAppSettings()
+        } catch (e: Exception) {
+            android.util.Log.e("PermissionManager", "App settings failed", e)
+            showManualBatteryOptimizationGuide()
+        }
+    }
+    
+    /**
+     * 수동 배터리 최적화 설정 가이드
+     */
+    private fun showManualBatteryOptimizationGuide() {
+        AlertDialog.Builder(activity)
+            .setTitle("⚡ 배터리 최적화 설정 안내")
+            .setMessage("""
+                알람의 안정적 동작을 위해 다음 단계를 따라주세요:
+                
+                1️⃣ 설정 → 배터리 (또는 전원 관리)
+                2️⃣ 앱 전원 관리 (또는 배터리 최적화)
+                3️⃣ 세모알 앱 찾기
+                4️⃣ '제한 없음' 또는 '최적화 안함' 선택
+                
+                ⚠️ 이 설정을 하지 않으면 수면 추적이 정상 작동하지 않을 수 있습니다.
+            """.trimIndent())
+            .setPositiveButton("설정으로 이동") { _, _ ->
+                try {
+                    val intent = Intent(Settings.ACTION_SETTINGS)
+                    activity.startActivity(intent)
+                } catch (e: Exception) {
+                    // 최후 수단으로 앱 목록만 표시
+                }
+            }
+            .setNegativeButton("나중에") { _, _ -> }
+            .show()
+    }
+    
+    /**
      * 사용자가 수동으로 권한 설정을 다시 시도할 때 사용
      */
     fun resetAndRequestAllPermissions() {
@@ -389,6 +525,64 @@ class PermissionManager(private val activity: AppCompatActivity) {
         
         // 권한 재요청
         checkAndRequestAllPermissions()
+    }
+    
+    /**
+     * 배터리 최적화 해제 성공 다이얼로그
+     */
+    private fun showBatteryOptimizationSuccessDialog() {
+        AlertDialog.Builder(activity)
+            .setTitle("✅ 설정 완료!")
+            .setMessage("""
+                배터리 최적화가 성공적으로 해제되었습니다.
+                
+                🎉 이제 세모알의 모든 기능이 안정적으로 작동합니다:
+                ✅ 알람이 정확한 시간에 울립니다
+                ✅ 수면 추적이 중단되지 않습니다
+                ✅ 타이머가 백그라운드에서 계속 작동합니다
+            """.trimIndent())
+            .setPositiveButton("확인") { _, _ -> }
+            .show()
+    }
+    
+    /**
+     * 배터리 최적화 해제 실패 다이얼로그
+     */
+    private fun showBatteryOptimizationFailureDialog() {
+        val message = if (isSamsungDevice()) {
+            // 삼성 갤럭시 전용 안내
+            """
+                배터리 최적화가 아직 활성화되어 있습니다.
+                
+                🔋 삼성 갤럭시 설정 방법:
+                1️⃣ 디바이스 케어 → 배터리
+                2️⃣ 앱 전원 관리
+                3️⃣ "세모알" 앱 찾기
+                4️⃣ "제한 없음" 선택 ✅
+                
+                💡 "적응형" 또는 "최적화"가 아닌 반드시 "제한 없음"을 선택해주세요!
+            """.trimIndent()
+        } else {
+            // 기본 Android 안내
+            """
+                배터리 최적화가 아직 활성화되어 있습니다.
+                
+                알람과 수면 추적의 안정적 동작을 위해 
+                다시 한 번 설정을 완료해주세요.
+                
+                💡 다음 화면에서 세모알을 찾아 
+                "허용" 또는 "최적화 안함"을 선택해주세요.
+            """.trimIndent()
+        }
+        
+        AlertDialog.Builder(activity)
+            .setTitle("⚠️ 설정이 완료되지 않았습니다")
+            .setMessage(message)
+            .setPositiveButton("다시 설정") { _, _ ->
+                openBatteryOptimizationSettings()
+            }
+            .setNegativeButton("나중에") { _, _ -> }
+            .show()
     }
     
     /**
