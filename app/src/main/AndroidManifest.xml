@@ -85,6 +85,13 @@
             android:turnScreenOn="true"
             android:theme="@style/Theme.FullScreenAlarm" />
 
+        <!-- 🎙️ 코골이 녹음 전체 목록 액티비티 -->
+        <activity
+            android:name=".ui.activities.AllSnoringRecordingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activities.MainActivity"
+            android:theme="@style/Theme.SemoR" />
+
         <!-- 알람 수신자 -->
         <receiver
             android:name=".receivers.AlarmReceiver"

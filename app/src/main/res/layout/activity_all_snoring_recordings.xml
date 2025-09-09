@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/md_theme_background">
+
+    <!-- 툴바 -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/md_theme_primary"
+        app:titleTextColor="@color/md_theme_onPrimary"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:navigationIconTint="@color/md_theme_onPrimary" />
+
+    <!-- 헤더 정보 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@color/md_theme_surface"
+        android:elevation="2dp">
+
+        <!-- 제목 및 개수 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_sleep"
+                app:tint="@color/semo_neon_blue" />
+
+            <TextView
+                android:id="@+id/textRecordingCount"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="총 15개의 녹음"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/md_theme_onSurface"
+                style="@style/TextAppearance.Material3.HeadlineSmall" />
+
+            <!-- 새로고침 버튼 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonRefresh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                app:icon="@drawable/ic_refresh"
+                app:iconSize="20dp"
+                app:backgroundTint="@color/semo_neon_blue"
+                app:iconTint="@color/md_theme_onPrimary"
+                style="@style/Widget.Material3.Button.UnelevatedButton" />
+
+        </LinearLayout>
+
+        <!-- 저장소 사용량 및 정리 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/textStorageUsage"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="12.3MB / 100MB 사용 중"
+                android:textSize="14sp"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                style="@style/TextAppearance.Material3.BodyMedium" />
+
+            <!-- 저장소 정리 버튼 -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/buttonClearStorage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="7일 이상 삭제"
+                android:textSize="12sp"
+                android:layout_marginStart="8dp"
+                app:backgroundTint="@color/semo_deep_gray"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- 로딩 인디케이터 -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <!-- 녹음 목록 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerViewAllRecordings"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_snoring_recording" />
+
+        <!-- 빈 상태 메시지 -->
+        <LinearLayout
+            android:id="@+id/textEmptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginBottom="16dp"
+                android:src="@drawable/ic_sleep"
+                android:alpha="0.3"
+                app:tint="@color/md_theme_onSurfaceVariant" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="아직 녹음된 코골이가 없어요"
+                android:textSize="16sp"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                style="@style/TextAppearance.Material3.BodyLarge" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="수면 추적을 시작하면 코골이를 자동으로 감지하고 녹음합니다"
+                android:textSize="14sp"
+                android:textColor="@color/md_theme_onSurfaceVariant"
+                android:gravity="center"
+                android:paddingHorizontal="32dp"
+                style="@style/TextAppearance.Material3.BodyMedium" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>

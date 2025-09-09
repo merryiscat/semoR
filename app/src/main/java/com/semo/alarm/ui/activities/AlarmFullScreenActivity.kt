@@ -1,12 +1,10 @@
 package com.semo.alarm.ui.activities
 
-import android.animation.ValueAnimator
 import android.content.Intent
 import android.os.*
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
@@ -16,6 +14,10 @@ import com.semo.alarm.R
 import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.services.AlarmService
 import com.semo.alarm.receivers.AlarmNotificationReceiver
+import com.semo.alarm.character.AlarmCharacterView
+import com.semo.alarm.character.CharacterAnimationManager
+import com.semo.alarm.character.CharacterState
+import com.semo.alarm.character.AnimationType
 import dagger.hilt.android.AndroidEntryPoint
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,41 +34,17 @@ class AlarmFullScreenActivity : AppCompatActivity() {
     // UI 컴포넌트
     private lateinit var timeDisplay: TextView
     private lateinit var alarmLabel: TextView
-    private lateinit var merryCharacter: ImageView
+    private lateinit var characterView: AlarmCharacterView
     private lateinit var dismissButton: Button
     private lateinit var snoozeButton: Button
     private lateinit var stopButton: Button
     
-    // 애니메이션 관련
-    private var frameAnimator: ValueAnimator? = null
+    // 🐱 메리 캐릭터 애니메이션 시스템
+    private lateinit var animationManager: CharacterAnimationManager
     private var phaseTimer: Handler = Handler(Looper.getMainLooper())
-    private var currentPhase: AnimationPhase = AnimationPhase.APPEARING
-    private var currentFrameIndex: Int = 0
     
     // 알람 데이터
     private var currentAlarm: Alarm? = null
-    
-    // 애니메이션 단계
-    enum class AnimationPhase(val frames: List<String>, val duration: Long) {
-        APPEARING(listOf("character_merry_idle_01"), 2000L), // 임시로 idle_01 사용
-        IDLE(listOf(
-            "character_merry_idle_01", 
-            "character_merry_idle_02", 
-            "character_merry_idle_03", 
-            "character_merry_idle_04"
-        ), 4000L),
-        ATTENTION(listOf(
-            "attention_01", 
-            "attention_02", 
-            "attention_03"
-        ), 3000L),
-        URGENT(listOf(
-            "urgent_01", 
-            "urgent_02", 
-            "urgent_03", 
-            "urgent_04"
-        ), 2000L)
-    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,7 +63,7 @@ class AlarmFullScreenActivity : AppCompatActivity() {
         initializeViews()
         loadAlarmData()
         setupButtonListeners()
-        startMerryAnimation()
+        startAlarmScenario()
         
         android.util.Log.d(TAG, "🔥 AlarmFullScreenActivity.onCreate() completed!")
     }
@@ -160,13 +138,18 @@ class AlarmFullScreenActivity : AppCompatActivity() {
     private fun initializeViews() {
         timeDisplay = findViewById(R.id.tv_alarm_time)
         alarmLabel = findViewById(R.id.tv_alarm_label)
-        merryCharacter = findViewById(R.id.iv_merry_character)
+        characterView = findViewById(R.id.alarm_character_view)
         dismissButton = findViewById(R.id.btn_dismiss)
         snoozeButton = findViewById(R.id.btn_snooze)
         stopButton = findViewById(R.id.btn_stop)
         
+        // 🐱 메리 캐릭터 애니메이션 매니저 초기화
+        animationManager = CharacterAnimationManager(characterView)
+        
         // 현재 시간 표시
         updateTimeDisplay()
+        
+        android.util.Log.d(TAG, "✅ Views initialized with AlarmCharacterView")
     }
     
     private fun loadAlarmData() {
@@ -201,72 +184,39 @@ class AlarmFullScreenActivity : AppCompatActivity() {
         }
     }
     
-    private fun startMerryAnimation() {
-        // 등장 애니메이션 시작
-        currentPhase = AnimationPhase.APPEARING
-        playAnimationPhase(currentPhase)
+    /**
+     * 🚀 알람 시나리오를 시작합니다
+     * 등장 → 대기 → 관심 끌기 → 회전 → 독촉 단계로 진행
+     */
+    private fun startAlarmScenario() {
+        android.util.Log.d(TAG, "🚀 Starting alarm scenario with CharacterAnimationManager")
+        
+        // 등장 애니메이션으로 시작
+        characterView.setState(CharacterState.APPEARING)
+        characterView.applyBrandHighlight(true) // 네온 블루 효과
+        
+        // 3초 후 대기 상태로 전환
+        phaseTimer.postDelayed({
+            characterView.setState(CharacterState.IDLE)
+        }, 3000L)
         
         // 15초 후 관심 끌기 모드
         phaseTimer.postDelayed({
-            if (currentPhase == AnimationPhase.IDLE) {
-                currentPhase = AnimationPhase.ATTENTION
-                playAnimationPhase(currentPhase)
-            }
+            characterView.setState(CharacterState.ATTENTION)
+            android.util.Log.d(TAG, "👀 Switching to ATTENTION mode")
         }, 15000L)
         
-        // 30초 후 독촉 모드
+        // 25초 후 회전 모드 (핵심 기능!)
         phaseTimer.postDelayed({
-            if (currentPhase != AnimationPhase.URGENT) {
-                currentPhase = AnimationPhase.URGENT
-                playAnimationPhase(currentPhase)
-            }
-        }, 30000L)
-    }
-    
-    private fun playAnimationPhase(phase: AnimationPhase) {
-        frameAnimator?.cancel()
+            characterView.setState(CharacterState.SPINNING)
+            android.util.Log.d(TAG, "🌪️ Switching to SPINNING mode - Core feature!")
+        }, 25000L)
         
-        val frames = phase.frames
-        val frameDuration = phase.duration / frames.size
-        
-        currentFrameIndex = 0
-        
-        frameAnimator = ValueAnimator.ofInt(0, frames.size - 1).apply {
-            duration = phase.duration
-            repeatCount = if (phase == AnimationPhase.APPEARING) 0 else ValueAnimator.INFINITE
-            repeatMode = ValueAnimator.RESTART
-            
-            addUpdateListener { animator ->
-                val frameIndex = animator.animatedValue as Int
-                if (frameIndex < frames.size) {
-                    val frameResName = frames[frameIndex]
-                    updateMerryFrame(frameResName)
-                }
-            }
-            
-            start()
-        }
-        
-        // APPEARING 완료 후 IDLE로 전환
-        if (phase == AnimationPhase.APPEARING) {
-            phaseTimer.postDelayed({
-                currentPhase = AnimationPhase.IDLE
-                playAnimationPhase(currentPhase)
-            }, phase.duration)
-        }
-    }
-    
-    private fun updateMerryFrame(frameResName: String) {
-        // drawable 리소스에서 프레임 로드
-        val resId = try {
-            resources.getIdentifier(frameResName, "drawable", packageName)
-        } catch (e: Exception) {
-            R.drawable.character_merry_idle_01 // 기본 이미지
-        }
-        
-        if (resId != 0) {
-            merryCharacter.setImageResource(resId)
-        }
+        // 40초 후 독촉 모드
+        phaseTimer.postDelayed({
+            characterView.setState(CharacterState.URGENT)
+            android.util.Log.d(TAG, "🚨 Switching to URGENT mode")
+        }, 40000L)
     }
     
     private fun updateTimeDisplay() {
@@ -276,7 +226,7 @@ class AlarmFullScreenActivity : AppCompatActivity() {
     }
     
     private fun handleDismissAlarm() {
-        stopMerryAnimation()
+        stopAlarmScenario()
         
         // AlarmNotificationReceiver에 해제 신호 전송
         currentAlarm?.let { alarm ->
@@ -287,13 +237,17 @@ class AlarmFullScreenActivity : AppCompatActivity() {
             sendBroadcast(dismissIntent)
         }
         
+        android.util.Log.d(TAG, "✅ Alarm dismissed")
         finish()
     }
     
     private fun handleSnoozeAlarm() {
         currentAlarm?.let { alarm ->
             if (alarm.snoozeEnabled) {
-                stopMerryAnimation()
+                stopAlarmScenario()
+                
+                // 스누즈 효과: 페이드 아웃
+                characterView.applyFadeEffect(true)
                 
                 // AlarmNotificationReceiver에 스누즈 신호 전송
                 val snoozeIntent = Intent(this, AlarmNotificationReceiver::class.java).apply {
@@ -303,29 +257,41 @@ class AlarmFullScreenActivity : AppCompatActivity() {
                 }
                 sendBroadcast(snoozeIntent)
                 
+                android.util.Log.d(TAG, "😴 Alarm snoozed")
                 finish()
             }
         }
     }
     
     private fun handleStopAlarm() {
-        stopMerryAnimation()
+        stopAlarmScenario()
         
         // AlarmService 완전 정지
         val stopIntent = Intent(this, AlarmService::class.java)
         stopService(stopIntent)
         
+        android.util.Log.d(TAG, "⏹️ Alarm stopped")
         finish()
     }
     
-    private fun stopMerryAnimation() {
-        frameAnimator?.cancel()
+    /**
+     * 🛑 알람 시나리오를 중지합니다
+     */
+    private fun stopAlarmScenario() {
+        android.util.Log.d(TAG, "🛑 Stopping alarm scenario")
+        
+        // 모든 예약된 타이머 취소
         phaseTimer.removeCallbacksAndMessages(null)
+        
+        // 캐릭터 애니메이션 중지
+        characterView.stopAnimation()
+        animationManager.cleanup()
     }
     
     override fun onDestroy() {
         super.onDestroy()
-        stopMerryAnimation()
+        stopAlarmScenario()
+        android.util.Log.d(TAG, "🗑️ AlarmFullScreenActivity destroyed")
     }
     
     override fun onBackPressed() {

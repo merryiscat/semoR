@@ -89,6 +89,10 @@
     <!-- Deep Gray (세모알 브랜드 색상) -->
     <color name="deep_gray">#6B7280</color>
     
+    <!-- 세모알 브랜드 색상 별칭 -->
+    <color name="semo_neon_blue">@color/neon_blue</color>
+    <color name="semo_deep_gray">@color/deep_gray</color>
+    
     <!-- Day Chip Colors -->
     <color name="day_chip_off_bg">#6B7280</color>        <!-- 회색 배경 -->
     <color name="day_chip_off_text">#FFFFFF</color>      <!-- 흰색 폰트 -->

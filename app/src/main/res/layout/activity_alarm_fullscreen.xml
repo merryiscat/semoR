@@ -41,13 +41,12 @@
             android:background="@drawable/character_glow_background"
             android:alpha="0.3" />
 
-        <!-- 메리 캐릭터 이미지뷰 -->
-        <ImageView
-            android:id="@+id/iv_merry_character"
+        <!-- 메리 캐릭터 애니메이션 뷰 -->
+        <com.semo.alarm.character.AlarmCharacterView
+            android:id="@+id/alarm_character_view"
             android:layout_width="240dp"
             android:layout_height="240dp"
             android:layout_gravity="center"
-            android:src="@drawable/character_merry_idle_01"
             android:scaleType="centerInside"
             android:contentDescription="메리 캐릭터" />
 

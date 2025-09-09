@@ -242,8 +242,7 @@ class SleepFragment : Fragment() {
         
         // 모든 녹음 보기 버튼
         binding.buttonViewAllRecordings.setOnClickListener {
-            // TODO: 전체 녹음 목록 화면으로 이동
-            showSnackbar("전체 녹음 목록 화면 준비 중입니다")
+            startActivity(com.semo.alarm.ui.activities.AllSnoringRecordingsActivity.createIntent(requireContext()))
         }
         
         // 초기 데이터 로드
