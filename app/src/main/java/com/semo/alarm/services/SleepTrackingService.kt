@@ -17,6 +17,7 @@ import com.semo.alarm.R
 import com.semo.alarm.ui.activities.MainActivity
 import com.semo.alarm.utils.SnoringDetector
 import com.semo.alarm.utils.SnoringEvent
+import com.semo.alarm.utils.SleepEventLogger
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -85,10 +86,12 @@ class SleepTrackingService : Service() {
     private var notificationManager: NotificationManager? = null
     private var snoringDetector: SnoringDetector? = null
     private val snoringEvents = mutableListOf<SnoringEvent>()
+    private lateinit var sleepEventLogger: SleepEventLogger
     
     override fun onCreate() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        sleepEventLogger = SleepEventLogger.getInstance(this)
         createNotificationChannel()
         initializeSnoringDetector()
         Log.d(TAG, "SleepTrackingService created")
@@ -124,8 +127,18 @@ class SleepTrackingService : Service() {
     private fun startSleepTracking() {
         if (isTracking) {
             Log.w(TAG, "Sleep tracking already started")
+            sleepEventLogger.logInfo("수면 추적이 이미 시작되었습니다")
             return
         }
+        
+        // 수면 세션 시작 로깅
+        sleepEventLogger.startSleepSession()
+        sleepEventLogger.logInfo("수면 추적 시작", mapOf(
+            "sleepRecordId" to sleepRecordId,
+            "sleepStartTime" to sleepStartTime,
+            "snoringEnabled" to isSnoringEnabled,
+            "serviceId" to "SleepTrackingService"
+        ))
         
         isTracking = true
         startForeground(NOTIFICATION_ID, createNotification())
@@ -133,8 +146,11 @@ class SleepTrackingService : Service() {
         
         // 코골이 감지 시작 (활성화된 경우)
         if (isSnoringEnabled) {
+            sleepEventLogger.logInfo("코골이 감지 기능 활성화")
             snoringDetector?.startDetection()
             Log.d(TAG, "Snoring detection started")
+        } else {
+            sleepEventLogger.logInfo("코골이 감지 기능 비활성화")
         }
         
         Log.d(TAG, "Sleep tracking started: recordId=$sleepRecordId, startTime=$sleepStartTime")
@@ -143,14 +159,28 @@ class SleepTrackingService : Service() {
     private fun stopSleepTracking() {
         if (!isTracking) {
             Log.w(TAG, "Sleep tracking not started")
+            sleepEventLogger.logInfo("수면 추적이 시작되지 않았습니다")
             return
         }
+        
+        val totalDuration = System.currentTimeMillis() - sleepStartTime
+        sleepEventLogger.logInfo("수면 추적 종료", mapOf(
+            "sleepRecordId" to sleepRecordId,
+            "totalDuration" to totalDuration,
+            "snoringEventCount" to snoringEvents.size,
+            "serviceId" to "SleepTrackingService"
+        ))
         
         isTracking = false
         stopElapsedTimeUpdates()
         
         // 코골이 감지 중지
+        sleepEventLogger.logInfo("코골이 감지 중지")
         snoringDetector?.stopDetection()
+        
+        // 시스템 상태 마지막 로그
+        sleepEventLogger.logSystemStatus()
+        sleepEventLogger.endSleepSession()
         
         // UI에 수면 추적 종료 알림 (코골이 데이터 포함)
         val intent = Intent(BROADCAST_SLEEP_STOPPED).apply {
@@ -294,6 +324,15 @@ class SleepTrackingService : Service() {
                     audioFilePath = audioFilePath  // 🎙️ 오디오 파일 경로 추가
                 )
                 snoringEvents.add(event)
+                
+                // 서비스에서도 코골이 이벤트 로깅 (SnoringDetector에서의 로깅과 구분)
+                sleepEventLogger.logInfo("서비스에서 코골이 이벤트 수신", mapOf(
+                    "eventCount" to snoringEvents.size,
+                    "decibelLevel" to decibelLevel,
+                    "duration" to duration,
+                    "hasAudio" to (audioFilePath != null),
+                    "intensity" to event.getIntensityLevel()
+                ))
                 
                 // UI에 코골이 감지 알림
                 val intent = Intent(BROADCAST_SNORING_DETECTED).apply {

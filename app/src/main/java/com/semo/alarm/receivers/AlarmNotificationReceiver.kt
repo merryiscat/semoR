@@ -21,6 +21,12 @@ import com.semo.alarm.data.entities.Alarm
 import com.semo.alarm.ui.activities.MainActivity
 import com.semo.alarm.ui.activities.AlarmFullScreenActivity
 import com.semo.alarm.utils.NotificationAlarmManager
+import com.semo.alarm.data.repositories.AlarmRepository
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * 알람 알림을 직접 표시하고 사운드/진동을 재생하는 Receiver
@@ -28,7 +34,11 @@ import com.semo.alarm.utils.NotificationAlarmManager
  * 기존 AlarmReceiver + AlarmService의 기능을 통합하여
  * 더 확실한 알람 동작을 보장합니다.
  */
+@AndroidEntryPoint
 class AlarmNotificationReceiver : BroadcastReceiver() {
+    
+    @Inject
+    lateinit var alarmRepository: AlarmRepository
     
     companion object {
         private const val TAG = "AlarmNotificationReceiver"
@@ -136,6 +146,24 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
         // 4. 진동 중지
         stopVibration(context)
         
+        // 🔧 5. "한 번만" 알람인 경우 DB에서 자동 비활성화
+        if (alarmId != -1) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val alarm = alarmRepository.getAlarmById(alarmId)
+                    if (alarm != null && alarm.days == "once") {
+                        Log.d(TAG, "🔧 Disabling 'once only' alarm after execution: $alarmId")
+                        alarmRepository.updateAlarmStatus(alarmId, false)
+                        Log.d(TAG, "✅ Successfully disabled 'once only' alarm $alarmId")
+                    } else if (alarm != null) {
+                        Log.d(TAG, "ℹ️ Alarm $alarmId is not 'once only' (days: ${alarm.days}) - keeping active")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "❌ Failed to check/disable 'once only' alarm $alarmId", e)
+                }
+            }
+        }
+        
         Log.d(TAG, "✅ Alarm $alarmId completely dismissed")
     }
     
@@ -241,36 +269,15 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
         
-        // 해제 버튼 인텐트
-        val dismissIntent = Intent(context, AlarmNotificationReceiver::class.java).apply {
-            action = ACTION_DISMISS
-            putExtra("alarm_id", alarm.id)
-        }
-        val dismissPendingIntent = PendingIntent.getBroadcast(
-            context, alarm.id, dismissIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        )
+        // 🚫 해제/스누즈 PendingIntent 제거 - 풀스크린에서만 상호작용 가능
         
-        // 스누즈 버튼 인텐트
-        val snoozeIntent = Intent(context, AlarmNotificationReceiver::class.java).apply {
-            action = ACTION_SNOOZE
-            putExtra("alarm_id", alarm.id)
-            putExtra("alarm", alarm)
-        }
-        val snoozePendingIntent = PendingIntent.getBroadcast(
-            context, alarm.id + 1000, snoozeIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        )
-        
-        // 알림 생성 - 최고 우선순위로 풀스크린 강제 실행
+        // 🔧 알림 생성 - 해제/스누즈 버튼 제거하여 풀스크린만 강제
         val notification = NotificationCompat.Builder(context, NotificationAlarmManager.ALARM_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
             .setLargeIcon(android.graphics.BitmapFactory.decodeResource(context.resources, R.drawable.character_merry_idle_01))
             .setContentTitle(alarm.label.ifEmpty { "🐱 메리가 깨우고 있어요!" })
-            .setContentText("${alarm.time} - 탭하면 메리를 만날 수 있어요!")
-            .setSubText("알람이 울리고 있습니다")
+            .setContentText("${alarm.time} - 메리를 터치해서 만나보세요!")
+            .setSubText("💤 화면을 터치하면 메리가 나타나요")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(fullScreenPendingIntent, true)
@@ -282,20 +289,7 @@ class AlarmNotificationReceiver : BroadcastReceiver() {
             .setDefaults(0) // 기본값 제거하고 수동 설정
             .setSound(android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM))
             .setOnlyAlertOnce(false) // 반복 알림 허용
-            .addAction(
-                R.drawable.ic_alarm,
-                "해제",
-                dismissPendingIntent
-            )
-            .apply {
-                if (alarm.snoozeEnabled) {
-                    addAction(
-                        R.drawable.ic_timer,
-                        "스누즈 (${alarm.snoozeInterval}분)",
-                        snoozePendingIntent
-                    )
-                }
-            }
+            // 🚫 액션 버튼들 모두 제거 - 풀스크린 상호작용만 가능
             .build()
         
         // 풀스크린 강제 실행을 위한 플래그 추가

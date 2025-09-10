@@ -32,6 +32,9 @@ class DatabaseInitializer @Inject constructor(
      */
     fun initializeDefaultDataIfNeeded() {
         CoroutineScope(Dispatchers.IO).launch {
+            // 항상 중복 카테고리 정리 먼저 실행
+            cleanupDuplicateCategoriesSync()
+            
             if (!isDefaultCategoriesInitialized()) {
                 initializeDefaultCategories()
                 markDefaultCategoriesInitialized()
@@ -49,10 +52,41 @@ class DatabaseInitializer @Inject constructor(
      */
     fun reinitializeDefaultData() {
         CoroutineScope(Dispatchers.IO).launch {
+            cleanupDuplicateCategoriesSync() // 중복 카테고리 정리
             initializeDefaultCategories()
             initializeDefaultTemplates()
             markDefaultCategoriesInitialized()
             markDefaultTemplatesInitialized()
+        }
+    }
+    
+    /**
+     * 중복된 기본 카테고리를 정리 (비동기)
+     */
+    fun cleanupDuplicateCategories() {
+        CoroutineScope(Dispatchers.IO).launch {
+            cleanupDuplicateCategoriesSync()
+        }
+    }
+    
+    /**
+     * 중복된 기본 카테고리를 정리 (suspend 함수)
+     */
+    private suspend fun cleanupDuplicateCategoriesSync() {
+        try {
+            val allCategories = timerRepository.getAllCategoriesSync()
+            val defaultCategories = allCategories.filter { it.name == "기본" && it.isDefault }
+            
+            if (defaultCategories.size > 1) {
+                // 첫 번째 것만 남기고 나머지는 삭제
+                defaultCategories.drop(1).forEach { category ->
+                    timerRepository.deleteCategory(category)
+                    android.util.Log.d("DatabaseInitializer", "Removed duplicate category: ${category.id}")
+                }
+                android.util.Log.d("DatabaseInitializer", "Cleaned up ${defaultCategories.size - 1} duplicate categories")
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("DatabaseInitializer", "Failed to cleanup duplicate categories", e)
         }
     }
     
@@ -97,13 +131,20 @@ class DatabaseInitializer @Inject constructor(
             
             defaultCategories.forEach { category ->
                 try {
-                    timerRepository.insertCategory(category)
+                    // 이미 존재하는 카테고리인지 확인
+                    val existingCategory = timerRepository.getCategoryByName(category.name)
+                    if (existingCategory == null) {
+                        timerRepository.insertCategory(category)
+                        android.util.Log.d("DatabaseInitializer", "Inserted default category: ${category.name}")
+                    } else {
+                        android.util.Log.d("DatabaseInitializer", "Category already exists: ${category.name}")
+                    }
                 } catch (e: Exception) {
-                    android.util.Log.e("DatabaseInitializer", "Failed to insert category: ${category.name}", e)
+                    android.util.Log.e("DatabaseInitializer", "Failed to process category: ${category.name}", e)
                 }
             }
             
-            android.util.Log.d("DatabaseInitializer", "Default categories initialized successfully. Total: ${defaultCategories.size}")
+            android.util.Log.d("DatabaseInitializer", "Default categories initialization completed")
             
         } catch (e: Exception) {
             android.util.Log.e("DatabaseInitializer", "Failed to initialize default categories", e)

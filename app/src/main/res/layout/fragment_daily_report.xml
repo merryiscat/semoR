@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".ui.fragments.DailyReportFragment">
+
+    <!-- 날짜 선택 상단바 -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="2dp"
+        app:strokeColor="#00D4FF"
+        app:strokeWidth="1dp">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_calendar"
+                android:tint="#00D4FF"
+                android:layout_marginEnd="12dp" />
+            
+            <TextView
+                android:id="@+id/textDateSelector"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="2025년 09월 10일 (화)"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/md_theme_onSurface"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true" />
+            
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_arrow_drop_down"
+                android:tint="#6B7280" />
+            
+        </LinearLayout>
+        
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- 최근 알람 섹션 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="최근 알람"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/md_theme_onBackground"
+        android:layout_marginBottom="12dp" />
+    
+    <!-- 알람 목록 헤더 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:background="#F5F5F5"
+        android:layout_marginBottom="8dp">
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:text="시간"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280" />
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:text="라벨"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280" />
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="타입"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:gravity="center" />
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="상태"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:gravity="center" />
+        
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.8"
+            android:text="삭제"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#6B7280"
+            android:gravity="center" />
+        
+    </LinearLayout>
+
+    <!-- 알람 목록 RecyclerView -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewRecentAlarms"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        tools:listitem="@layout/item_recent_alarm" />
+
+    <!-- 빈 상태 표시 -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone">
+        
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_alarm"
+            android:alpha="0.3"
+            android:layout_marginBottom="16dp" />
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="선택한 날짜에 알람 기록이 없습니다"
+            android:textSize="16sp"
+            android:textColor="#6B7280"
+            android:gravity="center" />
+        
+    </LinearLayout>
+
+</LinearLayout>

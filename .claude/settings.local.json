@@ -100,7 +100,8 @@
       "Bash(.\\gradlew.bat:*)",
       "Bash(cmd /c gradlew:*)",
       "Bash(.gradlew.bat assembleDebug)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []

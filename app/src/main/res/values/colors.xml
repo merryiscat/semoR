@@ -85,6 +85,7 @@
     <color name="neon_blue">#00D4FF</color>
     <color name="neon_blue_glow">#4000D4FF</color>
     <color name="neon_blue_bright">#80E0F0FF</color>
+    <color name="neon_blue_light">#E6F7FF</color>
     
     <!-- Deep Gray (세모알 브랜드 색상) -->
     <color name="deep_gray">#6B7280</color>

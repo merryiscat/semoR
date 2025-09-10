@@ -3,9 +3,11 @@ package com.semo.alarm.data.repositories
 import androidx.lifecycle.LiveData
 import com.semo.alarm.data.dao.ReportDao
 import com.semo.alarm.data.dao.AlarmDao
+import com.semo.alarm.data.dao.AlarmHistoryDao
 import com.semo.alarm.data.dao.SleepRecordDao
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.entities.ReportData
+import com.semo.alarm.data.entities.AlarmHistory
 import com.semo.alarm.data.dao.SleepTrendPoint
 import com.semo.alarm.data.dao.TimerTrendPoint
 import com.semo.alarm.data.dao.LifestyleTrendPoint
@@ -20,6 +22,7 @@ import javax.inject.Singleton
 class ReportRepository @Inject constructor(
     private val reportDao: ReportDao,
     private val alarmDao: AlarmDao,
+    private val alarmHistoryDao: AlarmHistoryDao,
     private val sleepRecordDao: SleepRecordDao,
     private val timerTemplateDao: TimerTemplateDao
 ) {
@@ -201,6 +204,25 @@ class ReportRepository @Inject constructor(
         val activityScore = (timerStats.completionRate * 30f) // 최대 30점
         
         return (sleepScore + consistencyScore + activityScore).coerceIn(0f, 100f)
+    }
+    
+    // AlarmHistory 관련 메서드들
+    suspend fun getAlarmHistoryByDate(date: String): List<AlarmHistory> = withContext(Dispatchers.IO) {
+        alarmHistoryDao.getAlarmHistoryByDate(date)
+    }
+    
+    fun getAlarmHistoryByDateLive(date: String): LiveData<List<AlarmHistory>> = 
+        alarmHistoryDao.getAlarmHistoryByDateLive(date)
+    
+    suspend fun insertAlarmHistory(alarmHistory: AlarmHistory): Long = 
+        alarmHistoryDao.insertAlarmHistory(alarmHistory)
+    
+    suspend fun deleteAlarmHistory(alarmHistory: AlarmHistory) = 
+        alarmHistoryDao.deleteAlarmHistory(alarmHistory)
+    
+    suspend fun deleteOldAlarmHistory(daysToKeep: Int = 31) {
+        val cutoffDate = getDateString(daysToKeep)
+        alarmHistoryDao.deleteOldAlarmHistory(cutoffDate)
     }
 }
 

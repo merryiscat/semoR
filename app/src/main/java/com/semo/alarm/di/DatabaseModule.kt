@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.room.Room
 import com.semo.alarm.data.dao.AlarmDao
+import com.semo.alarm.data.dao.AlarmHistoryDao
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.dao.TimerRoundDao
 import com.semo.alarm.data.dao.TimerCategoryDao
@@ -30,6 +31,11 @@ object DatabaseModule {
     @Provides
     fun provideAlarmDao(database: AlarmDatabase): AlarmDao {
         return database.alarmDao()
+    }
+    
+    @Provides
+    fun provideAlarmHistoryDao(database: AlarmDatabase): AlarmHistoryDao {
+        return database.alarmHistoryDao()
     }
     
     @Provides

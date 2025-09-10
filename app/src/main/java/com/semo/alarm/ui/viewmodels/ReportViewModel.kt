@@ -6,12 +6,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.semo.alarm.data.entities.ReportData
+import com.semo.alarm.data.entities.AlarmHistory
 import com.semo.alarm.data.repositories.ReportRepository
 import com.semo.alarm.data.repositories.WeeklyStats
 import com.semo.alarm.data.repositories.MonthlyStats
 import com.semo.alarm.data.dao.SleepTrendPoint
 import com.semo.alarm.data.dao.TimerTrendPoint
 import com.semo.alarm.data.dao.LifestyleTrendPoint
+import java.text.SimpleDateFormat
+import java.util.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -56,6 +59,10 @@ class ReportViewModel @Inject constructor(
     
     private val _suggestions = MutableLiveData<List<Suggestion>>()
     val suggestions: LiveData<List<Suggestion>> = _suggestions
+    
+    // Recent alarms data
+    private val _recentAlarms = MutableLiveData<List<AlarmHistory>>()
+    val recentAlarms: LiveData<List<AlarmHistory>> = _recentAlarms
     
     init {
         refreshAllData()
@@ -245,6 +252,32 @@ class ReportViewModel @Inject constructor(
                 _lifestyleTrendData.value = data
             } catch (e: Exception) {
                 _errorMessage.value = "라이프스타일 트렌드 데이터 로딩 오류: ${e.message}"
+            }
+        }
+    }
+    
+    fun loadRecentAlarmsForDate(date: Date) {
+        viewModelScope.launch {
+            try {
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val dateString = dateFormat.format(date)
+                val alarms = reportRepository.getAlarmHistoryByDate(dateString)
+                _recentAlarms.value = alarms
+            } catch (e: Exception) {
+                _errorMessage.value = "알람 기록 로딩 오류: ${e.message}"
+            }
+        }
+    }
+    
+    fun deleteAlarmHistory(alarmHistory: AlarmHistory) {
+        viewModelScope.launch {
+            try {
+                reportRepository.deleteAlarmHistory(alarmHistory)
+                // Reload the current date's alarms
+                val currentAlarms = _recentAlarms.value ?: emptyList()
+                _recentAlarms.value = currentAlarms.filter { it.id != alarmHistory.id }
+            } catch (e: Exception) {
+                _errorMessage.value = "알람 기록 삭제 오류: ${e.message}"
             }
         }
     }

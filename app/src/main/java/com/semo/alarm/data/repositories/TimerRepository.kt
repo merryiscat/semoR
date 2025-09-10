@@ -174,6 +174,10 @@ class TimerRepository @Inject constructor(
         return categoryDao.getCategoryById(id)
     }
     
+    suspend fun getCategoryByName(name: String): TimerCategory? {
+        return categoryDao.getCategoryByName(name)
+    }
+    
     suspend fun insertCategory(category: TimerCategory): Long {
         return categoryDao.insertCategory(category)
     }

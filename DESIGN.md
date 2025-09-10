@@ -252,10 +252,11 @@ const val ACTION_TIMER_COMPLETE = "com.semo.alarm.TIMER_COMPLETE"
 2. **수면 추적 로직**: SleepTrackingService 구현  
 3. **데이터 시각화**: MPAndroidChart로 7일/30일 패턴 표시
 
-### Phase 3: 리포트 시스템
+### Phase 3: 리포트 시스템 (4주 기반 재설계)
 1. **데이터 수집**: 알람/타이머 사용 통계 자동 생성
-2. **차트 구현**: 사용 패턴 시각화
-3. **개인화된 인사이트**: 사용 패턴 기반 조언
+2. **4주 보관 시스템**: 월간 대신 4주 데이터 저장으로 85% 메모리 절약
+3. **차트 구현**: 사용 패턴 시각화 (일간/주간/4주간/종합)
+4. **개인화된 인사이트**: 사용 패턴 기반 조언
 
 ## 🚧 알려진 기술적 이슈
 
@@ -289,6 +290,155 @@ const val ACTION_TIMER_COMPLETE = "com.semo.alarm.TIMER_COMPLETE"
 - Apple Watch 연동
 - AI 기반 개인화된 알람
 - 소셜 기능 (가족 알람 공유)
+
+---
+
+## 📊 리포트 시스템 설계 (2025-09-10 개선)
+
+### 기존 월간 vs 새로운 4주 방식
+
+#### 🔄 **기존 설계 (월간 리포트)**
+```
+구조: 오늘 → 주간 → 월간 → 종합
+문제점:
+- 월간 데이터: 30-31일 × 24시간 = 720-744 포인트
+- 메모리 사용: ~5MB (상세 차트 + 애니메이션)
+- 저장소: 12개월 × 5MB = 60MB
+- 복잡한 월간 트렌드 계산 필요
+```
+
+#### ✅ **새로운 설계 (4주 보관 방식)**
+```
+구조: 오늘 → 주간 → 4주간 → 종합
+장점:
+- 4주 데이터: 4주 × 7일 = 28일 포인트  
+- 메모리 사용: ~1MB (주간 데이터 재활용)
+- 저장소: 4주 × 1MB = 4MB
+- 85% 메모리 절약 (60MB → 4MB)
+- 기존 주간 로직 재활용 가능
+```
+
+### UI 재설계 방향
+
+#### **탭 구조 변경**
+```kotlin
+// Before: 📅 오늘 / 📈 주간 / 📊 월간 / 🏆 종합
+// After:  오늘 / 주간 / 4주간 / 종합 (이모지 제거)
+```
+
+#### **4주간 탭 설계**
+```
+4주간 리포트 레이아웃:
+├── 📅 4주 요약 카드
+│   ├── 총 알람 횟수: 142회
+│   ├── 총 타이머 시간: 23시간 45분  
+│   ├── 평균 수면: 7시간 12분
+│   └── 가장 활발한 요일: 화요일
+├── 📈 주차별 트렌드 차트
+│   ├── Week 1: 09/01-09/07
+│   ├── Week 2: 09/08-09/14  
+│   ├── Week 3: 09/15-09/21
+│   └── Week 4: 09/22-09/28
+└── 💡 4주 인사이트
+    ├── "매주 화요일 타이머 사용량 증가"
+    ├── "3주차부터 수면 패턴 개선"
+    └── "알람 정확도 92% 달성"
+```
+
+### 데이터 구조 최적화
+
+#### **ReportData 엔티티 확장**
+```kotlin
+@Entity(tableName = "report_data")
+data class ReportData(
+    @PrimaryKey(autoGenerate = true) 
+    val id: Long = 0,
+    val date: String,              // "YYYY-MM-DD"
+    val weekOfYear: Int,           // 🆕 주차 정보 (1-52)
+    val alarmCount: Int = 0,       // 일일 알람 사용 횟수
+    val timerTotalSeconds: Long = 0, // 🆕 타이머 총 시간(초)
+    val sleepDuration: Long = 0,   // 수면 시간 (밀리초)
+    val sleepQuality: Float = 0f,  // 🆕 수면 품질 (1-5)
+    val snoringEvents: Int = 0,    // 🆕 코골이 감지 횟수
+    val dataJson: String = ""      // 추가 메타데이터
+)
+```
+
+#### **4주 데이터 관리 정책**
+```kotlin
+class FourWeekDataManager {
+    // 28일 이상된 데이터 자동 삭제
+    suspend fun cleanupOldData()
+    
+    // 주차별 요약 데이터 생성
+    suspend fun generateWeeklySummary(weekNumber: Int): WeeklySummary
+    
+    // 4주 트렌드 분석
+    suspend fun analyzeFourWeekTrend(): TrendAnalysis
+}
+```
+
+### 차트 라이브러리 최적화
+
+#### **MPAndroidChart 설정**
+```kotlin
+// 4주간 트렌드를 위한 차트 설정
+class FourWeekChartConfig {
+    fun setupBarChart(): BarChart {
+        // 주차별 막대 그래프 (4개 막대)
+        // 네온 블루 그라데이션
+        // 세모알 브랜딩 적용
+    }
+    
+    fun setupLineChart(): LineChart {  
+        // 4주간 추세선 표시
+        // 수면/알람/타이머 패턴 시각화
+    }
+}
+```
+
+### 메모리 효율성 개선
+
+#### **지연 로딩 + 페이징**
+```kotlin
+// 필요할 때만 차트 데이터 로딩
+@Composable fun FourWeekReport() {
+    val chartData by produceState<ChartData?>(null) {
+        value = loadChartDataAsync()
+    }
+}
+```
+
+#### **백그라운드 데이터 수집**
+```kotlin
+// 매일 자정에 리포트 데이터 자동 생성
+class DailyReportWorker : Worker() {
+    override suspend fun doWork(): Result {
+        // 어제 사용량 데이터 수집
+        // ReportData 엔티티에 저장
+        // 28일 이상 데이터 자동 정리
+    }
+}
+```
+
+### 실용성 고려사항
+
+#### **사용자 행동 패턴**
+- **일간**: 매일 확인 (오늘의 성취)
+- **주간**: 주말에 확인 (한 주 돌아보기)  
+- **4주간**: 월말에 확인 (한 달 패턴 파악)
+- **종합**: 가끔 확인 (장기 트렌드)
+
+#### **인사이트 생성 로직**
+```kotlin
+class InsightGenerator {
+    fun generateFourWeekInsights(data: List<ReportData>): List<String> {
+        // "2주차부터 타이머 사용량 50% 증가"
+        // "매주 목요일 수면 품질이 가장 좋음"
+        // "알람 정시 기상 성공률 향상 중"
+    }
+}
+```
 
 ---
 

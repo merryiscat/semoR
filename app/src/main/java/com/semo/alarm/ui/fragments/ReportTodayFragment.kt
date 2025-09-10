@@ -99,15 +99,15 @@ class ReportTodayFragment : Fragment() {
 class ReportWeeklyFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(android.R.layout.simple_list_item_1, container, false).apply {
-            findViewById<android.widget.TextView>(android.R.id.text1).text = "📈 주간 리포트\n\n구현 예정..."
+            findViewById<android.widget.TextView>(android.R.id.text1).text = "주간 리포트\n\n구현 예정..."
         }
     }
 }
 
-class ReportMonthlyFragment : Fragment() {
+class ReportFourWeekFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(android.R.layout.simple_list_item_1, container, false).apply {
-            findViewById<android.widget.TextView>(android.R.id.text1).text = "📊 월간 리포트\n\n구현 예정..."
+            findViewById<android.widget.TextView>(android.R.id.text1).text = "4주간 리포트\n\n• 4주 요약 통계\n• 주차별 트렌드 차트\n• 생활 패턴 인사이트\n\n85% 메모리 절약 설계\n구현 예정..."
         }
     }
 }
@@ -115,7 +115,7 @@ class ReportMonthlyFragment : Fragment() {
 class ReportOverallFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(android.R.layout.simple_list_item_1, container, false).apply {
-            findViewById<android.widget.TextView>(android.R.id.text1).text = "🏆 종합 리포트\n\n구현 예정..."
+            findViewById<android.widget.TextView>(android.R.id.text1).text = "종합 리포트\n\n구현 예정..."
         }
     }
 }

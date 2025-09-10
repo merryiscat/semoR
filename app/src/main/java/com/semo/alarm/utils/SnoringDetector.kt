@@ -26,6 +26,8 @@ class SnoringDetector(
     private val onError: (String) -> Unit
 ) {
     
+    private val eventLogger = SleepEventLogger.getInstance(context)
+    
     companion object {
         private const val TAG = "SnoringDetector"
         
@@ -35,11 +37,11 @@ class SnoringDetector(
         // 최소 지속 시간 (밀리초)
         private const val MIN_SNORING_DURATION = 2000L
         
-        // 녹음 간격 (밀리초)
-        private const val RECORDING_INTERVAL = 10000L // 10초
+        // 🔧 녹음 간격 단축: 10초 → 5초 (50% 개선)
+        private const val RECORDING_INTERVAL = 5000L // 5초
         
-        // 실제 녹음 시간 (밀리초)
-        private const val RECORDING_DURATION = 3000L // 3초
+        // 🔧 실제 녹음 시간 증가: 3초 → 4초 (33% 개선) 
+        private const val RECORDING_DURATION = 4000L // 4초
     }
     
     private var mediaRecorder: MediaRecorder? = null
@@ -63,12 +65,15 @@ class SnoringDetector(
      */
     fun startDetection(enableRecording: Boolean = true) {
         if (!hasAudioPermission()) {
-            onError("오디오 녹음 권한이 필요합니다")
+            val errorMsg = "오디오 녹음 권한이 필요합니다"
+            eventLogger.logError("PERMISSION_DENIED", errorMsg)
+            onError(errorMsg)
             return
         }
         
         if (isDetecting) {
             Log.w(TAG, "Already detecting snoring")
+            eventLogger.logInfo("감지가 이미 진행 중입니다")
             return
         }
         
@@ -78,6 +83,16 @@ class SnoringDetector(
         }
         
         isDetecting = true
+        
+        // 감지 시작 로그
+        eventLogger.logDetectionState("STARTED", mapOf(
+            "recordingEnabled" to enableRecording,
+            "threshold" to SNORING_THRESHOLD_DB,
+            "interval" to RECORDING_INTERVAL,
+            "duration" to RECORDING_DURATION,
+            "minDuration" to MIN_SNORING_DURATION
+        ))
+        
         scheduleNextDetection()
         Log.d(TAG, "Snoring detection started (recording: $enableRecording)")
     }
@@ -88,6 +103,7 @@ class SnoringDetector(
     fun stopDetection() {
         if (!isDetecting) {
             Log.w(TAG, "Not detecting snoring")
+            eventLogger.logInfo("감지가 진행 중이 아닙니다")
             return
         }
         
@@ -95,6 +111,12 @@ class SnoringDetector(
         stopRecording()
         stopAudioRecording()
         cancelScheduledDetection()
+        
+        eventLogger.logDetectionState("STOPPED", mapOf(
+            "totalDetectionTime" to (System.currentTimeMillis() - (lastSnoringTime.takeIf { it > 0 } ?: System.currentTimeMillis()))
+        ))
+        eventLogger.logSystemStatus()
+        
         Log.d(TAG, "Snoring detection stopped")
     }
     
@@ -126,12 +148,22 @@ class SnoringDetector(
         try {
             startRecording()
             
-            // 녹음 시작 후 약간의 시간을 두고 분석 (마이크 초기화 대기)
+            // 🔧 개선된 다중 샘플링: 4초 구간에서 3번 분석
             handler.postDelayed({
-                // 중간에 한 번 더 체크
+                // 첫 번째 분석 (0.5초 후)
                 handler.postDelayed({
                     analyzeRecording()
-                }, 500) // 0.5초 후 분석
+                }, 500)
+                
+                // 두 번째 분석 (2초 후)
+                handler.postDelayed({
+                    analyzeRecording()
+                }, 2000)
+                
+                // 세 번째 분석 (3.5초 후)
+                handler.postDelayed({
+                    analyzeRecording()
+                }, 3500)
                 
                 // 녹음 종료
                 handler.postDelayed({
@@ -237,11 +269,24 @@ class SnoringDetector(
         try {
             // AudioRecord 방법 시도
             val audioLevel = analyzeAudioWithAudioRecord()
+            val currentTime = System.currentTimeMillis()
+            val isAboveThreshold = audioLevel >= SNORING_THRESHOLD_DB
+            
+            // 상세한 감지 분석 로그
+            eventLogger.logDetectionProcess(
+                analysisType = "AudioRecord",
+                audioLevel = audioLevel,
+                threshold = SNORING_THRESHOLD_DB,
+                isAboveThreshold = isAboveThreshold,
+                additionalInfo = mapOf(
+                    "snoringStartTime" to snoringStartTime,
+                    "lastSnoringTime" to lastSnoringTime,
+                    "isCurrentlySnoring" to (snoringStartTime > 0L)
+                )
+            )
             
             if (audioLevel > 0) {
                 Log.d(TAG, "🎙️ AudioRecord level: $audioLevel, threshold: ${SNORING_THRESHOLD_DB.toInt()} dB")
-                
-                val currentTime = System.currentTimeMillis()
                 
                 if (audioLevel >= SNORING_THRESHOLD_DB) {
                     // 코골이 가능성 있는 소음 감지
@@ -252,6 +297,11 @@ class SnoringDetector(
                         Log.i(TAG, "🎙️ Starting audio recording for snoring event")
                         snoringStartTime = currentTime
                         startAudioRecording()
+                        
+                        eventLogger.logDetectionState("SNORING_STARTED", mapOf(
+                            "startTime" to snoringStartTime,
+                            "decibelLevel" to audioLevel
+                        ))
                     }
                     lastSnoringTime = currentTime
                     
@@ -265,11 +315,28 @@ class SnoringDetector(
                             // 유효한 코골이로 판정 - 오디오 녹음 중지
                             val audioFilePath = stopAudioRecording()
                             Log.d(TAG, "Snoring detected: duration=${snoringDuration}ms, level=${audioLevel.toInt()}dB, audio: $audioFilePath")
+                            
+                            eventLogger.logSnoringEvent(audioLevel, snoringDuration, audioFilePath, mapOf(
+                                "startTime" to snoringStartTime,
+                                "endTime" to lastSnoringTime,
+                                "validated" to true
+                            ))
+                            
                             onSnoringDetected(audioLevel, snoringDuration, audioFilePath)
                         } else {
                             // 너무 짧은 소음 - 녹음 취소
+                            eventLogger.logInfo("너무 짧은 소음으로 코골이 제외", mapOf(
+                                "duration" to snoringDuration,
+                                "minRequired" to MIN_SNORING_DURATION,
+                                "audioLevel" to audioLevel
+                            ))
                             stopAudioRecording()
                         }
+                        
+                        eventLogger.logDetectionState("SNORING_ENDED", mapOf(
+                            "duration" to snoringDuration,
+                            "wasValid" to (snoringDuration >= MIN_SNORING_DURATION)
+                        ))
                         
                         snoringStartTime = 0L
                         lastSnoringTime = 0L
@@ -281,6 +348,7 @@ class SnoringDetector(
             
         } catch (e: Exception) {
             Log.e(TAG, "Error analyzing recording", e)
+            eventLogger.logError("ANALYSIS_ERROR", "오디오 분석 중 오류 발생", e)
         }
     }
     
@@ -386,6 +454,9 @@ class SnoringDetector(
         
         if (isRecordingAudio) {
             Log.d(TAG, "Started audio recording: $currentRecordingPath")
+            eventLogger.logAudioRecording("start", currentRecordingPath)
+        } else {
+            eventLogger.logAudioRecording("start", null, error = "녹음 시작 실패")
         }
     }
     
@@ -400,12 +471,16 @@ class SnoringDetector(
         
         val recordingResult = audioRecorder?.stopRecording()
         val filePath = recordingResult?.filePath
+        val duration = recordingResult?.duration
         
         isRecordingAudio = false
         currentRecordingPath = null
         
         if (filePath != null) {
             Log.d(TAG, "Stopped audio recording: $filePath (${recordingResult.getFormattedDuration()})")
+            eventLogger.logAudioRecording("stop", filePath, duration)
+        } else {
+            eventLogger.logAudioRecording("stop", null, error = "녹음 중지 실패 또는 파일 없음")
         }
         
         return filePath

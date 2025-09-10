@@ -7,12 +7,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import android.content.Context
 import com.semo.alarm.data.dao.AlarmDao
+import com.semo.alarm.data.dao.AlarmHistoryDao
 import com.semo.alarm.data.dao.TimerTemplateDao
 import com.semo.alarm.data.dao.TimerRoundDao
 import com.semo.alarm.data.dao.TimerCategoryDao
 import com.semo.alarm.data.dao.SleepRecordDao
 import com.semo.alarm.data.dao.ReportDao
 import com.semo.alarm.data.entities.Alarm
+import com.semo.alarm.data.entities.AlarmHistory
 import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.data.entities.TimerRound
 import com.semo.alarm.data.entities.TimerCategory
@@ -20,13 +22,14 @@ import com.semo.alarm.data.entities.SleepRecord
 import com.semo.alarm.data.entities.ReportData
 
 @Database(
-    entities = [Alarm::class, TimerTemplate::class, TimerRound::class, TimerCategory::class, SleepRecord::class, ReportData::class],
-    version = 10,
+    entities = [Alarm::class, AlarmHistory::class, TimerTemplate::class, TimerRound::class, TimerCategory::class, SleepRecord::class, ReportData::class],
+    version = 11,
     exportSchema = false
 )
 abstract class AlarmDatabase : RoomDatabase() {
     
     abstract fun alarmDao(): AlarmDao
+    abstract fun alarmHistoryDao(): AlarmHistoryDao
     abstract fun timerTemplateDao(): TimerTemplateDao
     abstract fun timerRoundDao(): TimerRoundDao
     abstract fun timerCategoryDao(): TimerCategoryDao

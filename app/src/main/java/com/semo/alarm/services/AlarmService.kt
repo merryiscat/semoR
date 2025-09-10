@@ -14,9 +14,14 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.semo.alarm.R
 import com.semo.alarm.data.entities.Alarm
+import com.semo.alarm.data.repositories.AlarmRepository
 import com.semo.alarm.ui.activities.MainActivity
 import com.semo.alarm.ui.activities.AlarmFullScreenActivity
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class AlarmService : Service() {
@@ -28,6 +33,9 @@ class AlarmService : Service() {
         const val ACTION_DISMISS = "action_dismiss"
         const val ACTION_SNOOZE = "action_snooze"
     }
+    
+    @Inject
+    lateinit var alarmRepository: AlarmRepository
     
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
@@ -194,6 +202,36 @@ class AlarmService : Service() {
     private fun dismissAlarm() {
         stopAlarmSound()
         stopVibration()
+        
+        // 🔧 "한 번만" 알람인 경우 자동으로 비활성화
+        currentAlarm?.let { alarm ->
+            if (alarm.days == "once") {
+                Log.d(TAG, "Disabling 'once only' alarm after execution: ${alarm.id}")
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        alarmRepository.updateAlarmStatus(alarm.id, false)
+                        Log.d(TAG, "Successfully disabled alarm ${alarm.id}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to disable alarm ${alarm.id}", e)
+                    }
+                }
+            }
+            
+            // 🔧 "N회 반복" 알람인 경우도 처리 (미래 확장)
+            if (alarm.isCountRepeat()) {
+                Log.d(TAG, "Count repeat alarm detected: ${alarm.days}")
+                // TODO: 반복 횟수 추적 로직 추가 (현재는 단순히 비활성화)
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        alarmRepository.updateAlarmStatus(alarm.id, false)
+                        Log.d(TAG, "Successfully disabled count repeat alarm ${alarm.id}")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to disable count repeat alarm ${alarm.id}", e)
+                    }
+                }
+            }
+        }
+        
         stopForeground(true)
         stopSelf()
     }
@@ -256,48 +294,20 @@ class AlarmService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
         
-        val dismissIntent = Intent(this, AlarmService::class.java).apply {
-            action = ACTION_DISMISS
-        }
-        val dismissPendingIntent = PendingIntent.getService(
-            this, 0, dismissIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        )
-        
-        val snoozeIntent = Intent(this, AlarmService::class.java).apply {
-            action = ACTION_SNOOZE
-        }
-        val snoozePendingIntent = PendingIntent.getService(
-            this, 1, snoozeIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
-        )
+        // 🚫 해제/스누즈 PendingIntent 제거 - 풀스크린에서만 상호작용 가능
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_alarm)
             .setContentTitle(alarm.label.ifEmpty { "🐱 메리가 깨우고 있어요!" })
-            .setContentText("${alarm.time} - 메리를 만나보세요")
+            .setContentText("${alarm.time} - 메리를 터치해서 만나보세요!")
+            .setSubText("💤 화면을 터치하면 메리가 나타나요")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .setContentIntent(fullScreenPendingIntent)
             .setAutoCancel(false)
             .setOngoing(true)
-            .addAction(
-                R.drawable.ic_alarm,
-                "해제",
-                dismissPendingIntent
-            )
-            .apply {
-                if (alarm.snoozeEnabled) {
-                    addAction(
-                        R.drawable.ic_timer,
-                        "스누즈",
-                        snoozePendingIntent
-                    )
-                }
-            }
+            // 🚫 액션 버튼들 모두 제거 - 풀스크린 상호작용만 가능
             .build()
     }
     
