@@ -2,6 +2,8 @@
 
 세상의 모든 알람을 위한 스마트 알람 앱의 MVP (최소 기능 제품) 버전입니다.
 
+설치 경로 : /app/build/intermediates/apk/debug/app-debug.apk
+
 ## 🎯 MVP 포함 기능
 
 ### ✅ 구현 완료된 기능
