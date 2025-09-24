@@ -2,6 +2,7 @@ package com.semo.alarm.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -16,7 +17,8 @@ class MixedTimerAdapter(
     private val onCategoryDeleteClicked: (TimerCategory) -> Unit,
     private val onTimerClicked: (TimerTemplate) -> Unit,
     private val onTimerLongClicked: (TimerTemplate) -> Unit,
-    private val onTimerDeleteClicked: (TimerTemplate) -> Unit
+    private val onTimerDeleteClicked: (TimerTemplate) -> Unit,
+    private val onTimerResetClicked: (TimerTemplate) -> Unit
 ) : ListAdapter<MixedTimerItem, RecyclerView.ViewHolder>(MixedTimerDiffCallback()) {
 
     companion object {
@@ -91,28 +93,71 @@ class MixedTimerAdapter(
 
         fun bind(template: TimerTemplate) {
             binding.apply {
+                // Set template info
                 tvTemplateName.text = template.name
-                tvDuration.text = template.getFormattedDuration()
 
-                // 독립 타이머임을 나타내는 시각적 구분
-                root.alpha = 0.9f
+                // Show remaining time if available, otherwise show total duration (same as category timers)
+                if (template.remainingSeconds > 0) {
+                    // 실행 중이거나 일시정지 상태 - 남은 시간 표시
+                    tvDuration.text = formatDuration(template.remainingSeconds)
+                    if (template.isRunning) {
+                        // 실행 중 - 빨간색
+                        tvDuration.setTextColor(ContextCompat.getColor(root.context, com.semo.alarm.R.color.md_theme_error))
+                    } else {
+                        // 일시정지 - 주황색으로 구분
+                        tvDuration.setTextColor(ContextCompat.getColor(root.context, com.semo.alarm.R.color.orange))
+                    }
+                } else {
+                    // 완전 정지 상태 - 초기 설정 시간 표시
+                    tvDuration.text = formatDuration(template.totalDuration)
+                    tvDuration.setTextColor(ContextCompat.getColor(root.context, com.semo.alarm.R.color.md_theme_onSurfaceVariant))
+                }
 
-                // 독립 타이머는 삭제 버튼 숨기기 (롱클릭으로만 삭제)
-                btnDeleteTemplate.visibility = android.view.View.GONE
+                // Set category icon for independent timers
+                tvCategoryIcon.text = "🔥"  // 독립 타이머 구분용 아이콘
 
-                // 클릭 리스너 설정
+                // Set refresh button state (same logic as category timers)
+                if (template.isRunning) {
+                    btnRefreshTimer.isEnabled = true
+                    btnRefreshTimer.alpha = 1.0f
+                } else {
+                    btnRefreshTimer.isEnabled = false
+                    btnRefreshTimer.alpha = 0.8f
+                }
+
+                // Set refresh button click listener
+                btnRefreshTimer.setOnClickListener {
+                    if (template.isRunning) {
+                        onTimerResetClicked(template)
+                    }
+                }
+
+                // 카테고리 타이머와 동일한 클릭 동작: 실행중=일시정지, 정지=시작
                 root.setOnClickListener {
                     onTimerClicked(template)
                 }
 
+                // 롱클릭으로 편집 (카테고리 타이머와 동일)
                 root.setOnLongClickListener {
                     onTimerLongClicked(template)
                     true
                 }
 
+                // 삭제 버튼 표시 (카테고리 타이머와 동일)
                 btnDeleteTemplate.setOnClickListener {
                     onTimerDeleteClicked(template)
                 }
+            }
+        }
+
+        private fun formatDuration(seconds: Int): String {
+            val minutes = seconds / 60
+            val remainingSeconds = seconds % 60
+
+            return when {
+                minutes == 0 -> "${remainingSeconds}초"
+                remainingSeconds == 0 -> "${minutes}분"
+                else -> "${minutes}분 ${remainingSeconds}초"
             }
         }
     }

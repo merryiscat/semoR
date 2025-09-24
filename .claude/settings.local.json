@@ -105,7 +105,9 @@
       "mcp__serena__find_symbol",
       "mcp__serena__search_for_pattern",
       "mcp__sequential-thinking__sequentialthinking",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(.\\gradlew.bat build:*)",
+      "mcp__context7__get-library-docs"
     ],
     "deny": [],
     "ask": []

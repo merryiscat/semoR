@@ -1,6 +1,10 @@
 package com.semo.alarm.ui.fragments
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +35,22 @@ class CustomTimerFragment : Fragment() {
     
     private val viewModel: CustomTimerViewModel by viewModels()
     private lateinit var mixedAdapter: MixedTimerAdapter
+
+    private val timerUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            when (intent?.action) {
+                "TIMER_STATE_UPDATE" -> {
+                    val timerId = intent.getIntExtra("timerId", -1)
+                    val isRunning = intent.getBooleanExtra("isRunning", false)
+                    val remainingSeconds = intent.getIntExtra("remainingSeconds", 0)
+
+                    if (timerId != -1) {
+                        updateTimerInAdapter(timerId, isRunning, remainingSeconds)
+                    }
+                }
+            }
+        }
+    }
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,6 +77,16 @@ class CustomTimerFragment : Fragment() {
         super.onResume()
         // 카테고리 추가 후 돌아왔을 때 목록 새로고침
         viewModel.loadAllCategories()
+
+        // Register broadcast receiver for timer updates
+        val filter = IntentFilter("TIMER_STATE_UPDATE")
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(timerUpdateReceiver, filter)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Unregister broadcast receiver
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(timerUpdateReceiver)
     }
     
     private fun setupRecyclerView() {
@@ -71,15 +101,19 @@ class CustomTimerFragment : Fragment() {
                 onDeleteCategory(category)
             },
             onTimerClicked = { timer ->
-                // 독립 타이머 클릭 시 타이머 실행
-                viewModel.startTimer(timer.id)
+                // 카테고리 타이머와 동일한 동작: 실행중=일시정지, 정지=시작/재개
+                onTimerClicked(timer)
             },
             onTimerLongClicked = { timer ->
-                // 독립 타이머 롱클릭 시 실행/편집 옵션 표시
-                showTimerActionDialog(timer)
+                // 롱클릭으로 편집 화면 이동 (카테고리 타이머와 동일)
+                onEditTimer(timer)
             },
             onTimerDeleteClicked = { timer ->
                 onDeleteIndependentTimer(timer)
+            },
+            onTimerResetClicked = { timer ->
+                // 실행 중인 타이머 리셋
+                onResetTimer(timer)
             }
         )
 
@@ -184,21 +218,27 @@ class CustomTimerFragment : Fragment() {
         }
     }
 
-    private fun showTimerActionDialog(template: TimerTemplate) {
-        AlertDialog.Builder(requireContext())
-            .setTitle(template.name)
-            .setItems(arrayOf("실행", "편집", "삭제")) { _, which ->
-                when (which) {
-                    0 -> viewModel.startTimer(template.id)
-                    1 -> {
-                        val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
-                        intent.putExtra("template", template)
-                        startActivity(intent)
-                    }
-                    2 -> onDeleteIndependentTimer(template)
-                }
-            }
-            .show()
+    private fun onTimerClicked(timer: TimerTemplate) {
+        if (timer.isRunning) {
+            // Pause timer
+            viewModel.pauseTimer(timer.id)
+            Toast.makeText(context, "${timer.name} 타이머 일시정지", Toast.LENGTH_SHORT).show()
+        } else {
+            // Start timer (resume from where it was paused or start fresh)
+            viewModel.startTimer(timer.id)
+            Toast.makeText(context, "${timer.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun onEditTimer(timer: TimerTemplate) {
+        val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
+        intent.putExtra("template", timer)
+        startActivity(intent)
+    }
+
+    private fun onResetTimer(timer: TimerTemplate) {
+        viewModel.resetTimer(timer.id)
+        Toast.makeText(context, "${timer.name} 타이머 리셋", Toast.LENGTH_SHORT).show()
     }
 
     private fun onDeleteIndependentTimer(template: TimerTemplate) {
@@ -211,6 +251,16 @@ class CustomTimerFragment : Fragment() {
             }
             .setNegativeButton("취소", null)
             .show()
+    }
+
+    private fun updateTimerInAdapter(timerId: Int, isRunning: Boolean, remainingSeconds: Int) {
+        // Update both categories and independent templates lists
+        viewModel.categories.value?.let { categories ->
+            updateMixedList(categories)
+        }
+
+        // Also refresh independent templates
+        viewModel.loadIndependentTemplates()
     }
 
     override fun onDestroyView() {
