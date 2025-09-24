@@ -273,7 +273,34 @@ class CustomTimerViewModel @Inject constructor(
             }
         }
     }
-    
+
+    suspend fun generateAutoTimerName(categoryId: Int?): String {
+        return try {
+            val existingTemplates = if (categoryId == null) {
+                timerRepository.getIndependentTemplatesSync()
+            } else {
+                timerRepository.getTemplatesByCategorySync(categoryId)
+            }
+
+            // 기존 타이머들 중 "타이머N" 패턴 찾기
+            val timerNumberPattern = Regex("타이머(\\d+)")
+            val existingNumbers = existingTemplates.mapNotNull { template ->
+                timerNumberPattern.find(template.name)?.groupValues?.get(1)?.toIntOrNull()
+            }
+
+            // 다음 번호 찾기
+            val nextNumber = if (existingNumbers.isEmpty()) {
+                1
+            } else {
+                (existingNumbers.maxOrNull() ?: 0) + 1
+            }
+
+            "타이머$nextNumber"
+        } catch (e: Exception) {
+            "타이머1"
+        }
+    }
+
     fun insertTimerTemplate(template: TimerTemplate, rounds: List<TimerRound>) {
         viewModelScope.launch {
             try {

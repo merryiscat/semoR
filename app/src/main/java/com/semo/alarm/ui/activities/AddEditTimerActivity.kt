@@ -287,14 +287,10 @@ class AddEditTimerActivity : AppCompatActivity() {
     private fun setupNewTimer() {
         // 자동 타이머 이름 생성
         lifecycleScope.launch {
-            if (categoryId == -1) return@launch
-            val existingTemplates = viewModel.getTemplatesByCategory(categoryId)
-            val timerCount = existingTemplates.size + 1
-            val autoName = "타이머$timerCount"
-            
+            val autoName = viewModel.generateAutoTimerName(if (categoryId == -1) null else categoryId)
             binding.editTextTimerName.setText(autoName)
-            
-            Log.d(TAG, "Auto-generated timer name: $autoName")
+
+            Log.d(TAG, "Auto-generated timer name: $autoName (categoryId: $categoryId)")
         }
     }
     

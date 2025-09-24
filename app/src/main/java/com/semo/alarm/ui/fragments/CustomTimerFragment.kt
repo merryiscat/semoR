@@ -71,10 +71,8 @@ class CustomTimerFragment : Fragment() {
                 onDeleteCategory(category)
             },
             onTimerClicked = { timer ->
-                // 독립 타이머 클릭 시 편집 화면으로 이동
-                val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
-                intent.putExtra("template", timer)
-                startActivity(intent)
+                // 독립 타이머 클릭 시 타이머 실행
+                viewModel.startTimer(timer.id)
             },
             onTimerLongClicked = { timer ->
                 // 독립 타이머 롱클릭 시 실행/편집 옵션 표시

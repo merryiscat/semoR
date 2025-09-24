@@ -66,6 +66,13 @@ class MixedTimerAdapter(
                 tvCategoryName.text = category.name
                 tvTemplateCount.text = "${templateCount}개"
 
+                // 기본 카테고리는 삭제 버튼 숨기기
+                btnDeleteCategory.visibility = if (category.isDefault) {
+                    android.view.View.GONE
+                } else {
+                    android.view.View.VISIBLE
+                }
+
                 // 클릭 리스너 설정
                 root.setOnClickListener {
                     onCategoryClicked(category)
@@ -89,6 +96,9 @@ class MixedTimerAdapter(
 
                 // 독립 타이머임을 나타내는 시각적 구분
                 root.alpha = 0.9f
+
+                // 독립 타이머는 삭제 버튼 숨기기 (롱클릭으로만 삭제)
+                btnDeleteTemplate.visibility = android.view.View.GONE
 
                 // 클릭 리스너 설정
                 root.setOnClickListener {
