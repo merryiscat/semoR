@@ -14,7 +14,7 @@
         android:background="@color/md_theme_surface"
         android:elevation="4dp"
         app:navigationIcon="?attr/homeAsUpIndicator"
-        app:title="타이머 추가"
+        app:title="알람 추가"
         app:titleTextColor="@color/md_theme_onSurface" />
 
     <ScrollView

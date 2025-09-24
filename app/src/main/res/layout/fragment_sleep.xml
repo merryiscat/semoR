@@ -159,6 +159,7 @@
                     android:layout_marginBottom="8dp"
                     style="@style/TextAppearance.Material3.BodyLarge" />
 
+                <!-- 코골이 표시 숨김
                 <TextView
                     android:id="@+id/textTodaysSnoring"
                     android:layout_width="wrap_content"
@@ -166,7 +167,9 @@
                     android:text="코골이: 1시간 12분 (16%)"
                     android:textSize="16sp"
                     android:textColor="@color/md_theme_onSurface"
+                    android:visibility="gone"
                     style="@style/TextAppearance.Material3.BodyLarge" />
+                -->
 
             </LinearLayout>
 
@@ -206,6 +209,7 @@
                     android:layout_marginBottom="8dp"
                     style="@style/TextAppearance.Material3.BodyLarge" />
 
+                <!-- 평균 코골이 표시 숨김
                 <TextView
                     android:id="@+id/textAverageSnoring"
                     android:layout_width="wrap_content"
@@ -214,7 +218,9 @@
                     android:textSize="16sp"
                     android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="8dp"
+                    android:visibility="gone"
                     style="@style/TextAppearance.Material3.BodyLarge" />
+                -->
 
                 <TextView
                     android:id="@+id/textRecordCount"
@@ -229,11 +235,12 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 코골이 감지 설정 카드 -->
+        <!-- 코골이 감지 설정 카드 - 숨김 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:visibility="gone"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp">
 
@@ -282,7 +289,7 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 🎙️ 코골이 녹음 기록 카드 -->
+        <!-- 🎙️ 코골이 녹음 기록 카드 - 완전히 숨김 -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardSnoringRecordings"
             android:layout_width="match_parent"

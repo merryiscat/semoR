@@ -76,10 +76,10 @@ class SleepFragment : Fragment() {
             showDeleteSleepConfirmDialog()
         }
         
-        binding.switchSnoringDetection.setOnCheckedChangeListener { _, isChecked ->
-            // TODO: 코골이 감지 설정 저장
-            showSnackbar(if (isChecked) "코골이 감지가 활성화되었습니다" else "코골이 감지가 비활성화되었습니다")
-        }
+        // 코골이 감지 기능 비활성화
+        // binding.switchSnoringDetection.setOnCheckedChangeListener { _, isChecked ->
+        //     showSnackbar(if (isChecked) "코골이 감지가 활성화되었습니다" else "코골이 감지가 비활성화되었습니다")
+        // }
     }
     
     private fun observeViewModel() {
@@ -112,7 +112,8 @@ class SleepFragment : Fragment() {
                 }
                 
                 binding.textTodaysSleepTime.text = "$bedtime → $wakeupTime (${summary.sleepDuration})"
-                binding.textTodaysSnoring.text = "😴 코골이: ${summary.snoringPercentage}%"
+                // 코골이 정보 비활성화
+                // binding.textTodaysSnoring.text = "😴 코골이: ${summary.snoringPercentage}%"
             } else {
                 binding.cardTodaysSummary.visibility = View.GONE
             }
@@ -122,7 +123,8 @@ class SleepFragment : Fragment() {
         sleepViewModel.averageStats.observe(viewLifecycleOwner) { stats ->
             if (stats != null) {
                 binding.textAverageSleep.text = "수면: ${stats.averageSleepDuration}"
-                binding.textAverageSnoring.text = "코골이: ${stats.averageSnoringPercentage}% (평균)"
+                // 코골이 평균 비활성화
+                // binding.textAverageSnoring.text = "코골이: ${stats.averageSnoringPercentage}% (평균)"
                 binding.textRecordCount.text = "기록 개수: ${stats.recordCount}일"
             }
         }
@@ -248,10 +250,12 @@ class SleepFragment : Fragment() {
     }
     
     // ═══════════════════════════════════════════════════
-    // 🎙️ 코골이 녹음 기능
+    // 🎙️ 코골이 녹음 기능 - 비활성화
     // ═══════════════════════════════════════════════════
     
     private fun setupSnoringRecording() {
+        // 코골이 녹음 기능 비활성화 - 아래 코드들은 더 이상 사용되지 않음
+        return
         // 오디오 플레이어 초기화
         audioPlayer = SnoringAudioPlayer(
             context = requireContext(),

@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="커스텀 타이머"
+                android:text="커스텀 알람"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@color/md_theme_onBackground" />
@@ -108,5 +108,21 @@
             android:layout_marginTop="8dp" />
 
     </LinearLayout>
+
+    <!-- FloatingActionButton for adding new timer directly -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddTimer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="새 알람 추가"
+        android:src="@drawable/ic_add"
+        android:backgroundTint="@color/neon_blue"
+        android:tint="@color/day_chip_on_text"
+        app:elevation="6dp"
+        app:pressedTranslationZ="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

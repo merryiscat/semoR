@@ -79,8 +79,11 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:src="@drawable/ic_add"
-        android:contentDescription="새 타이머 추가"
+        android:contentDescription="새 알람 추가"
+        android:backgroundTint="@color/neon_blue"
+        android:tint="@color/day_chip_on_text"
         app:fabSize="normal"
-        app:tint="?attr/colorOnPrimary" />
+        app:elevation="6dp"
+        app:pressedTranslationZ="8dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

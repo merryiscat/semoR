@@ -41,6 +41,7 @@ class CustomTimerFragment : Fragment() {
         
         setupRecyclerView()
         setupAddCategoryButton()
+        setupAddTimerButton()
         observeViewModel()
         
         // Load categories on start
@@ -75,6 +76,30 @@ class CustomTimerFragment : Fragment() {
     private fun setupAddCategoryButton() {
         binding.btnAddCategory.setOnClickListener {
             val intent = Intent(requireContext(), AddEditCategoryActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    private fun setupAddTimerButton() {
+        binding.fabAddTimer.setOnClickListener {
+            // 기본 카테고리 찾아서 바로 타이머 추가 화면으로 이동
+            val categories = categoryAdapter.currentList
+            val defaultCategory = categories.find { it.name == "기본" && it.isDefault }
+
+            val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
+            if (defaultCategory != null) {
+                intent.putExtra("category", defaultCategory)
+                intent.putExtra("categoryId", defaultCategory.id)
+            } else {
+                // 기본 카테고리가 없으면 첫 번째 카테고리 사용, 그것도 없으면 경고
+                if (categories.isNotEmpty()) {
+                    intent.putExtra("category", categories.first())
+                    intent.putExtra("categoryId", categories.first().id)
+                } else {
+                    Toast.makeText(context, "먼저 카테고리를 추가해주세요", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
             startActivity(intent)
         }
     }
