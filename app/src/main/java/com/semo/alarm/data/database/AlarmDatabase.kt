@@ -23,7 +23,7 @@ import com.semo.alarm.data.entities.ReportData
 
 @Database(
     entities = [Alarm::class, AlarmHistory::class, TimerTemplate::class, TimerRound::class, TimerCategory::class, SleepRecord::class, ReportData::class],
-    version = 11,
+    version = 12,
     exportSchema = false
 )
 abstract class AlarmDatabase : RoomDatabase() {

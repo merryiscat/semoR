@@ -30,6 +30,9 @@ class CustomTimerViewModel @Inject constructor(
     
     private val _categories = MutableLiveData<List<TimerCategory>>()
     val categories: LiveData<List<TimerCategory>> get() = _categories
+
+    private val _independentTemplates = MutableLiveData<List<TimerTemplate>>()
+    val independentTemplates: LiveData<List<TimerTemplate>> get() = _independentTemplates
     
     private val _loading = MutableLiveData<Boolean>()
     val loading: LiveData<Boolean> get() = _loading
@@ -245,8 +248,28 @@ class CustomTimerViewModel @Inject constructor(
                 timerRepository.deleteTemplate(templateId)
                 // Refresh current template list
                 _templates.value = _templates.value?.filter { it.id != templateId } ?: emptyList()
+                // Also refresh independent templates if this was an independent timer
+                _independentTemplates.value = _independentTemplates.value?.filter { it.id != templateId } ?: emptyList()
             } catch (e: Exception) {
                 _error.value = "템플릿 삭제에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+
+    fun loadIndependentTemplates() {
+        viewModelScope.launch {
+            try {
+                _loading.value = true
+                _error.value = null
+
+                timerRepository.getIndependentTemplates().observeForever { templates ->
+                    _independentTemplates.value = templates ?: emptyList()
+                    _loading.value = false
+                }
+            } catch (e: Exception) {
+                _error.value = "독립 타이머를 불러오는데 실패했습니다: ${e.message}"
+                _loading.value = false
+                _independentTemplates.value = emptyList()
             }
         }
     }
@@ -343,6 +366,9 @@ class CustomTimerViewModel @Inject constructor(
         val currentCategoryId = _templates.value?.firstOrNull()?.categoryId
         if (currentCategoryId != null) {
             loadTemplatesByCategory(currentCategoryId)
+        } else {
+            // categoryId가 null이면 독립 타이머이므로 전체 템플릿 로드
+            loadAllTemplates()
         }
     }
     

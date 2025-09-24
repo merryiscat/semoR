@@ -86,7 +86,7 @@ class AddEditTimerActivity : AppCompatActivity() {
         binding.toolbar.title = if (isEditMode) {
             "타이머 편집"
         } else {
-            "${category?.name} 타이머 추가"
+            if (categoryId == -1) "독립 타이머 추가" else "${category?.name} 타이머 추가"
         }
     }
     
@@ -445,12 +445,12 @@ class AddEditTimerActivity : AppCompatActivity() {
             Toast.makeText(this, "시간을 설정해주세요", Toast.LENGTH_SHORT).show()
             return
         }
-        
-        if (categoryId == -1) return
+
+        // categoryId == -1 means independent timer (null categoryId)
         
         // 단순 타이머 템플릿 생성 (소리 & 진동 설정 포함)
         val template = TimerTemplate(
-            categoryId = categoryId,
+            categoryId = if (categoryId == -1) null else categoryId,
             name = name,
             description = "", // 설명 제거
             totalDuration = totalDuration,

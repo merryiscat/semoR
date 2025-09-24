@@ -30,6 +30,14 @@ class TimerRepository @Inject constructor(
     suspend fun getTemplatesByCategorySync(categoryId: Int): List<TimerTemplate> {
         return templateDao.getTemplatesByCategorySync(categoryId)
     }
+
+    fun getIndependentTemplates(): LiveData<List<TimerTemplate>> {
+        return templateDao.getIndependentTemplates()
+    }
+
+    suspend fun getIndependentTemplatesSync(): List<TimerTemplate> {
+        return templateDao.getIndependentTemplatesSync()
+    }
     
     fun getDefaultTemplates(): LiveData<List<TimerTemplate>> {
         return templateDao.getDefaultTemplates()

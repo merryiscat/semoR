@@ -15,6 +15,12 @@ interface TimerTemplateDao {
     
     @Query("SELECT * FROM timer_templates WHERE categoryId = :categoryId ORDER BY usageCount DESC, name ASC")
     suspend fun getTemplatesByCategorySync(categoryId: Int): List<TimerTemplate>
+
+    @Query("SELECT * FROM timer_templates WHERE categoryId IS NULL ORDER BY usageCount DESC, name ASC")
+    fun getIndependentTemplates(): LiveData<List<TimerTemplate>>
+
+    @Query("SELECT * FROM timer_templates WHERE categoryId IS NULL ORDER BY usageCount DESC, name ASC")
+    suspend fun getIndependentTemplatesSync(): List<TimerTemplate>
     
     @Query("SELECT * FROM timer_templates WHERE isDefault = 1 ORDER BY categoryId, name ASC")
     fun getDefaultTemplates(): LiveData<List<TimerTemplate>>
@@ -36,6 +42,9 @@ interface TimerTemplateDao {
     
     @Query("SELECT COUNT(*) FROM timer_templates WHERE categoryId = :categoryId")
     suspend fun getTemplateCountByCategory(categoryId: Int): Int
+
+    @Query("SELECT COUNT(*) FROM timer_templates WHERE categoryId IS NULL")
+    suspend fun getIndependentTemplateCount(): Int
     
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertTemplate(template: TimerTemplate): Long

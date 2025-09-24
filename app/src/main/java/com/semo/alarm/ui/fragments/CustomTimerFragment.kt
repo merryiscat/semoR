@@ -9,12 +9,17 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import kotlinx.coroutines.launch
 import com.semo.alarm.databinding.FragmentCustomTimerBinding
 import com.semo.alarm.data.entities.TimerCategory
+import com.semo.alarm.data.entities.TimerTemplate
 import com.semo.alarm.ui.activities.AddEditCategoryActivity
 import com.semo.alarm.ui.activities.TimerListActivity
 import com.semo.alarm.ui.adapters.CategoryListAdapter
+import com.semo.alarm.ui.adapters.MixedTimerAdapter
+import com.semo.alarm.ui.adapters.MixedTimerItem
 import com.semo.alarm.ui.viewmodels.CustomTimerViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -25,7 +30,7 @@ class CustomTimerFragment : Fragment() {
     private val binding get() = _binding!!
     
     private val viewModel: CustomTimerViewModel by viewModels()
-    private lateinit var categoryAdapter: CategoryListAdapter
+    private lateinit var mixedAdapter: MixedTimerAdapter
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,21 +60,34 @@ class CustomTimerFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        categoryAdapter = CategoryListAdapter(
+        mixedAdapter = MixedTimerAdapter(
             onCategoryClicked = { category ->
                 // 카테고리 클릭 시 해당 카테고리의 타이머 목록 화면으로 이동
                 val intent = Intent(requireContext(), TimerListActivity::class.java)
                 intent.putExtra("category", category)
                 startActivity(intent)
             },
-            onDeleteClicked = { category -> 
+            onCategoryDeleteClicked = { category ->
                 onDeleteCategory(category)
+            },
+            onTimerClicked = { timer ->
+                // 독립 타이머 클릭 시 편집 화면으로 이동
+                val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
+                intent.putExtra("template", timer)
+                startActivity(intent)
+            },
+            onTimerLongClicked = { timer ->
+                // 독립 타이머 롱클릭 시 실행/편집 옵션 표시
+                showTimerActionDialog(timer)
+            },
+            onTimerDeleteClicked = { timer ->
+                onDeleteIndependentTimer(timer)
             }
         )
-        
+
         binding.recyclerViewCategories.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            adapter = categoryAdapter
+            adapter = mixedAdapter
         }
     }
     
@@ -82,24 +100,9 @@ class CustomTimerFragment : Fragment() {
 
     private fun setupAddTimerButton() {
         binding.fabAddTimer.setOnClickListener {
-            // 기본 카테고리 찾아서 바로 타이머 추가 화면으로 이동
-            val categories = categoryAdapter.currentList
-            val defaultCategory = categories.find { it.name == "기본" && it.isDefault }
-
+            // 독립 타이머로 생성 (categoryId = null)
             val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
-            if (defaultCategory != null) {
-                intent.putExtra("category", defaultCategory)
-                intent.putExtra("categoryId", defaultCategory.id)
-            } else {
-                // 기본 카테고리가 없으면 첫 번째 카테고리 사용, 그것도 없으면 경고
-                if (categories.isNotEmpty()) {
-                    intent.putExtra("category", categories.first())
-                    intent.putExtra("categoryId", categories.first().id)
-                } else {
-                    Toast.makeText(context, "먼저 카테고리를 추가해주세요", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
-            }
+            intent.putExtra("categoryId", -1) // -1을 null 표시자로 사용
             startActivity(intent)
         }
     }
@@ -113,23 +116,18 @@ class CustomTimerFragment : Fragment() {
             }
         }
         
-        // Observe categories
+        // Observe categories and combine with independent timers
         viewModel.categories.observe(viewLifecycleOwner) { categories ->
-            if (categories.isNotEmpty()) {
-                categoryAdapter.submitList(categories)
-                binding.emptyStateLayout.visibility = android.view.View.GONE
-                binding.recyclerViewCategories.visibility = android.view.View.VISIBLE
-                
-                // 카테고리 개수 업데이트 (알람과 동일한 방식)
-                binding.categoryCountText.text = "카테고리 ${categories.size}개"
-            } else {
-                // 카테고리가 없을 때 처리 (알람과 동일한 방식)
-                categoryAdapter.submitList(emptyList())
-                binding.emptyStateLayout.visibility = android.view.View.VISIBLE
-                binding.recyclerViewCategories.visibility = android.view.View.GONE
-                binding.categoryCountText.text = "카테고리 0개"
-            }
+            updateMixedList(categories)
         }
+
+        // Observe independent templates
+        viewModel.independentTemplates.observe(viewLifecycleOwner) { independentTimers ->
+            updateMixedList(viewModel.categories.value)
+        }
+
+        // Load independent templates through ViewModel
+        viewModel.loadIndependentTemplates()
         
         // Observe loading state
         viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
@@ -155,6 +153,68 @@ class CustomTimerFragment : Fragment() {
             .show()
     }
     
+    private fun updateMixedList(categories: List<TimerCategory>?) {
+        lifecycleScope.launch {
+            val mixedItems = mutableListOf<MixedTimerItem>()
+
+            // Add categories first
+            categories?.forEach { category ->
+                val templateCount = viewModel.getTemplatesByCategory(category.id).size
+                mixedItems.add(MixedTimerItem.CategoryItem(category, templateCount))
+            }
+
+            // Add independent timers
+            viewModel.independentTemplates.value?.forEach { template ->
+                mixedItems.add(MixedTimerItem.IndependentTimerItem(template))
+            }
+
+            // Update UI
+            if (mixedItems.isNotEmpty()) {
+                mixedAdapter.submitList(mixedItems)
+                binding.emptyStateLayout.visibility = android.view.View.GONE
+                binding.recyclerViewCategories.visibility = android.view.View.VISIBLE
+
+                val categoryCount = categories?.size ?: 0
+                val timerCount = viewModel.independentTemplates.value?.size ?: 0
+                binding.categoryCountText.text = "카테고리 ${categoryCount}개, 독립 타이머 ${timerCount}개"
+            } else {
+                mixedAdapter.submitList(emptyList())
+                binding.emptyStateLayout.visibility = android.view.View.VISIBLE
+                binding.recyclerViewCategories.visibility = android.view.View.GONE
+                binding.categoryCountText.text = "카테고리 0개"
+            }
+        }
+    }
+
+    private fun showTimerActionDialog(template: TimerTemplate) {
+        AlertDialog.Builder(requireContext())
+            .setTitle(template.name)
+            .setItems(arrayOf("실행", "편집", "삭제")) { _, which ->
+                when (which) {
+                    0 -> viewModel.startTimer(template.id)
+                    1 -> {
+                        val intent = Intent(requireContext(), com.semo.alarm.ui.activities.AddEditTimerActivity::class.java)
+                        intent.putExtra("template", template)
+                        startActivity(intent)
+                    }
+                    2 -> onDeleteIndependentTimer(template)
+                }
+            }
+            .show()
+    }
+
+    private fun onDeleteIndependentTimer(template: TimerTemplate) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("독립 타이머 삭제")
+            .setMessage("'${template.name}' 타이머를 삭제하시겠습니까?")
+            .setPositiveButton("삭제") { _, _ ->
+                viewModel.deleteTemplate(template.id)
+                Toast.makeText(context, "${template.name} 타이머가 삭제되었습니다", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("취소", null)
+            .show()
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

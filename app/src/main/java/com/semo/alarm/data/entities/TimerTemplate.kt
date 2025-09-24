@@ -15,7 +15,7 @@ import kotlinx.parcelize.Parcelize
             entity = TimerCategory::class,
             parentColumns = ["id"],
             childColumns = ["categoryId"],
-            onDelete = ForeignKey.CASCADE
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [androidx.room.Index(value = ["categoryId"])]
@@ -23,7 +23,7 @@ import kotlinx.parcelize.Parcelize
 data class TimerTemplate(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val categoryId: Int,            // TimerCategory ID 참조
+    val categoryId: Int?,           // TimerCategory ID 참조 (null = 독립 타이머)
     val name: String,              // '타바타', '반숙란', '뽀모도로'
     val description: String,       // 상세 설명
     val totalDuration: Int,        // 전체 소요시간 (초)

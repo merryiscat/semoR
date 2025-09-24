@@ -101,7 +101,11 @@
       "Bash(cmd /c gradlew:*)",
       "Bash(.gradlew.bat assembleDebug)",
       "Bash(cmd /c:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "mcp__serena__find_symbol",
+      "mcp__serena__search_for_pattern",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
