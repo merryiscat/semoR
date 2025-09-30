@@ -26,9 +26,13 @@
 
         <!-- 앱 정보 카드 -->
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/layoutAppInfo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp">
 
@@ -52,7 +56,7 @@
                         android:text="앱 정보"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:textColor="@color/md_theme_onSurface"
+                        android:textColor="#FFFFFF"
                         style="@style/TextAppearance.Material3.TitleMedium" />
 
                     <TextView
@@ -61,82 +65,9 @@
                         android:layout_height="wrap_content"
                         android:text="v1.0.0"
                         android:textSize="16sp"
-                        android:textColor="#6B7280"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="세모알 - 세상의 모든 알람"
-                        android:textSize="14sp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- 알람 설정 카드 -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="⏰ 알람 설정"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp"
-                    style="@style/TextAppearance.Material3.TitleMedium" />
-
-                <!-- 기본 알람음 설정 -->
-                <LinearLayout
-                    android:id="@+id/layoutDefaultSound"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="기본 알람음"
-                        android:textSize="16sp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <TextView
-                        android:id="@+id/textDefaultSound"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="기본 알람음"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280"
+                        android:textColor="#00D4FF"
                         android:layout_marginEnd="8dp"
-                        style="@style/TextAppearance.Material3.BodySmall" />
+                        style="@style/TextAppearance.Material3.BodyMedium" />
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -146,89 +77,19 @@
 
                 </LinearLayout>
 
-                <!-- 기본 볼륨 설정 -->
-                <LinearLayout
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="기본 볼륨"
-                            android:textSize="16sp"
-                            style="@style/TextAppearance.Material3.BodyMedium" />
-
-                        <TextView
-                            android:id="@+id/textDefaultVolume"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="70%"
-                            android:textSize="14sp"
-                            android:textColor="#00D4FF"
-                            android:textStyle="bold"
-                            style="@style/TextAppearance.Material3.BodySmall" />
-
-                    </LinearLayout>
-
-                    <SeekBar
-                        android:id="@+id/seekBarDefaultVolume"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:max="100"
-                        android:progress="70"
-                        android:progressTint="#00D4FF"
-                        android:thumbTint="#00D4FF" />
-
-                </LinearLayout>
-
-                <!-- 스누즈 기본 설정 -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="스누즈 기본값"
-                        android:textSize="16sp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <TextView
-                        android:id="@+id/textDefaultSnooze"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="5분"
-                        android:textSize="14sp"
-                        android:textColor="#6B7280"
-                        android:layout_marginEnd="8dp"
-                        style="@style/TextAppearance.Material3.BodySmall" />
-
-                    <com.google.android.material.materialswitch.MaterialSwitch
-                        android:id="@+id/switchDefaultSnooze"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checked="true"
-                        app:thumbTint="#FFFFFF"
-                        app:trackTint="#00D4FF" />
-
-                </LinearLayout>
+                    android:text="세모알은 세상의 모든 알람 기능들을 통합한\n통합 솔루션을 지향하고 있습니다.\n\nbeta 버전에서는 버그 수정과 최적화에 집중하고 있습니다."
+                    android:textSize="14sp"
+                    android:lineHeight="20dp"
+                    android:textColor="#FFFFFF"
+                    style="@style/TextAppearance.Material3.BodyMedium" />
 
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
+
 
         <!-- 알림 설정 카드 -->
         <com.google.android.material.card.MaterialCardView
@@ -331,113 +192,6 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 데이터 관리 카드 -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💾 데이터 관리"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:layout_marginBottom="16dp"
-                    style="@style/TextAppearance.Material3.TitleMedium" />
-
-                <!-- 백업 -->
-                <LinearLayout
-                    android:id="@+id/layoutBackup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="백업"
-                        android:textSize="16sp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_chevron_right_24"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-
-                <!-- 복원 -->
-                <LinearLayout
-                    android:id="@+id/layoutRestore"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="복원"
-                        android:textSize="16sp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_chevron_right_24"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-
-                <!-- 데이터 초기화 -->
-                <LinearLayout
-                    android:id="@+id/layoutResetData"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="데이터 초기화"
-                        android:textSize="16sp"
-                        android:textColor="#EF4444"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_chevron_right_24"
-                        app:tint="#EF4444" />
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
 
         <!-- 정보 카드 -->
         <com.google.android.material.card.MaterialCardView
@@ -484,7 +238,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="세모알 팀"
+                        android:text="MerryisCat"
                         android:textSize="14sp"
                         android:textColor="#6B7280"
                         android:layout_marginEnd="8dp"

@@ -38,10 +38,7 @@ class SettingsFragment : Fragment() {
     private lateinit var audioManager: AudioManager
     
     companion object {
-        private const val PREF_DEFAULT_VOLUME = "default_volume"
-        private const val PREF_DEFAULT_SOUND = "default_sound"
-        private const val PREF_DEFAULT_SNOOZE = "default_snooze_enabled"
-        private const val PREF_SNOOZE_INTERVAL = "default_snooze_interval"
+        // 필요한 상수들은 여기에 추가
     }
     
     override fun onCreateView(
@@ -78,70 +75,30 @@ class SettingsFragment : Fragment() {
             binding.textAppVersion.text = "v1.0.0"
         }
         
-        // 볼륨 SeekBar 리스너
-        binding.seekBarDefaultVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    binding.textDefaultVolume.text = "${progress}%"
-                    updateVolumeColor(progress)
-                    
-                    // SharedPreferences에 저장
-                    sharedPreferences.edit()
-                        .putInt(PREF_DEFAULT_VOLUME, progress)
-                        .apply()
-                }
-            }
-            
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-        
-        // 스누즈 스위치 리스너
-        binding.switchDefaultSnooze.setOnCheckedChangeListener { _, isChecked ->
-            sharedPreferences.edit()
-                .putBoolean(PREF_DEFAULT_SNOOZE, isChecked)
-                .apply()
-            
-            binding.textDefaultSnooze.text = if (isChecked) "5분" else "사용 안함"
-        }
+        // UI 설정 완료
     }
     
     private fun setupClickListeners() {
-        // 기본 알람음 설정
-        binding.layoutDefaultSound.setOnClickListener {
-            showSoundSelectionDialog()
+        // 앱 정보
+        binding.layoutAppInfo.setOnClickListener {
+            showAppInfoDialog()
         }
-        
+
         // 알림 권한 설정
         binding.layoutNotificationPermission.setOnClickListener {
             openNotificationSettings()
         }
-        
+
         // 배터리 최적화 제외 설정
         binding.layoutBatteryOptimization.setOnClickListener {
             openBatteryOptimizationSettings()
         }
-        
-        // 백업
-        binding.layoutBackup.setOnClickListener {
-            showBackupDialog()
-        }
-        
-        // 복원
-        binding.layoutRestore.setOnClickListener {
-            showRestoreDialog()
-        }
-        
-        // 데이터 초기화
-        binding.layoutResetData.setOnClickListener {
-            showResetDataDialog()
-        }
-        
+
         // 개발자 정보
         binding.layoutDeveloper.setOnClickListener {
             showDeveloperInfo()
         }
-        
+
         // 라이선스
         binding.layoutLicense.setOnClickListener {
             showLicenseDialog()
@@ -149,35 +106,10 @@ class SettingsFragment : Fragment() {
     }
     
     private fun loadSettings() {
-        // 기본 볼륨 로드
-        val defaultVolume = sharedPreferences.getInt(PREF_DEFAULT_VOLUME, 70)
-        binding.seekBarDefaultVolume.progress = defaultVolume
-        binding.textDefaultVolume.text = "${defaultVolume}%"
-        updateVolumeColor(defaultVolume)
-        
-        // 스누즈 설정 로드
-        val snoozeEnabled = sharedPreferences.getBoolean(PREF_DEFAULT_SNOOZE, true)
-        binding.switchDefaultSnooze.isChecked = snoozeEnabled
-        binding.textDefaultSnooze.text = if (snoozeEnabled) "5분" else "사용 안함"
-        
-        // 기본 알람음 로드
-        val defaultSound = sharedPreferences.getString(PREF_DEFAULT_SOUND, "기본 알람음")
-        binding.textDefaultSound.text = defaultSound
-        
         // 권한 상태 업데이트
         updatePermissionStatus()
     }
     
-    private fun updateVolumeColor(volume: Int) {
-        val color = if (volume == 0) {
-            ContextCompat.getColor(requireContext(), R.color.deep_gray)
-        } else {
-            ContextCompat.getColor(requireContext(), R.color.neon_blue)
-        }
-        
-        binding.seekBarDefaultVolume.progressTintList = android.content.res.ColorStateList.valueOf(color)
-        binding.seekBarDefaultVolume.thumbTintList = android.content.res.ColorStateList.valueOf(color)
-    }
     
     private fun updatePermissionStatus() {
         // 알림 권한 상태
@@ -207,27 +139,6 @@ class SettingsFragment : Fragment() {
         )
     }
     
-    private fun showSoundSelectionDialog() {
-        val soundOptions = arrayOf("기본 알람음", "벨소리 1", "벨소리 2", "자연 소리")
-        val currentSound = binding.textDefaultSound.text.toString()
-        val currentIndex = soundOptions.indexOf(currentSound)
-        
-        AlertDialog.Builder(requireContext())
-            .setTitle("기본 알람음 선택")
-            .setSingleChoiceItems(soundOptions, currentIndex) { dialog, which ->
-                val selectedSound = soundOptions[which]
-                binding.textDefaultSound.text = selectedSound
-                
-                sharedPreferences.edit()
-                    .putString(PREF_DEFAULT_SOUND, selectedSound)
-                    .apply()
-                
-                dialog.dismiss()
-                Toast.makeText(requireContext(), "기본 알람음이 설정되었습니다", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
     
     private fun openNotificationSettings() {
         val intent = Intent().apply {
@@ -359,78 +270,38 @@ class SettingsFragment : Fragment() {
             .show()
     }
     
-    private fun showBackupDialog() {
+    
+    
+    
+    private fun showAppInfoDialog() {
         AlertDialog.Builder(requireContext())
-            .setTitle("백업")
-            .setMessage("알람 및 설정 데이터를 백업하시겠습니까?\n\n백업 파일은 Downloads 폴더에 저장됩니다.")
-            .setPositiveButton("백업") { _, _ ->
-                // TODO: 백업 기능 구현
-                Toast.makeText(requireContext(), "백업 기능은 추후 업데이트에서 제공됩니다", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("취소", null)
+            .setTitle("세모알 상세 정보")
+            .setMessage("세모알은 최종적으로 세상의 모든 알람 기능들을 통합한 통합 솔루션을 지향하고 있습니다.\n\n" +
+                    "현재 beta 1.0 버전에서는 다음을 목표로 하고 있습니다:\n" +
+                    "• 모든 버그 수정 및 안정성 확보\n" +
+                    "• 성능 최적화\n" +
+                    "• 사용자 경험 개선\n\n" +
+                    "주요 기능:\n" +
+                    "• 혁신적인 알람 시스템\n" +
+                    "• 커스텀 타이머\n" +
+                    "• 수면 추적\n" +
+                    "• 통계 및 리포트\n\n" +
+                    "버전: ${binding.textAppVersion.text}\n" +
+                    "개발자: MerryisCat")
+            .setPositiveButton("확인", null)
             .show()
     }
-    
-    private fun showRestoreDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("복원")
-            .setMessage("백업 파일에서 데이터를 복원하시겠습니까?\n\n기존 데이터는 덮어씌워집니다.")
-            .setPositiveButton("복원") { _, _ ->
-                // TODO: 복원 기능 구현
-                Toast.makeText(requireContext(), "복원 기능은 추후 업데이트에서 제공됩니다", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
-    
-    private fun showResetDataDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("⚠️ 데이터 초기화")
-            .setMessage("모든 알람, 타이머, 수면 기록 및 설정이 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.")
-            .setPositiveButton("초기화") { _, _ ->
-                showFinalConfirmationDialog()
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
-    
-    private fun showFinalConfirmationDialog() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("최종 확인")
-            .setMessage("정말로 모든 데이터를 초기화하시겠습니까?")
-            .setPositiveButton("네, 초기화합니다") { _, _ ->
-                performDataReset()
-            }
-            .setNegativeButton("취소", null)
-            .show()
-    }
-    
-    private fun performDataReset() {
-        try {
-            // SharedPreferences 초기화
-            sharedPreferences.edit().clear().apply()
-            
-            // TODO: 데이터베이스 초기화
-            // database.clearAllTables()
-            
-            Toast.makeText(requireContext(), "데이터가 초기화되었습니다", Toast.LENGTH_SHORT).show()
-            
-            // 설정 다시 로드
-            loadSettings()
-        } catch (e: Exception) {
-            Toast.makeText(requireContext(), "초기화 중 오류가 발생했습니다", Toast.LENGTH_SHORT).show()
-        }
-    }
-    
+
     private fun showDeveloperInfo() {
         AlertDialog.Builder(requireContext())
-            .setTitle("🏢 세모알 팀")
+            .setTitle("개발자 정보")
             .setMessage("세모알 - 세상의 모든 알람\n\n" +
-                    "개발자: 세모알 개발팀\n" +
+                    "개발자: MerryisCat\n" +
+                    "연락처: merryiscat20@gmail.com\n" +
                     "버전: ${binding.textAppVersion.text}\n" +
                     "제작년도: 2024\n\n" +
                     "문의사항이나 버그 신고는\n" +
-                    "앱스토어 리뷰를 통해 남겨주세요!")
+                    "이메일로 연락주세요!")
             .setPositiveButton("확인", null)
             .show()
     }
@@ -438,20 +309,20 @@ class SettingsFragment : Fragment() {
     private fun showLicenseDialog() {
         val licenseText = """
             세모알은 다음 오픈소스 라이브러리를 사용합니다:
-            
+
             • Android Jetpack Components
             • Material Design Components
             • Hilt (의존성 주입)
             • Room Database
             • MPAndroidChart (차트)
             • Kotlin Coroutines
-            
+
             각 라이브러리는 해당 라이선스를 따릅니다.
             자세한 내용은 Apache License 2.0을 확인하세요.
         """.trimIndent()
-        
+
         AlertDialog.Builder(requireContext())
-            .setTitle("📄 오픈소스 라이선스")
+            .setTitle("오픈소스 라이선스")
             .setMessage(licenseText)
             .setPositiveButton("확인", null)
             .show()
