@@ -44,11 +44,13 @@ class TimerForegroundService : Service() {
         const val ACTION_PAUSE_TIMER = "PAUSE_TIMER"
         const val ACTION_STOP_TIMER = "STOP_TIMER"
         const val ACTION_TIMER_COMPLETE = "TIMER_COMPLETE"
-        
+        const val ACTION_ADD_TIME = "ADD_TIME"
+
         // Intent extras
         const val EXTRA_TIMER_NAME = "timer_name"
         const val EXTRA_TIMER_DURATION = "timer_duration"
         const val EXTRA_TIMER_ID = "timer_id"
+        const val EXTRA_ADD_SECONDS = "add_seconds"
         
         // Broadcast actions for UI updates
         const val BROADCAST_TIMER_UPDATE = "com.semo.alarm.TIMER_UPDATE"
@@ -80,7 +82,7 @@ class TimerForegroundService : Service() {
                 timerName = intent.getStringExtra(EXTRA_TIMER_NAME) ?: "타이머"
                 val durationSeconds = intent.getIntExtra(EXTRA_TIMER_DURATION, 0)
                 timerId = intent.getIntExtra(EXTRA_TIMER_ID, 0)
-                
+
                 Log.d(TAG, "Starting timer: $timerName for $durationSeconds seconds")
                 startTimer(durationSeconds)
             }
@@ -95,6 +97,12 @@ class TimerForegroundService : Service() {
             ACTION_TIMER_COMPLETE -> {
                 Log.d(TAG, "Timer completed: $timerName")
                 onTimerComplete()
+            }
+            ACTION_ADD_TIME -> {
+                val addSeconds = intent.getIntExtra(EXTRA_ADD_SECONDS, 0)
+                timerId = intent.getIntExtra(EXTRA_TIMER_ID, 0)
+                Log.d(TAG, "Adding $addSeconds seconds to timer: $timerName")
+                addTime(addSeconds)
             }
         }
         
@@ -163,7 +171,7 @@ class TimerForegroundService : Service() {
     private fun pauseTimer() {
         countDownTimer?.cancel()
         isTimerRunning = false
-        
+
         // DB에 일시정지 상태 및 현재 남은 시간 저장
         serviceScope.launch {
             try {
@@ -173,11 +181,65 @@ class TimerForegroundService : Service() {
                 Log.e(TAG, "Failed to update timer state on pause: ${e.message}")
             }
         }
-        
+
         // UI에 일시정지 브로드캐스트
         sendTimerUpdateBroadcast()
-        
+
         // 일시정지 상태 알림 업데이트
+        updateNotification()
+    }
+
+    /**
+     * 타이머에 시간을 추가합니다 (실행 중일 때만 작동)
+     */
+    private fun addTime(secondsToAdd: Int) {
+        if (!isTimerRunning) {
+            Log.w(TAG, "Cannot add time - timer is not running")
+            return
+        }
+
+        // 기존 타이머 취소
+        countDownTimer?.cancel()
+
+        // 시간 추가
+        remainingSeconds += secondsToAdd
+
+        Log.d(TAG, "⏱️ Added $secondsToAdd seconds. New remaining time: $remainingSeconds seconds")
+
+        // DB에 업데이트된 시간 저장
+        serviceScope.launch {
+            try {
+                timerRepository.updateTimerState(timerId, isRunning = true, remainingSeconds = remainingSeconds)
+                Log.d(TAG, "Timer state updated with added time: ID=$timerId, remainingSeconds=$remainingSeconds")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to update timer state after adding time: ${e.message}")
+            }
+        }
+
+        // 새로운 시간으로 타이머 재시작
+        countDownTimer = object : CountDownTimer(remainingSeconds * 1000L, 1000L) {
+            override fun onTick(millisUntilFinished: Long) {
+                remainingSeconds = (millisUntilFinished / 1000).toInt()
+
+                // UI에 상태 브로드캐스트
+                sendTimerUpdateBroadcast()
+
+                // 알림 업데이트
+                updateNotification()
+
+                Log.d(TAG, "Timer tick: ${formatTime(remainingSeconds)}")
+            }
+
+            override fun onFinish() {
+                Log.d(TAG, "Timer finished: $timerName")
+                onTimerComplete()
+            }
+        }
+
+        countDownTimer?.start()
+
+        // UI에 업데이트 브로드캐스트
+        sendTimerUpdateBroadcast()
         updateNotification()
     }
     

@@ -14,7 +14,8 @@ class TimerTemplateAdapter(
     private val onItemClick: (TimerTemplate) -> Unit,
     private val onDeleteClick: (TimerTemplate) -> Unit,
     private val onResetTimer: (TimerTemplate) -> Unit,
-    private val onEditClick: (TimerTemplate) -> Unit
+    private val onEditClick: (TimerTemplate) -> Unit,
+    private val onAddTime: (TimerTemplate, Int) -> Unit
 ) : ListAdapter<TimerTemplate, TimerTemplateAdapter.TimerTemplateViewHolder>(DiffCallback()) {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimerTemplateViewHolder {
@@ -23,7 +24,7 @@ class TimerTemplateAdapter(
             parent,
             false
         )
-        return TimerTemplateViewHolder(binding, onItemClick, onDeleteClick, onResetTimer, onEditClick)
+        return TimerTemplateViewHolder(binding, onItemClick, onDeleteClick, onResetTimer, onEditClick, onAddTime)
     }
     
     override fun onBindViewHolder(holder: TimerTemplateViewHolder, position: Int) {
@@ -35,14 +36,15 @@ class TimerTemplateAdapter(
         private val onItemClick: (TimerTemplate) -> Unit,
         private val onDeleteClick: (TimerTemplate) -> Unit,
         private val onResetTimer: (TimerTemplate) -> Unit,
-        private val onEditClick: (TimerTemplate) -> Unit
+        private val onEditClick: (TimerTemplate) -> Unit,
+        private val onAddTime: (TimerTemplate, Int) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
-        
+
         fun bind(template: TimerTemplate) {
             binding.apply {
                 // Set template info
                 tvTemplateName.text = template.name
-                
+
                 // Show remaining time if available, otherwise show total duration
                 if (template.remainingSeconds > 0) {
                     // 실행 중이거나 일시정지 상태 - 남은 시간 표시
@@ -62,10 +64,10 @@ class TimerTemplateAdapter(
                     tvDuration.setTextColor(ContextCompat.getColor(root.context, R.color.md_theme_onSurfaceVariant))
                     android.util.Log.d("TimerTemplateAdapter", "⚪ 정지: ${template.name}: ${template.totalDuration}초")
                 }
-                
+
                 // Set category icon (기본값 사용, 나중에 카테고리 정보와 함께 업데이트)
                 tvCategoryIcon.text = "⏰"
-                
+
                 // Set refresh button state
                 if (template.isRunning) {
                     // Enable refresh button when timer is running (allows reset)
@@ -76,25 +78,40 @@ class TimerTemplateAdapter(
                     btnRefreshTimer.isEnabled = false
                     btnRefreshTimer.alpha = 0.8f
                 }
-                
+
+                // Show/hide time increment buttons based on timer running state
+                if (template.isRunning) {
+                    timeIncrementContainer.visibility = android.view.View.VISIBLE
+                } else {
+                    timeIncrementContainer.visibility = android.view.View.GONE
+                }
+
+                // Set time increment button listeners
+                btnAdd1Min.setOnClickListener { onAddTime(template, 60) } // +1분
+                btnAdd5Min.setOnClickListener { onAddTime(template, 300) } // +5분
+                btnAdd10Min.setOnClickListener { onAddTime(template, 600) } // +10분
+                btnAdd15Min.setOnClickListener { onAddTime(template, 900) } // +15분
+                btnAdd30Min.setOnClickListener { onAddTime(template, 1800) } // +30분
+                btnAdd1Hour.setOnClickListener { onAddTime(template, 3600) } // +1시간
+
                 // Set refresh button click listener
                 btnRefreshTimer.setOnClickListener {
                     if (template.isRunning) {
                         onResetTimer(template)
                     }
                 }
-                
+
                 // Set click listeners
-                root.setOnClickListener { 
+                root.setOnClickListener {
                     onItemClick(template)
                 }
-                
+
                 // Set long click listener for edit
                 root.setOnLongClickListener {
                     onEditClick(template)
                     true // Consume the long click event
                 }
-                
+
                 btnDeleteTemplate.setOnClickListener { onDeleteClick(template) }
             }
         }

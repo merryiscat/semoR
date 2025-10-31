@@ -359,13 +359,41 @@ class CustomTimerViewModel @Inject constructor(
             putExtra(TimerForegroundService.EXTRA_TIMER_ID, templateId)
         }
         getApplication<Application>().startService(intent)
-        
+
         viewModelScope.launch {
             try {
                 timerRepository.updateTimerState(templateId, isRunning = false, remainingSeconds = 0)
                 refreshTemplates()
             } catch (e: Exception) {
                 _error.value = "타이머 리셋에 실패했습니다: ${e.message}"
+            }
+        }
+    }
+
+    /**
+     * 타이머에 시간을 추가합니다 (실행 중일 때만 작동)
+     * @param templateId 타이머 템플릿 ID
+     * @param secondsToAdd 추가할 시간 (초)
+     */
+    fun addTime(templateId: Int, secondsToAdd: Int) {
+        viewModelScope.launch {
+            try {
+                val template = timerRepository.getTemplateById(templateId)
+                if (template != null && template.isRunning) {
+                    // TimerForegroundService에 시간 추가 명령 전송
+                    val intent = Intent(getApplication(), TimerForegroundService::class.java).apply {
+                        action = TimerForegroundService.ACTION_ADD_TIME
+                        putExtra(TimerForegroundService.EXTRA_TIMER_ID, templateId)
+                        putExtra(TimerForegroundService.EXTRA_ADD_SECONDS, secondsToAdd)
+                    }
+                    getApplication<Application>().startService(intent)
+
+                    android.util.Log.d("CustomTimerViewModel", "⏱️ Added $secondsToAdd seconds to timer ID $templateId")
+                } else {
+                    _error.value = "타이머가 실행 중이 아닙니다"
+                }
+            } catch (e: Exception) {
+                _error.value = "시간 추가에 실패했습니다: ${e.message}"
             }
         }
     }

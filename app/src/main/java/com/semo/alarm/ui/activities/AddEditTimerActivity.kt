@@ -130,6 +130,24 @@ class AddEditTimerActivity : AppCompatActivity() {
         binding.btnSaveTimer.setOnClickListener {
             saveTimer()
         }
+
+        // 빠른 시간 설정 버튼들
+        binding.btnSet1Min.setOnClickListener { setQuickTime(0, 1, 0) } // 1분
+        binding.btnSet5Min.setOnClickListener { setQuickTime(0, 5, 0) } // 5분
+        binding.btnSet10Min.setOnClickListener { setQuickTime(0, 10, 0) } // 10분
+        binding.btnSet15Min.setOnClickListener { setQuickTime(0, 15, 0) } // 15분
+        binding.btnSet30Min.setOnClickListener { setQuickTime(0, 30, 0) } // 30분
+        binding.btnSet1Hour.setOnClickListener { setQuickTime(1, 0, 0) } // 1시간
+    }
+
+    /**
+     * 빠른 시간 설정
+     */
+    private fun setQuickTime(hours: Int, minutes: Int, seconds: Int) {
+        binding.hourPicker.value = hours
+        binding.minutePicker.value = minutes
+        binding.secondPicker.value = seconds
+        updateTotalDuration()
     }
     
     private fun setupSoundAndVibrationSettings() {

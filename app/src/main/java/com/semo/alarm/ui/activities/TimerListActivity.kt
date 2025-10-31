@@ -93,9 +93,10 @@ class TimerListActivity : AppCompatActivity() {
             onItemClick = { template -> onTemplateClicked(template) },
             onDeleteClick = { template -> onDeleteTemplate(template) },
             onResetTimer = { template -> onResetTimer(template) },
-            onEditClick = { template -> onEditTemplate(template) }
+            onEditClick = { template -> onEditTemplate(template) },
+            onAddTime = { template, seconds -> onAddTime(template, seconds) }
         )
-        
+
         binding.recyclerViewTemplates.apply {
             layoutManager = LinearLayoutManager(this@TimerListActivity)
             adapter = this@TimerListActivity.adapter
@@ -177,10 +178,27 @@ class TimerListActivity : AppCompatActivity() {
         intent.putExtra("templateId", template.id)
         intent.putExtra("template", template)
         startActivity(intent)
-        
+
         Toast.makeText(this, "${template.name} 편집", Toast.LENGTH_SHORT).show()
     }
-    
+
+    /**
+     * 타이머에 시간 추가
+     */
+    private fun onAddTime(template: TimerTemplate, secondsToAdd: Int) {
+        viewModel.addTime(template.id, secondsToAdd)
+
+        val minutes = secondsToAdd / 60
+        val timeText = if (minutes >= 60) {
+            "${minutes / 60}시간"
+        } else {
+            "${minutes}분"
+        }
+
+        Toast.makeText(this, "${template.name}에 $timeText 추가", Toast.LENGTH_SHORT).show()
+        Log.d("TimerListActivity", "⏱️ Added $secondsToAdd seconds to '${template.name}'")
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         // Unregister broadcast receiver
