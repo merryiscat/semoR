@@ -203,39 +203,50 @@ class SettingsFragment : Fragment() {
     }
     
     private fun openBatteryOptimizationSettingsForced() {
+        android.util.Log.d("SettingsFragment", "🔋 Opening battery optimization settings...")
+
         try {
-            // 1차: 직접 배터리 최적화 요청
+            // 1차: 직접 배터리 최적화 팝업 요청 (가장 편한 방법)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                     data = Uri.parse("package:${requireContext().packageName}")
                 }
                 startActivity(intent)
+                android.util.Log.d("SettingsFragment", "✅ Direct battery optimization popup launched")
+                Toast.makeText(requireContext(), "팝업에서 '허용' 버튼을 눌러주세요", Toast.LENGTH_SHORT).show()
                 return
             }
         } catch (e: Exception) {
-            android.util.Log.e("SettingsFragment", "Direct battery optimization failed", e)
+            android.util.Log.e("SettingsFragment", "❌ Direct battery optimization failed: ${e.message}", e)
         }
-        
+
         try {
-            // 2차: 배터리 최적화 목록 화면
-            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            startActivity(intent)
-            Toast.makeText(requireContext(), "목록에서 '세모알'을 찾아 '최적화 안함'으로 설정해주세요", Toast.LENGTH_LONG).show()
-            return
-        } catch (e: Exception) {
-            android.util.Log.e("SettingsFragment", "Battery optimization list failed", e)
-        }
-        
-        try {
-            // 3차: 앱 정보 화면
+            // 2차: 앱 정보 화면 (배터리 설정에 2클릭 필요)
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.parse("package:${requireContext().packageName}")
             }
             startActivity(intent)
-            Toast.makeText(requireContext(), "배터리 항목에서 '제한 없음'으로 설정해주세요", Toast.LENGTH_LONG).show()
+            android.util.Log.d("SettingsFragment", "✅ App details settings launched")
+            Toast.makeText(requireContext(), "배터리 → 제한 없음으로 설정해주세요", Toast.LENGTH_LONG).show()
+            return
         } catch (e: Exception) {
-            showManualBatteryOptimizationGuide()
+            android.util.Log.e("SettingsFragment", "❌ App details settings failed: ${e.message}", e)
         }
+
+        try {
+            // 3차: 배터리 최적화 목록 화면 (앱을 찾아야 함)
+            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            startActivity(intent)
+            android.util.Log.d("SettingsFragment", "✅ Battery optimization list launched")
+            Toast.makeText(requireContext(), "목록에서 '세모알'을 찾아 '최적화 안함'으로 설정해주세요", Toast.LENGTH_LONG).show()
+            return
+        } catch (e: Exception) {
+            android.util.Log.e("SettingsFragment", "❌ Battery optimization list failed: ${e.message}", e)
+        }
+
+        // 모든 시도 실패 시 수동 안내
+        android.util.Log.w("SettingsFragment", "⚠️ All automatic methods failed, showing manual guide")
+        showManualBatteryOptimizationGuide()
     }
     
     private fun showManualBatteryOptimizationGuide() {

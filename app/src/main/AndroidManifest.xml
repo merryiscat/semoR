@@ -17,7 +17,10 @@
     
     <!-- 풀스크린 인텐트 권한 (Android 14+) -->
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    
+
+    <!-- 🔋 배터리 최적화 제외 요청 권한 (알람 안정성을 위해 필수) -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- 🎙️ 코골이 녹음 권한 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
