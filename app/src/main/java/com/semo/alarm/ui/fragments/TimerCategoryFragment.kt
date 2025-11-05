@@ -102,12 +102,13 @@ class TimerCategoryFragment : Fragment() {
         }
     }
     
-    private fun setupRecyclerView() {
-        adapter = TimerTemplateAdapter(
-            onItemClick = { template -> onTemplateClicked(template) },
-            onDeleteClick = { template -> onDeleteTemplate(template) },
-            onResetTimer = { template -> onResetTimer(template) },
-            onEditClick = { template -> onEditTemplate(template) }
+  private fun setupRecyclerView() {
+      adapter = TimerTemplateAdapter(
+          onItemClick = { template -> onTemplateClicked(template) },
+          onDeleteClick = { template -> onDeleteTemplate(template) },
+          onResetTimer = { template -> onResetTimer(template) },
+          onEditClick = { template -> onEditTemplate(template) },
+          onAddTime = { template, seconds -> onAddTime(template, seconds) }
         )
         
         binding.recyclerViewTemplates.apply {
@@ -169,6 +170,13 @@ class TimerCategoryFragment : Fragment() {
         viewModel.resetTimer(template.id)
         Toast.makeText(context, "${template.name} 타이머 리셋", Toast.LENGTH_SHORT).show()
     }
+
+  private fun onAddTime(template: TimerTemplate, seconds: Int) {
+      // Add time to running timer
+      viewModel.addTime(template.id, seconds)
+      val minutes = seconds / 60
+      Toast.makeText(context, "${template.name} 타이머에 ${minutes}분 추가", Toast.LENGTH_SHORT).show()
+  }
     
     private fun onDeleteTemplate(template: TimerTemplate) {
         AlertDialog.Builder(requireContext())

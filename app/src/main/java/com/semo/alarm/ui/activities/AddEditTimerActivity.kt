@@ -131,24 +131,54 @@ class AddEditTimerActivity : AppCompatActivity() {
             saveTimer()
         }
 
-        // 빠른 시간 설정 버튼들
-        binding.btnSet1Min.setOnClickListener { setQuickTime(0, 1, 0) } // 1분
-        binding.btnSet5Min.setOnClickListener { setQuickTime(0, 5, 0) } // 5분
-        binding.btnSet10Min.setOnClickListener { setQuickTime(0, 10, 0) } // 10분
-        binding.btnSet15Min.setOnClickListener { setQuickTime(0, 15, 0) } // 15분
-        binding.btnSet30Min.setOnClickListener { setQuickTime(0, 30, 0) } // 30분
-        binding.btnSet1Hour.setOnClickListener { setQuickTime(1, 0, 0) } // 1시간
+        // 빠른 시간 추가 버튼들 (누적 방식)
+        binding.btnSet1Min.setOnClickListener { addQuickTime(0, 1, 0) } // +1분
+        binding.btnSet5Min.setOnClickListener { addQuickTime(0, 5, 0) } // +5분
+        binding.btnSet10Min.setOnClickListener { addQuickTime(0, 10, 0) } // +10분
+        binding.btnSet15Min.setOnClickListener { addQuickTime(0, 15, 0) } // +15분
+        binding.btnSet30Min.setOnClickListener { addQuickTime(0, 30, 0) } // +30분
     }
 
-    /**
-     * 빠른 시간 설정
-     */
-    private fun setQuickTime(hours: Int, minutes: Int, seconds: Int) {
-        binding.hourPicker.value = hours
-        binding.minutePicker.value = minutes
-        binding.secondPicker.value = seconds
-        updateTotalDuration()
-    }
+ /**
+   * 빠른 시간 추가 (누적 방식)
+   * Accumulates time instead of replacing it
+   */
+  private fun addQuickTime(hoursToAdd: Int, minutesToAdd: Int, secondsToAdd: Int) {
+      // 1️⃣ 현재 값 읽기
+      val currentHours = binding.hourPicker.value
+      val currentMinutes = binding.minutePicker.value
+      val currentSeconds = binding.secondPicker.value
+
+      // 2️⃣ 추가할 시간 더하기
+      var newSeconds = currentSeconds + secondsToAdd
+      var newMinutes = currentMinutes + minutesToAdd
+      var newHours = currentHours + hoursToAdd
+
+      // 3️⃣ Overflow 처리 (초→분→시간)
+      if (newSeconds >= 60) {
+          newMinutes += newSeconds / 60
+          newSeconds %= 60
+      }
+
+      if (newMinutes >= 60) {
+          newHours += newMinutes / 60
+          newMinutes %= 60
+      }
+
+      // 4️⃣ 최대값 제한 (23시간 59분 59초)
+      if (newHours > 23) {
+          newHours = 23
+          newMinutes = 59
+          newSeconds = 59
+      }
+
+      // 5️⃣ NumberPicker 업데이트
+      binding.hourPicker.value = newHours
+      binding.minutePicker.value = newMinutes
+      binding.secondPicker.value = newSeconds
+
+      updateTotalDuration()
+  }
     
     private fun setupSoundAndVibrationSettings() {
         // 초기 SeekBar 색상 설정 (기본값 70%)
