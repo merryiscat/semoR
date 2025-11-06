@@ -11,13 +11,13 @@ import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
+import android.webkit.WebView
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -68,13 +68,8 @@ class SettingsFragment : Fragment() {
     
     private fun setupUI() {
         // 앱 버전 표시
-        try {
-            val packageInfo: PackageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
-            binding.textAppVersion.text = "v${packageInfo.versionName}"
-        } catch (e: PackageManager.NameNotFoundException) {
-            binding.textAppVersion.text = "v1.0.0"
-        }
-        
+        binding.textAppVersion.text = "ver.0.90"
+
         // UI 설정 완료
     }
     
@@ -87,11 +82,6 @@ class SettingsFragment : Fragment() {
         // 알림 권한 설정
         binding.layoutNotificationPermission.setOnClickListener {
             openNotificationSettings()
-        }
-
-        // 배터리 최적화 제외 설정
-        binding.layoutBatteryOptimization.setOnClickListener {
-            openBatteryOptimizationSettings()
         }
 
         // 개발자 정보
@@ -121,22 +111,6 @@ class SettingsFragment : Fragment() {
                 if (notificationEnabled) R.color.green else R.color.red
             )
         )
-        
-        // 배터리 최적화 상태
-        val powerManager = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
-        val batteryOptimized = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            !powerManager.isIgnoringBatteryOptimizations(requireContext().packageName)
-        } else {
-            false
-        }
-        
-        binding.textBatteryStatus.text = if (batteryOptimized) "설정 필요" else "제외됨"
-        binding.textBatteryStatus.setTextColor(
-            ContextCompat.getColor(
-                requireContext(),
-                if (batteryOptimized) R.color.orange else R.color.green
-            )
-        )
     }
     
     
@@ -154,153 +128,81 @@ class SettingsFragment : Fragment() {
                 }
             }
         }
-        
+
         try {
             startActivity(intent)
         } catch (e: Exception) {
             Toast.makeText(requireContext(), "설정 화면을 열 수 없습니다", Toast.LENGTH_SHORT).show()
         }
     }
-    
-    private fun openBatteryOptimizationSettings() {
-        // 현재 배터리 최적화 상태 확인
-        val powerManager = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
-        val isIgnoringBatteryOptimizations = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            powerManager.isIgnoringBatteryOptimizations(requireContext().packageName)
-        } else {
-            true
-        }
-        
-        if (isIgnoringBatteryOptimizations) {
-            // 이미 설정되어 있는 경우
-            AlertDialog.Builder(requireContext())
-                .setTitle("✅ 배터리 최적화 설정 완료")
-                .setMessage("세모알이 이미 배터리 최적화에서 제외되어 있습니다.\n알람과 수면 추적이 안정적으로 동작합니다.")
-                .setPositiveButton("확인") { _, _ -> }
-                .setNeutralButton("다시 설정") { _, _ ->
-                    openBatteryOptimizationSettingsForced()
-                }
-                .show()
-        } else {
-            // 설정이 필요한 경우
-            AlertDialog.Builder(requireContext())
-                .setTitle("⚡ 알람 안정성 개선")
-                .setMessage("""
-                    수면 추적과 알람의 안정적 동작을 위해 배터리 최적화에서 세모알을 제외해주세요.
-                    
-                    ✅ 알람이 정확한 시간에 울립니다
-                    ✅ 수면 추적이 중단되지 않습니다  
-                    ✅ 코골이 감지가 정상 작동합니다
-                    
-                    ⭐ 설정 후 이 화면으로 돌아오면 상태가 자동으로 업데이트됩니다.
-                """.trimIndent())
-                .setPositiveButton("설정하러 가기") { _, _ ->
-                    openBatteryOptimizationSettingsForced()
-                }
-                .setNegativeButton("나중에") { _, _ -> }
-                .show()
-        }
-    }
-    
-    private fun openBatteryOptimizationSettingsForced() {
-        android.util.Log.d("SettingsFragment", "🔋 Opening battery optimization settings...")
 
-        try {
-            // 1차: 직접 배터리 최적화 팝업 요청 (가장 편한 방법)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:${requireContext().packageName}")
-                }
-                startActivity(intent)
-                android.util.Log.d("SettingsFragment", "✅ Direct battery optimization popup launched")
-                Toast.makeText(requireContext(), "팝업에서 '허용' 버튼을 눌러주세요", Toast.LENGTH_SHORT).show()
-                return
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("SettingsFragment", "❌ Direct battery optimization failed: ${e.message}", e)
-        }
 
-        try {
-            // 2차: 앱 정보 화면 (배터리 설정에 2클릭 필요)
-            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                data = Uri.parse("package:${requireContext().packageName}")
-            }
-            startActivity(intent)
-            android.util.Log.d("SettingsFragment", "✅ App details settings launched")
-            Toast.makeText(requireContext(), "배터리 → 제한 없음으로 설정해주세요", Toast.LENGTH_LONG).show()
-            return
-        } catch (e: Exception) {
-            android.util.Log.e("SettingsFragment", "❌ App details settings failed: ${e.message}", e)
-        }
-
-        try {
-            // 3차: 배터리 최적화 목록 화면 (앱을 찾아야 함)
-            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            startActivity(intent)
-            android.util.Log.d("SettingsFragment", "✅ Battery optimization list launched")
-            Toast.makeText(requireContext(), "목록에서 '세모알'을 찾아 '최적화 안함'으로 설정해주세요", Toast.LENGTH_LONG).show()
-            return
-        } catch (e: Exception) {
-            android.util.Log.e("SettingsFragment", "❌ Battery optimization list failed: ${e.message}", e)
-        }
-
-        // 모든 시도 실패 시 수동 안내
-        android.util.Log.w("SettingsFragment", "⚠️ All automatic methods failed, showing manual guide")
-        showManualBatteryOptimizationGuide()
-    }
-    
-    private fun showManualBatteryOptimizationGuide() {
-        AlertDialog.Builder(requireContext())
-            .setTitle("⚡ 배터리 최적화 설정 안내")
-            .setMessage("""
-                알람의 안정적 동작을 위해 다음 단계를 따라주세요:
-                
-                📱 **일반적인 경우:**
-                1️⃣ 설정 → 배터리 (또는 전원 관리)
-                2️⃣ 앱 전원 관리 (또는 배터리 최적화)
-                3️⃣ 세모알 앱 찾기
-                4️⃣ '제한 없음' 또는 '최적화 안함' 선택
-                
-                📱 **삼성 갤럭시:**
-                설정 → 디바이스 케어 → 배터리 → 앱 전원 관리 → 세모알 → 제한 없음
-                
-                📱 **샤오미:**
-                설정 → 앱 → 권한 → 자동실행 → 세모알 활성화
-                
-                ⚠️ 이 설정을 하지 않으면 수면 추적이 정상 작동하지 않을 수 있습니다.
-            """.trimIndent())
-            .setPositiveButton("일반 설정으로 이동") { _, _ ->
-                try {
-                    val intent = Intent(Settings.ACTION_SETTINGS)
-                    startActivity(intent)
-                } catch (e: Exception) {
-                    Toast.makeText(requireContext(), "설정 화면을 열 수 없습니다", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .setNegativeButton("나중에") { _, _ -> }
-            .show()
-    }
-    
-    
-    
-    
     private fun showAppInfoDialog() {
+        val appInfo = """
+세상의 모든 알람, 세모알
+
+안녕하세요. 세모알은 세상의 모든 알람 관련 기능들을 통합하여 하나의 앱으로 사용할 수 있도록 만드는 것을 목표로 하고 있습니다.
+
+【현재 버전: ver.0.90 (베타)】
+현재 알람/타이머/수면시간 체크/알람 리포트 기능을 제공하고 있습니다.
+
+■ 알람 탭
+• 기본적인 알람 설정 기능
+• 요일별 알람 설정
+• 1회~3회 반복 후 종료되는 알람 기능
+
+■ 타이머 탭
+• 기본적인 타이머 설정 기능
+• 타이머 별 카테고리 설정 기능
+  (카테고리는 출근버스, 요리 등의 카테고리를 만들어서 자주쓰는 타이머들을 한곳에서 모아 사용하는 걸 기획했습니다.)
+
+■ 수면 탭
+• 수면 시간 체크 기능
+  (주간/야간을 선택하여 핸드폰을 마지막으로 사용한 시간~기상알람 시간을 체크하는 로직으로 기획되어 있습니다.)
+
+■ 리포트 탭
+• 일일 리포트: 단순 알림/타이머 사용 리스트 제공
+• 주간 리포트: 각 주의 평균 수면시간, 알림앱 지연 시간 등 제공
+
+■ 설정 탭
+• 앱 정보, 알람 설정 등 제공
+
+【ver.1.00 목표】
+정식 서비스 ver.1.00에 들어가기 앞서 구현된 위 서비스들이 버그 없이 원활하게 동작하는 것을 목표로 삼고 있습니다.
+
+【정식 서비스 이후 확장 목표】
+첫번째 기능 확장:
+• 인터벌 타이머: 운동할 때 사용하기 용이한 2분-1분-2분-1분 등 연속되는 타이머 기능
+• 캐릭터 추가: 현재 알람 캐릭터 메리 외 장군이를 추가할 예정
+
+【피드백】
+사용에 있어 불편한 점, 버그리포트, 추가되었으면 하는 아이디어들은
+merryiscat20@gmail.com 으로 메일 보내주세요.
+        """.trimIndent()
+
         AlertDialog.Builder(requireContext())
-            .setTitle("세모알 상세 정보")
-            .setMessage("세모알은 최종적으로 세상의 모든 알람 기능들을 통합한 통합 솔루션을 지향하고 있습니다.\n\n" +
-                    "현재 beta 1.0 버전에서는 다음을 목표로 하고 있습니다:\n" +
-                    "• 모든 버그 수정 및 안정성 확보\n" +
-                    "• 성능 최적화\n" +
-                    "• 사용자 경험 개선\n\n" +
-                    "주요 기능:\n" +
-                    "• 혁신적인 알람 시스템\n" +
-                    "• 커스텀 타이머\n" +
-                    "• 수면 추적\n" +
-                    "• 통계 및 리포트\n\n" +
-                    "버전: ${binding.textAppVersion.text}\n" +
-                    "개발자: MerryisCat")
+            .setTitle("세모알 정보")
+            .setMessage(appInfo)
             .setPositiveButton("확인", null)
+            .setNeutralButton("메일 보내기") { _, _ ->
+                sendFeedbackEmail()
+            }
             .show()
+    }
+
+    private fun sendFeedbackEmail() {
+        val emailIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf("merryiscat20@gmail.com"))
+            putExtra(Intent.EXTRA_SUBJECT, "[세모알] 피드백")
+            putExtra(Intent.EXTRA_TEXT, "앱 버전: ${binding.textAppVersion.text}\n\n피드백 내용:\n")
+        }
+
+        try {
+            startActivity(Intent.createChooser(emailIntent, "이메일 앱 선택"))
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "이메일 앱을 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun showDeveloperInfo() {
@@ -314,6 +216,9 @@ class SettingsFragment : Fragment() {
                     "문의사항이나 버그 신고는\n" +
                     "이메일로 연락주세요!")
             .setPositiveButton("확인", null)
+            .setNeutralButton("메일 보내기") { _, _ ->
+                sendFeedbackEmail()
+            }
             .show()
     }
     

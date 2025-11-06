@@ -132,24 +132,14 @@ class MainActivity : AppCompatActivity() {
         android.util.Log.d("MainActivity", "🔍 Current Permission Status:")
         android.util.Log.d("MainActivity", "  📱 Notification Permission: ${permissionManager.hasNotificationPermission()}")
         android.util.Log.d("MainActivity", "  ⏰ Exact Alarm Permission: ${permissionManager.hasExactAlarmPermission()}")
-        android.util.Log.d("MainActivity", "  🔋 Battery Optimization Ignored: ${permissionManager.isBatteryOptimizationIgnored()}")
         android.util.Log.d("MainActivity", "  🎙️ Record Audio Permission: ${permissionManager.hasRecordAudioPermission()}")
-        
-        if (!permissionManager.isBatteryOptimizationIgnored()) {
-            android.util.Log.w("MainActivity", "  ⚠️ Battery optimization is ENABLED - this may prevent alarms from working!")
-        }
     }
     
     override fun onResume() {
         super.onResume()
-        
-        // onResume에서 권한 상태 재확인 (배터리 최적화는 사용자가 언제든 변경할 수 있음)
+
+        // onResume에서 권한 상태 재확인
         logCurrentPermissionStatus()
-        
-        // 배터리 최적화가 활성화된 경우에만 조용히 알림
-        if (!permissionManager.isBatteryOptimizationIgnored()) {
-            android.util.Log.w("MainActivity", "⚠️ Battery optimization detected on resume - alarm reliability may be affected")
-        }
     }
     
     /**

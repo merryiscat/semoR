@@ -113,7 +113,9 @@
       "mcp__serena__list_memories",
       "mcp__serena__write_memory",
       "Bash(gradlew.bat build:*)",
-      "Bash(./gradlew.bat build:*)"
+      "Bash(./gradlew.bat build:*)",
+      "Bash(./gradlew.bat assembleDebug:*)",
+      "Bash(gradlew.bat assembleDebug:*)"
     ],
     "deny": [],
     "ask": []

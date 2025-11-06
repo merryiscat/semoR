@@ -24,73 +24,6 @@
             android:layout_marginBottom="16dp"
             style="@style/TextAppearance.Material3.HeadlineSmall" />
 
-        <!-- 앱 정보 카드 -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/layoutAppInfo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?android:attr/selectableItemBackground"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="앱 정보"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        style="@style/TextAppearance.Material3.TitleMedium" />
-
-                    <TextView
-                        android:id="@+id/textAppVersion"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="v1.0.0"
-                        android:textSize="16sp"
-                        android:textColor="#00D4FF"
-                        android:layout_marginEnd="8dp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_chevron_right_24"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="세모알은 세상의 모든 알람 기능들을 통합한\n통합 솔루션을 지향하고 있습니다.\n\nbeta 버전에서는 버그 수정과 최적화에 집중하고 있습니다."
-                    android:textSize="14sp"
-                    android:lineHeight="20dp"
-                    android:textColor="#FFFFFF"
-                    style="@style/TextAppearance.Material3.BodyMedium" />
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-
         <!-- 알림 설정 카드 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
@@ -152,42 +85,6 @@
 
                 </LinearLayout>
 
-                <!-- 배터리 최적화 제외 -->
-                <LinearLayout
-                    android:id="@+id/layoutBatteryOptimization"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:padding="8dp"
-                    android:background="?attr/selectableItemBackground">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="배터리 최적화 제외"
-                        android:textSize="16sp"
-                        style="@style/TextAppearance.Material3.BodyMedium" />
-
-                    <TextView
-                        android:id="@+id/textBatteryStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="설정 필요"
-                        android:textSize="14sp"
-                        android:textColor="#F59E0B"
-                        android:layout_marginEnd="8dp"
-                        style="@style/TextAppearance.Material3.BodySmall" />
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_chevron_right_24"
-                        app:tint="#6B7280" />
-
-                </LinearLayout>
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
@@ -215,6 +112,43 @@
                     android:textColor="@color/md_theme_onSurface"
                     android:layout_marginBottom="16dp"
                     style="@style/TextAppearance.Material3.TitleMedium" />
+
+                <!-- 앱 정보 -->
+                <LinearLayout
+                    android:id="@+id/layoutAppInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="앱 정보"
+                        android:textSize="16sp"
+                        style="@style/TextAppearance.Material3.BodyMedium" />
+
+                    <TextView
+                        android:id="@+id/textAppVersion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ver.0.90"
+                        android:textSize="14sp"
+                        android:textColor="#00D4FF"
+                        android:layout_marginEnd="8dp"
+                        style="@style/TextAppearance.Material3.BodySmall" />
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_chevron_right_24"
+                        app:tint="#6B7280" />
+
+                </LinearLayout>
 
                 <!-- 개발자 정보 -->
                 <LinearLayout
