@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="커스텀 알람"
+                android:text="타이머"
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="@color/md_theme_onBackground" />

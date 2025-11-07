@@ -38,14 +38,34 @@ class CustomTimerFragment : Fragment() {
 
     private val timerUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
+            android.util.Log.d("CustomTimerFragment", "📡 BroadcastReceiver.onReceive: action=${intent?.action}")
+
             when (intent?.action) {
-                "TIMER_STATE_UPDATE" -> {
-                    val timerId = intent.getIntExtra("timerId", -1)
-                    val isRunning = intent.getBooleanExtra("isRunning", false)
-                    val remainingSeconds = intent.getIntExtra("remainingSeconds", 0)
+                com.semo.alarm.services.TimerForegroundService.BROADCAST_TIMER_UPDATE -> {
+                    val timerId = intent.getIntExtra(com.semo.alarm.services.TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    val isRunning = intent.getBooleanExtra(com.semo.alarm.services.TimerForegroundService.EXTRA_IS_RUNNING, false)
+                    val remainingSeconds = intent.getIntExtra(com.semo.alarm.services.TimerForegroundService.EXTRA_REMAINING_SECONDS, 0)
+
+                    android.util.Log.d("CustomTimerFragment", "📡 BROADCAST_TIMER_UPDATE 수신: timerId=$timerId, isRunning=$isRunning, remainingSeconds=$remainingSeconds")
 
                     if (timerId != -1) {
                         updateTimerInAdapter(timerId, isRunning, remainingSeconds)
+                    } else {
+                        android.util.Log.w("CustomTimerFragment", "❌ Invalid timerId: $timerId")
+                    }
+                }
+                com.semo.alarm.services.TimerForegroundService.BROADCAST_TIMER_COMPLETE -> {
+                    val timerId = intent.getIntExtra(com.semo.alarm.services.TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    android.util.Log.d("CustomTimerFragment", "📡 BROADCAST_TIMER_COMPLETE 수신: timerId=$timerId")
+                    if (timerId != -1) {
+                        updateTimerInAdapter(timerId, isRunning = false, remainingSeconds = 0)
+                    }
+                }
+                com.semo.alarm.services.TimerForegroundService.BROADCAST_TIMER_STOPPED -> {
+                    val timerId = intent.getIntExtra(com.semo.alarm.services.TimerForegroundService.EXTRA_TIMER_ID, -1)
+                    android.util.Log.d("CustomTimerFragment", "📡 BROADCAST_TIMER_STOPPED 수신: timerId=$timerId")
+                    if (timerId != -1) {
+                        updateTimerInAdapter(timerId, isRunning = false, remainingSeconds = 0)
                     }
                 }
             }
@@ -63,30 +83,38 @@ class CustomTimerFragment : Fragment() {
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
+
         setupRecyclerView()
         setupAddCategoryButton()
         setupAddTimerButton()
         observeViewModel()
-        
+
+        // Register broadcast receiver for timer updates (Fragment 생성 시 등록)
+        val filter = IntentFilter().apply {
+            addAction(com.semo.alarm.services.TimerForegroundService.BROADCAST_TIMER_UPDATE)
+            addAction(com.semo.alarm.services.TimerForegroundService.BROADCAST_TIMER_COMPLETE)
+            addAction(com.semo.alarm.services.TimerForegroundService.BROADCAST_TIMER_STOPPED)
+        }
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(timerUpdateReceiver, filter)
+
+        android.util.Log.d("CustomTimerFragment", "✅ BroadcastReceiver 등록 완료 (onViewCreated)")
+
         // Load categories on start
         viewModel.loadAllCategories()
     }
-    
+
     override fun onResume() {
         super.onResume()
         // 카테고리 추가 후 돌아왔을 때 목록 새로고침
         viewModel.loadAllCategories()
 
-        // Register broadcast receiver for timer updates
-        val filter = IntentFilter("TIMER_STATE_UPDATE")
-        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(timerUpdateReceiver, filter)
+        android.util.Log.d("CustomTimerFragment", "👁️ Fragment resumed (visible)")
     }
 
     override fun onPause() {
         super.onPause()
-        // Unregister broadcast receiver
-        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(timerUpdateReceiver)
+
+        android.util.Log.d("CustomTimerFragment", "💤 Fragment paused (not visible)")
     }
     
     private fun setupRecyclerView() {
@@ -219,12 +247,16 @@ class CustomTimerFragment : Fragment() {
     }
 
     private fun onTimerClicked(timer: TimerTemplate) {
+        android.util.Log.d("CustomTimerFragment", "🎯 Timer clicked: ID=${timer.id}, name='${timer.name}', isRunning=${timer.isRunning}, categoryId=${timer.categoryId}")
+
         if (timer.isRunning) {
             // Pause timer
+            android.util.Log.d("CustomTimerFragment", "⏸️ Pausing timer: ID=${timer.id}")
             viewModel.pauseTimer(timer.id)
             Toast.makeText(context, "${timer.name} 타이머 일시정지", Toast.LENGTH_SHORT).show()
         } else {
             // Start timer (resume from where it was paused or start fresh)
+            android.util.Log.d("CustomTimerFragment", "▶️ Starting timer: ID=${timer.id}")
             viewModel.startTimer(timer.id)
             Toast.makeText(context, "${timer.name} 타이머 시작!", Toast.LENGTH_SHORT).show()
         }
@@ -254,17 +286,53 @@ class CustomTimerFragment : Fragment() {
     }
 
     private fun updateTimerInAdapter(timerId: Int, isRunning: Boolean, remainingSeconds: Int) {
-        // Update both categories and independent templates lists
-        viewModel.categories.value?.let { categories ->
-            updateMixedList(categories)
+        android.util.Log.d("CustomTimerFragment", "🔔 updateTimerInAdapter 호출: timerId=$timerId, isRunning=$isRunning, remainingSeconds=$remainingSeconds")
+
+        // 현재 어댑터의 리스트에서 해당 타이머를 찾아서 직접 업데이트 (DB 재로드 없이 빠른 UI 업데이트)
+        val currentList = mixedAdapter.currentList.toMutableList()
+
+        android.util.Log.d("CustomTimerFragment", "📋 현재 리스트 크기: ${currentList.size}")
+        currentList.forEachIndexed { idx, item ->
+            when (item) {
+                is MixedTimerItem.CategoryItem -> {
+                    android.util.Log.d("CustomTimerFragment", "  [$idx] 카테고리: ${item.category.name}")
+                }
+                is MixedTimerItem.IndependentTimerItem -> {
+                    android.util.Log.d("CustomTimerFragment", "  [$idx] 독립 타이머: ID=${item.template.id}, name='${item.template.name}', isRunning=${item.template.isRunning}, remaining=${item.template.remainingSeconds}")
+                }
+            }
         }
 
-        // Also refresh independent templates
-        viewModel.loadIndependentTemplates()
+        val index = currentList.indexOfFirst {
+            it is MixedTimerItem.IndependentTimerItem && it.template.id == timerId
+        }
+
+        if (index != -1) {
+            val item = currentList[index]
+            if (item is MixedTimerItem.IndependentTimerItem) {
+                val updatedTemplate = item.template.copy(
+                    isRunning = isRunning,
+                    remainingSeconds = remainingSeconds
+                )
+                currentList[index] = MixedTimerItem.IndependentTimerItem(updatedTemplate)
+
+                // submitList는 새 리스트 객체를 요구하므로 toList()로 복사
+                mixedAdapter.submitList(currentList.toList())
+
+                android.util.Log.d("CustomTimerFragment", "✅ 독립 타이머 UI 업데이트 완료: '${updatedTemplate.name}' ${remainingSeconds}초 (index=$index)")
+            }
+        } else {
+            android.util.Log.w("CustomTimerFragment", "❌ Timer ID $timerId not found in adapter list")
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+
+        // Unregister broadcast receiver (Fragment 파괴 시 해제)
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(timerUpdateReceiver)
+        android.util.Log.d("CustomTimerFragment", "🔴 BroadcastReceiver 등록 해제 (onDestroyView)")
+
         _binding = null
     }
 }

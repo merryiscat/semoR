@@ -14,8 +14,7 @@ class TimerTemplateAdapter(
     private val onItemClick: (TimerTemplate) -> Unit,
     private val onDeleteClick: (TimerTemplate) -> Unit,
     private val onResetTimer: (TimerTemplate) -> Unit,
-    private val onEditClick: (TimerTemplate) -> Unit,
-    private val onAddTime: (TimerTemplate, Int) -> Unit
+    private val onEditClick: (TimerTemplate) -> Unit
 ) : ListAdapter<TimerTemplate, TimerTemplateAdapter.TimerTemplateViewHolder>(DiffCallback()) {
     
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TimerTemplateViewHolder {
@@ -24,7 +23,7 @@ class TimerTemplateAdapter(
             parent,
             false
         )
-        return TimerTemplateViewHolder(binding, onItemClick, onDeleteClick, onResetTimer, onEditClick, onAddTime)
+        return TimerTemplateViewHolder(binding, onItemClick, onDeleteClick, onResetTimer, onEditClick)
     }
     
     override fun onBindViewHolder(holder: TimerTemplateViewHolder, position: Int) {
@@ -36,8 +35,7 @@ class TimerTemplateAdapter(
         private val onItemClick: (TimerTemplate) -> Unit,
         private val onDeleteClick: (TimerTemplate) -> Unit,
         private val onResetTimer: (TimerTemplate) -> Unit,
-        private val onEditClick: (TimerTemplate) -> Unit,
-        private val onAddTime: (TimerTemplate, Int) -> Unit
+        private val onEditClick: (TimerTemplate) -> Unit
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(template: TimerTemplate) {
@@ -78,21 +76,6 @@ class TimerTemplateAdapter(
                     btnRefreshTimer.isEnabled = false
                     btnRefreshTimer.alpha = 0.8f
                 }
-
-                // Show/hide time increment buttons based on timer running state
-                if (template.isRunning) {
-                    timeIncrementContainer.visibility = android.view.View.VISIBLE
-                } else {
-                    timeIncrementContainer.visibility = android.view.View.GONE
-                }
-
-                // Set time increment button listeners
-                btnAdd1Min.setOnClickListener { onAddTime(template, 60) } // +1분
-                btnAdd5Min.setOnClickListener { onAddTime(template, 300) } // +5분
-                btnAdd10Min.setOnClickListener { onAddTime(template, 600) } // +10분
-                btnAdd15Min.setOnClickListener { onAddTime(template, 900) } // +15분
-                btnAdd30Min.setOnClickListener { onAddTime(template, 1800) } // +30분
-                btnAdd1Hour.setOnClickListener { onAddTime(template, 3600) } // +1시간
 
                 // Set refresh button click listener
                 btnRefreshTimer.setOnClickListener {
