@@ -25,6 +25,7 @@ import javax.inject.Inject
 /**
  * 타이머 백그라운드 실행을 위한 Foreground Service
  * 앱이 종료되어도 타이머가 계속 실행되도록 함
+ * 여러 타이머를 동시에 관리하는 다중 타이머 시스템
  */
 @AndroidEntryPoint
 class TimerForegroundService : Service() {
@@ -36,7 +37,7 @@ class TimerForegroundService : Service() {
     
     companion object {
         private const val TAG = "TimerForegroundService"
-        private const val NOTIFICATION_ID = 2000
+        private const val NOTIFICATION_ID_BASE = 2000 // 기본 ID
         private const val CHANNEL_ID = "timer_foreground_channel"
         
         // Service actions
@@ -60,13 +61,30 @@ class TimerForegroundService : Service() {
         // Broadcast extras
         const val EXTRA_REMAINING_SECONDS = "remaining_seconds"
         const val EXTRA_IS_RUNNING = "is_running"
+        
+        /**
+         * 타이머 ID 기반 고유 Notification ID 생성
+         * 각 타이머마다 고유한 알림 ID를 사용하여 중첩 방지
+         */
+        fun getNotificationId(timerId: Int): Int = NOTIFICATION_ID_BASE + timerId
     }
     
-    private var countDownTimer: CountDownTimer? = null
-    private var timerName: String = "타이머"
-    private var timerId: Int = 0
-    private var remainingSeconds: Int = 0
-    private var isTimerRunning: Boolean = false
+    /**
+     * 타이머 정보를 담는 데이터 클래스
+     */
+    data class TimerInfo(
+        val timerId: Int,
+        val timerName: String,
+        var remainingSeconds: Int,
+        var isRunning: Boolean,
+        var countDownTimer: CountDownTimer? = null
+    )
+    
+    // 여러 타이머를 동시에 관리하는 Map (Key: timerId, Value: TimerInfo)
+    private val activeTimers = mutableMapOf<Int, TimerInfo>()
+
+    // 알림 업데이트 전용 타이머 (모든 타이머 알림을 동시에 업데이트)
+    private var notificationUpdateTimer: CountDownTimer? = null
     
     override fun onCreate() {
         super.onCreate()
@@ -75,34 +93,35 @@ class TimerForegroundService : Service() {
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand: action = ${intent?.action}")
+        val action = intent?.action
+        val timerId = intent?.getIntExtra(EXTRA_TIMER_ID, 0) ?: 0
         
-        when (intent?.action) {
+        Log.d(TAG, "onStartCommand: action = $action, timerId = $timerId")
+        
+        when (action) {
             ACTION_START_TIMER -> {
-                timerName = intent.getStringExtra(EXTRA_TIMER_NAME) ?: "타이머"
+                val timerName = intent.getStringExtra(EXTRA_TIMER_NAME) ?: "타이머"
                 val durationSeconds = intent.getIntExtra(EXTRA_TIMER_DURATION, 0)
-                timerId = intent.getIntExtra(EXTRA_TIMER_ID, 0)
 
-                Log.d(TAG, "Starting timer: $timerName for $durationSeconds seconds")
-                startTimer(durationSeconds)
+                Log.d(TAG, "🚀 Starting timer: ID=$timerId, name=$timerName, duration=${durationSeconds}s")
+                startTimer(timerId, timerName, durationSeconds)
             }
             ACTION_PAUSE_TIMER -> {
-                Log.d(TAG, "Pausing timer: $timerName")
-                pauseTimer()
+                Log.d(TAG, "⏸️ Pausing timer: ID=$timerId")
+                pauseTimer(timerId)
             }
             ACTION_STOP_TIMER -> {
-                Log.d(TAG, "Stopping timer: $timerName")
-                stopTimer()
+                Log.d(TAG, "⏹️ Stopping timer: ID=$timerId")
+                stopTimer(timerId)
             }
             ACTION_TIMER_COMPLETE -> {
-                Log.d(TAG, "Timer completed: $timerName")
-                onTimerComplete()
+                Log.d(TAG, "✅ Timer completed: ID=$timerId")
+                onTimerComplete(timerId)
             }
             ACTION_ADD_TIME -> {
                 val addSeconds = intent.getIntExtra(EXTRA_ADD_SECONDS, 0)
-                timerId = intent.getIntExtra(EXTRA_TIMER_ID, 0)
-                Log.d(TAG, "Adding $addSeconds seconds to timer: $timerName")
-                addTime(addSeconds)
+                Log.d(TAG, "➕ Adding $addSeconds seconds to timer: ID=$timerId")
+                addTime(timerId, addSeconds)
             }
         }
         
@@ -128,190 +147,250 @@ class TimerForegroundService : Service() {
         }
     }
     
-    private fun startTimer(durationSeconds: Int) {
-        remainingSeconds = durationSeconds
-        isTimerRunning = true
+    private fun startTimer(timerId: Int, timerName: String, durationSeconds: Int) {
+        // 기존 타이머가 있으면 취소
+        activeTimers[timerId]?.countDownTimer?.cancel()
+        
+        val timerInfo = TimerInfo(
+            timerId = timerId,
+            timerName = timerName,
+            remainingSeconds = durationSeconds,
+            isRunning = true
+        )
         
         // DB에 타이머 실행 상태 업데이트
         serviceScope.launch {
             try {
-                timerRepository.updateTimerState(timerId, isRunning = true, remainingSeconds = remainingSeconds)
-                Log.d(TAG, "Timer started: ID=$timerId, durationSeconds=$durationSeconds")
+                timerRepository.updateTimerState(timerId, isRunning = true, remainingSeconds = durationSeconds)
+                Log.d(TAG, "✅ Timer state saved to DB: ID=$timerId")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to update timer state on start: ${e.message}")
+                Log.e(TAG, "❌ Failed to update timer state on start: ${e.message}")
             }
         }
         
-        // Foreground notification 시작
-        startForeground(NOTIFICATION_ID, createTimerNotification())
+        // Foreground notification 시작 (첫 번째 타이머만)
+        if (activeTimers.isEmpty()) {
+            // Foreground Service는 빈 알림으로 시작 (실제 타이머 알림은 별도로 표시)
+            startForeground(NOTIFICATION_ID_BASE, createSummaryNotification())
+        }
+
+        // 개별 타이머 알림 표시 (Foreground와 별개)
+        showIndividualNotification(timerInfo)
         
         // CountDownTimer 시작
-        countDownTimer = object : CountDownTimer(durationSeconds * 1000L, 1000L) {
+        timerInfo.countDownTimer = object : CountDownTimer(durationSeconds * 1000L, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
-                remainingSeconds = (millisUntilFinished / 1000).toInt()
-                
-                // UI에 상태 브로드캐스트
-                sendTimerUpdateBroadcast()
-                
-                // 알림 업데이트
-                updateNotification()
-                
-                Log.d(TAG, "Timer tick: ${formatTime(remainingSeconds)}")
+                timerInfo.remainingSeconds = (millisUntilFinished / 1000).toInt()
+
+                // UI에 상태 브로드캐스트 전송
+                sendTimerUpdateBroadcast(timerInfo)
+
+                // 개별 알림 업데이트 (setOnlyAlertOnce로 조용히 갱신)
+                updateIndividualNotification(timerInfo)
+
+                Log.d(TAG, "⏱️ Timer $timerId tick: ${formatTime(timerInfo.remainingSeconds)}")
             }
-            
+
             override fun onFinish() {
-                Log.d(TAG, "Timer finished: $timerName")
-                onTimerComplete()
+                Log.d(TAG, "⏰ Timer $timerId finished")
+                onTimerComplete(timerId)
             }
         }
         
-        countDownTimer?.start()
+        timerInfo.countDownTimer?.start()
+        activeTimers[timerId] = timerInfo
+        
+        Log.d(TAG, "📊 Active timers count: ${activeTimers.size}")
     }
     
-    private fun pauseTimer() {
-        countDownTimer?.cancel()
-        isTimerRunning = false
+    private fun pauseTimer(timerId: Int) {
+        val timerInfo = activeTimers[timerId] ?: run {
+            Log.w(TAG, "⚠️ Timer $timerId not found for pause")
+            return
+        }
+        
+        timerInfo.countDownTimer?.cancel()
+        timerInfo.isRunning = false
 
         // DB에 일시정지 상태 및 현재 남은 시간 저장
         serviceScope.launch {
             try {
-                timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = remainingSeconds)
-                Log.d(TAG, "Timer paused: ID=$timerId, remainingSeconds=$remainingSeconds")
+                timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = timerInfo.remainingSeconds)
+                Log.d(TAG, "✅ Timer paused: ID=$timerId, remainingSeconds=${timerInfo.remainingSeconds}")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to update timer state on pause: ${e.message}")
+                Log.e(TAG, "❌ Failed to update timer state on pause: ${e.message}")
             }
         }
 
         // UI에 일시정지 브로드캐스트
-        sendTimerUpdateBroadcast()
+        sendTimerUpdateBroadcast(timerInfo)
 
-        // 일시정지 상태 알림 업데이트
-        updateNotification()
+        // 알림 업데이트
+        updateIndividualNotification(timerInfo)
     }
 
-    /**
-     * 타이머에 시간을 추가합니다 (실행 중일 때만 작동)
-     */
-    private fun addTime(secondsToAdd: Int) {
-        if (!isTimerRunning) {
-            Log.w(TAG, "Cannot add time - timer is not running")
+    private fun addTime(timerId: Int, secondsToAdd: Int) {
+        val timerInfo = activeTimers[timerId] ?: run {
+            Log.w(TAG, "⚠️ Timer $timerId not found for add time")
+            return
+        }
+        
+        if (!timerInfo.isRunning) {
+            Log.w(TAG, "⚠️ Cannot add time - timer $timerId is not running")
             return
         }
 
         // 기존 타이머 취소
-        countDownTimer?.cancel()
+        timerInfo.countDownTimer?.cancel()
 
         // 시간 추가
-        remainingSeconds += secondsToAdd
+        timerInfo.remainingSeconds += secondsToAdd
 
-        Log.d(TAG, "⏱️ Added $secondsToAdd seconds. New remaining time: $remainingSeconds seconds")
+        Log.d(TAG, "⏱️ Added $secondsToAdd seconds to timer $timerId. New remaining: ${timerInfo.remainingSeconds}s")
 
         // DB에 업데이트된 시간 저장
         serviceScope.launch {
             try {
-                timerRepository.updateTimerState(timerId, isRunning = true, remainingSeconds = remainingSeconds)
-                Log.d(TAG, "Timer state updated with added time: ID=$timerId, remainingSeconds=$remainingSeconds")
+                timerRepository.updateTimerState(timerId, isRunning = true, remainingSeconds = timerInfo.remainingSeconds)
+                Log.d(TAG, "✅ Timer state updated with added time: ID=$timerId")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to update timer state after adding time: ${e.message}")
+                Log.e(TAG, "❌ Failed to update timer state after adding time: ${e.message}")
             }
         }
 
         // 새로운 시간으로 타이머 재시작
-        countDownTimer = object : CountDownTimer(remainingSeconds * 1000L, 1000L) {
+        timerInfo.countDownTimer = object : CountDownTimer(timerInfo.remainingSeconds * 1000L, 1000L) {
             override fun onTick(millisUntilFinished: Long) {
-                remainingSeconds = (millisUntilFinished / 1000).toInt()
+                timerInfo.remainingSeconds = (millisUntilFinished / 1000).toInt()
 
-                // UI에 상태 브로드캐스트
-                sendTimerUpdateBroadcast()
+                // UI에 상태 브로드캐스트 전송
+                sendTimerUpdateBroadcast(timerInfo)
 
-                // 알림 업데이트
-                updateNotification()
+                // 개별 알림 업데이트 (setOnlyAlertOnce로 조용히 갱신)
+                updateIndividualNotification(timerInfo)
 
-                Log.d(TAG, "Timer tick: ${formatTime(remainingSeconds)}")
+                Log.d(TAG, "⏱️ Timer $timerId tick: ${formatTime(timerInfo.remainingSeconds)}")
             }
 
             override fun onFinish() {
-                Log.d(TAG, "Timer finished: $timerName")
-                onTimerComplete()
+                Log.d(TAG, "⏰ Timer $timerId finished")
+                onTimerComplete(timerId)
             }
         }
 
-        countDownTimer?.start()
+        timerInfo.countDownTimer?.start()
 
         // UI에 업데이트 브로드캐스트
-        sendTimerUpdateBroadcast()
-        updateNotification()
+        sendTimerUpdateBroadcast(timerInfo)
+
+        // 알림 업데이트
+        updateIndividualNotification(timerInfo)
     }
     
-    private fun stopTimer() {
-        countDownTimer?.cancel()
-        isTimerRunning = false
-        remainingSeconds = 0
+    private fun stopTimer(timerId: Int) {
+        val timerInfo = activeTimers[timerId] ?: run {
+            Log.w(TAG, "⚠️ Timer $timerId not found for stop")
+            return
+        }
+        
+        timerInfo.countDownTimer?.cancel()
+        timerInfo.isRunning = false
+        timerInfo.remainingSeconds = 0
         
         // DB에 타이머 중지 상태 업데이트 (리셋)
         serviceScope.launch {
             try {
                 timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = 0)
-                Log.d(TAG, "Timer stopped/reset: ID=$timerId")
+                Log.d(TAG, "✅ Timer stopped/reset: ID=$timerId")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to update timer state on stop: ${e.message}")
+                Log.e(TAG, "❌ Failed to update timer state on stop: ${e.message}")
             }
         }
         
         // UI에 중지 브로드캐스트
-        sendTimerStoppedBroadcast()
+        sendTimerStoppedBroadcast(timerId)
         
-        // 서비스 종료
-        stopForeground(true)
-        stopSelf()
+        // 개별 알림 제거
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(getNotificationId(timerId))
+
+        // 타이머 제거
+        activeTimers.remove(timerId)
+
+        // 모든 타이머가 중지되면 서비스 종료
+        if (activeTimers.isEmpty()) {
+            Log.d(TAG, "🛑 All timers stopped, stopping service")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        } else {
+            Log.d(TAG, "📊 Remaining active timers: ${activeTimers.size}")
+        }
     }
     
-    private fun onTimerComplete() {
-        countDownTimer?.cancel()
-        isTimerRunning = false
-        remainingSeconds = 0
+    private fun onTimerComplete(timerId: Int) {
+        val timerInfo = activeTimers[timerId] ?: run {
+            Log.w(TAG, "⚠️ Timer $timerId not found for completion")
+            return
+        }
+        
+        timerInfo.countDownTimer?.cancel()
+        timerInfo.isRunning = false
+        timerInfo.remainingSeconds = 0
         
         // DB에 타이머 완료 상태 업데이트
         serviceScope.launch {
             try {
                 timerRepository.updateTimerState(timerId, isRunning = false, remainingSeconds = 0)
-                Log.d(TAG, "Timer completed: ID=$timerId")
+                Log.d(TAG, "✅ Timer completed: ID=$timerId")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to update timer state on complete: ${e.message}")
+                Log.e(TAG, "❌ Failed to update timer state on complete: ${e.message}")
             }
         }
         
         // UI에 완료 브로드캐스트
-        sendTimerCompleteBroadcast()
+        sendTimerCompleteBroadcast(timerId)
         
         // 타이머 완료 알림 표시
         val notificationAlarmManager = NotificationAlarmManager(this)
-        notificationAlarmManager.showTimerCompleteNotification(timerName)
+        notificationAlarmManager.showTimerCompleteNotification(timerInfo.timerName)
+
+        // 타이머 제거
+        activeTimers.remove(timerId)
+
+        // 고유 Notification ID 사용하여 진행 중 알림 제거
+        val notificationId = getNotificationId(timerId)
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(notificationId)
+
+        // 모든 타이머가 완료되면 서비스 종료
+        if (activeTimers.isEmpty()) {
+            Log.d(TAG, "✅ All timers completed, stopping service")
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+        } else {
+            Log.d(TAG, "📊 Remaining active timers: ${activeTimers.size}")
+        }
         
-        // Foreground 서비스 종료
-        stopForeground(true)
-        stopSelf()
-        
-        Log.d(TAG, "⏰ Timer '$timerName' completed successfully")
+        Log.d(TAG, "⏰ Timer '${timerInfo.timerName}' completed successfully")
     }
     
     /**
      * UI에 타이머 상태 업데이트 브로드캐스트
      */
-    private fun sendTimerUpdateBroadcast() {
+    private fun sendTimerUpdateBroadcast(timerInfo: TimerInfo) {
         val intent = Intent(BROADCAST_TIMER_UPDATE).apply {
-            putExtra(EXTRA_TIMER_ID, timerId)
-            putExtra(EXTRA_REMAINING_SECONDS, remainingSeconds)
-            putExtra(EXTRA_IS_RUNNING, isTimerRunning)
+            putExtra(EXTRA_TIMER_ID, timerInfo.timerId)
+            putExtra(EXTRA_REMAINING_SECONDS, timerInfo.remainingSeconds)
+            putExtra(EXTRA_IS_RUNNING, timerInfo.isRunning)
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
-        Log.d(TAG, "📡 브로드캐스트 전송: ID=$timerId, ${remainingSeconds}초")
+        Log.d(TAG, "📡 브로드캐스트 전송: ID=${timerInfo.timerId}, ${timerInfo.remainingSeconds}초")
     }
     
     /**
      * UI에 타이머 완료 브로드캐스트
      */
-    private fun sendTimerCompleteBroadcast() {
+    private fun sendTimerCompleteBroadcast(timerId: Int) {
         val intent = Intent(BROADCAST_TIMER_COMPLETE).apply {
             putExtra(EXTRA_TIMER_ID, timerId)
             putExtra(EXTRA_REMAINING_SECONDS, 0)
@@ -323,7 +402,7 @@ class TimerForegroundService : Service() {
     /**
      * UI에 타이머 중지 브로드캐스트
      */
-    private fun sendTimerStoppedBroadcast() {
+    private fun sendTimerStoppedBroadcast(timerId: Int) {
         val intent = Intent(BROADCAST_TIMER_STOPPED).apply {
             putExtra(EXTRA_TIMER_ID, timerId)
             putExtra(EXTRA_REMAINING_SECONDS, 0)
@@ -332,50 +411,70 @@ class TimerForegroundService : Service() {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
     
-    private fun createTimerNotification(): android.app.Notification {
+    /**
+     * 개별 타이머의 알림 생성
+     */
+    private fun createIndividualNotification(timerInfo: TimerInfo): android.app.Notification {
         // 메인 액티비티로 이동하는 인텐트
         val mainIntent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val mainPendingIntent = PendingIntent.getActivity(
-            this, 0, mainIntent,
+            this, timerInfo.timerId, mainIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
-        
-        // 타이머 중지 버튼
+
+        // 중지 버튼 인텐트
         val stopIntent = Intent(this, TimerForegroundService::class.java).apply {
             action = ACTION_STOP_TIMER
+            putExtra(EXTRA_TIMER_ID, timerInfo.timerId)
         }
         val stopPendingIntent = PendingIntent.getService(
-            this, 0, stopIntent,
+            this, timerInfo.timerId, stopIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
         )
-        
-        val status = if (isTimerRunning) "실행 중" else "일시정지"
-        val timeDisplay = formatTime(remainingSeconds)
-        
+
+        val title = "${timerInfo.timerName} 실행 중"
+        val text = if (timerInfo.isRunning) {
+            "남은 시간: ${formatTime(timerInfo.remainingSeconds)}"
+        } else {
+            "일시정지"
+        }
+
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_timer)
-            .setContentTitle("$timerName $status")
-            .setContentText("남은 시간: $timeDisplay")
+            .setContentTitle(title)
+            .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setOngoing(true) // 사용자가 스와이프로 제거할 수 없음
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)  // 🔑 핵심: 업데이트 시 조용히 갱신
+            .setShowWhen(false)  // 타임스탬프 표시 안 함
+            .setSilent(true)  // 조용한 업데이트
             .setContentIntent(mainPendingIntent)
-            .addAction(
-                R.drawable.ic_alarm,
-                "중지",
-                stopPendingIntent
-            )
+            .addAction(R.drawable.ic_alarm, "중지", stopPendingIntent)
             .build()
     }
     
-    private fun updateNotification() {
-        val notification = createTimerNotification()
+    /**
+     * 개별 타이머의 알림을 표시 (Foreground Service가 아닌 일반 알림)
+     */
+    private fun showIndividualNotification(timerInfo: TimerInfo) {
+        val notification = createIndividualNotification(timerInfo)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(getNotificationId(timerInfo.timerId), notification)
+        Log.d(TAG, "🔔 Individual notification shown for timer ${timerInfo.timerId}")
+    }
+
+    /**
+     * 개별 타이머의 알림 업데이트
+     */
+    private fun updateIndividualNotification(timerInfo: TimerInfo) {
+        val notification = createIndividualNotification(timerInfo)
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(getNotificationId(timerInfo.timerId), notification)
     }
     
     private fun formatTime(seconds: Int): String {
@@ -391,7 +490,10 @@ class TimerForegroundService : Service() {
     
     override fun onDestroy() {
         super.onDestroy()
-        countDownTimer?.cancel()
-        Log.d(TAG, "TimerForegroundService destroyed")
+        // 모든 타이머 취소
+        activeTimers.values.forEach { it.countDownTimer?.cancel() }
+        activeTimers.clear()
+
+        Log.d(TAG, "🛑 TimerForegroundService destroyed")
     }
 }
