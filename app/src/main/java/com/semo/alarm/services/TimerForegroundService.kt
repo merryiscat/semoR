@@ -410,7 +410,33 @@ class TimerForegroundService : Service() {
         }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
-    
+
+    /**
+     * Foreground Service를 위한 요약 알림 생성
+     * (첫 번째 타이머 시작 시 Foreground Service에 필요한 알림)
+     */
+    private fun createSummaryNotification(): android.app.Notification {
+        val mainIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        }
+        val mainPendingIntent = PendingIntent.getActivity(
+            this, 0, mainIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_timer)
+            .setContentTitle("타이머 실행 중")
+            .setContentText("백그라운드에서 타이머가 실행되고 있습니다")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOngoing(true)
+            .setShowWhen(false)
+            .setSilent(true)
+            .setContentIntent(mainPendingIntent)
+            .build()
+    }
     /**
      * 개별 타이머의 알림 생성
      */
@@ -453,6 +479,8 @@ class TimerForegroundService : Service() {
             .setOnlyAlertOnce(true)  // 🔑 핵심: 업데이트 시 조용히 갱신
             .setShowWhen(false)  // 타임스탬프 표시 안 함
             .setSilent(true)  // 조용한 업데이트
+            .setSortKey(String.format("%04d", timerInfo.timerId))  // 🔑 타이머 ID 순서로 정렬
+            .setWhen(System.currentTimeMillis() - (timerInfo.timerId * 1000L))  // 🔑 생성 시간 고정
             .setContentIntent(mainPendingIntent)
             .addAction(R.drawable.ic_alarm, "중지", stopPendingIntent)
             .build()

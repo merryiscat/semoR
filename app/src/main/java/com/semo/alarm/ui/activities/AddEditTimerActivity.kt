@@ -59,7 +59,14 @@ class AddEditTimerActivity : AppCompatActivity() {
         categoryId = intent.getIntExtra("categoryId", -1)
         templateId = intent.getIntExtra("templateId", -1)
         currentTemplate = intent.getParcelableExtra("template")
-        isEditMode = templateId != -1
+
+        // 편집 모드 판단: templateId가 있거나 currentTemplate이 전달된 경우
+        isEditMode = templateId != -1 || currentTemplate != null
+
+        // currentTemplate이 있으면 templateId 설정
+        if (currentTemplate != null && templateId == -1) {
+            templateId = currentTemplate!!.id
+        }
         
         // category가 있으면 categoryId 설정, 없으면 categoryId를 직접 사용
         if (category != null) {
@@ -137,6 +144,7 @@ class AddEditTimerActivity : AppCompatActivity() {
         binding.btnSet10Min.setOnClickListener { addQuickTime(0, 10, 0) } // +10분
         binding.btnSet15Min.setOnClickListener { addQuickTime(0, 15, 0) } // +15분
         binding.btnSet30Min.setOnClickListener { addQuickTime(0, 30, 0) } // +30분
+        binding.btnSet1Hour.setOnClickListener { addQuickTime(1, 0, 0) } // +1시간
     }
 
  /**

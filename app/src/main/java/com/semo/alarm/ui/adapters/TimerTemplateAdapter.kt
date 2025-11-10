@@ -66,22 +66,13 @@ class TimerTemplateAdapter(
                 // Set category icon (기본값 사용, 나중에 카테고리 정보와 함께 업데이트)
                 tvCategoryIcon.text = "⏰"
 
-                // Set refresh button state
-                if (template.isRunning) {
-                    // Enable refresh button when timer is running (allows reset)
-                    btnRefreshTimer.isEnabled = true
-                    btnRefreshTimer.alpha = 1.0f
-                } else {
-                    // Disable refresh button when timer is not running
-                    btnRefreshTimer.isEnabled = false
-                    btnRefreshTimer.alpha = 0.8f
-                }
+                // Set refresh button state - 일시정지 상태에서도 새로고침 가능
+                btnRefreshTimer.isEnabled = true
+                btnRefreshTimer.alpha = 1.0f
 
-                // Set refresh button click listener
+                // Set refresh button click listener - 일시정지 상태에서도 새로고침 가능
                 btnRefreshTimer.setOnClickListener {
-                    if (template.isRunning) {
-                        onResetTimer(template)
-                    }
+                    onResetTimer(template)
                 }
 
                 // Set click listeners

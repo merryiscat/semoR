@@ -116,20 +116,13 @@ class MixedTimerAdapter(
                 // Set category icon for independent timers
                 tvCategoryIcon.text = "🔥"  // 독립 타이머 구분용 아이콘
 
-                // Set refresh button state (same logic as category timers)
-                if (template.isRunning) {
-                    btnRefreshTimer.isEnabled = true
-                    btnRefreshTimer.alpha = 1.0f
-                } else {
-                    btnRefreshTimer.isEnabled = false
-                    btnRefreshTimer.alpha = 0.8f
-                }
+                // Set refresh button state - 일시정지 상태에서도 새로고침 가능
+                btnRefreshTimer.isEnabled = true
+                btnRefreshTimer.alpha = 1.0f
 
-                // Set refresh button click listener
+                // Set refresh button click listener - 일시정지 상태에서도 새로고침 가능
                 btnRefreshTimer.setOnClickListener {
-                    if (template.isRunning) {
-                        onTimerResetClicked(template)
-                    }
+                    onTimerResetClicked(template)
                 }
 
                 // 카테고리 타이머와 동일한 클릭 동작: 실행중=일시정지, 정지=시작
