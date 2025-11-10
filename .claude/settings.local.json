@@ -117,7 +117,9 @@
       "Bash(./gradlew.bat assembleDebug:*)",
       "Bash(gradlew.bat assembleDebug:*)",
       "Bash(git --version:*)",
-      "mcp__serena__list_dir"
+      "mcp__serena__list_dir",
+      "mcp__serena__replace_symbol_body",
+      "Bash(adb install:*)"
     ],
     "deny": [],
     "ask": []
